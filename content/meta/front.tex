@@ -1,0 +1,26 @@
+%!TEX root = ../../thesis.tex
+% Author: Phil Steinhorst, p.st@wwu.de
+
+% --------------------------
+% rename document parts
+% --------------------------
+%\renewcaptionname{ngerman}{\figurename}{Abb.}
+%\renewcaptionname{ngerman}{\tablename}{Tab.}
+
+% --------------------------
+% Front matter
+% --------------------------
+\pagenumbering{roman}				% roman page numbing (invisible for empty page style)
+\pagestyle{empty}					% no header or footers
+\input{content/meta/titlepages}		% INCLUDE: all titlepages
+\cleardoublepage
+
+\pagestyle{plain}					% display just page numbers
+\input{content/meta/abstract}		% INCLUDE: the abstracts (english and german)
+\cleardoublepage
+%
+\input{content/meta/acknowledgement} % INCLUDE: acknowledgement
+\cleardoublepage
+%
+\setcounter{tocdepth}{2}		% define depth of toc
+\tableofcontents				% display table of contents

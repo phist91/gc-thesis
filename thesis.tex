@@ -4,29 +4,8 @@
 
 \begin{document}
 
-% --------------------------
-% rename document parts
-% --------------------------
-%\renewcaptionname{ngerman}{\figurename}{Abb.}
-%\renewcaptionname{ngerman}{\tablename}{Tab.}
+\input{content/meta/front.tex}
 
-% --------------------------
-% Front matter
-% --------------------------
-\pagenumbering{roman}			% roman page numbing (invisible for empty page style)
-\pagestyle{empty}				% no header or footers
-\input{content/titlepages}		% INCLUDE: all titlepages
-\cleardoublepage
-
-\pagestyle{plain}				% display just page numbers
-\input{content/abstract}		% INCLUDE: the abstracts (english and german)
-\cleardoublepage
-%
-\input{content/acknowledgement} % INCLUDE: acknowledgement
-\cleardoublepage
-%
-\setcounter{tocdepth}{2}		% define depth of toc
-\tableofcontents				% display table of contents
 \cleardoublepage
 
 % --------------------------
@@ -43,32 +22,7 @@
 \input{content/chapter-conclusion} % INCLUDE: conclusion
 \cleardoublepage
 
-% --------------------------
-% Back matter
-% --------------------------
-{%
-\setstretch{1.1}
-\renewcommand{\bibfont}{\normalfont\small}
-\setlength{\biblabelsep}{0pt}
-\setlength{\bibitemsep}{0.5\baselineskip plus 0.5\baselineskip}
-\printbibliography[nottype=online]
-\printbibliography[heading=subbibliography,title={Webseiten},type=online,prefixnumbers={@}]
-}
-\cleardoublepage
-
-\listoffigures
-\cleardoublepage
-
-\listoftables
-\cleardoublepage
-
-\input{content/colophon}
-\cleardoublepage
-
-\input{content/declaration}
-\clearpage
-\newpage
-\mbox{}
+\input{content/meta/back.tex}
 
 % **************************************************
 % End of Document CONTENT
