@@ -81,3 +81,53 @@
 	bookmarksnumbered=true,		%
 	bookmarksopen=true			%
 }
+
+\usepackage{mathtools}
+%\usepackage[usenames,x11names,final,table]{xcolor}
+\usepackage[textsize=small,color=Red1!80!OrangeRed1!80]{todonotes}
+
+% TikZ
+% ===========================================================
+	\usepackage{tikz}
+	\usepackage{tikz-cd}					% kommutative Diagramme
+	\usetikzlibrary{arrows.meta}			% mehr Pfeile!
+	\usetikzlibrary{shadows}
+	\usetikzlibrary{calc}
+	\tikzset{>=Latex}						% Standard-Pfeilspitze
+% ===========================================================
+
+% Listen und Tabellen
+% ===========================================================
+	\usepackage{multicol}
+	\usepackage{multirow}
+	%\setlist{itemsep=0pt}
+	%\setlist[enumerate]{font=\sffamily\bfseries}
+	%\setlist[itemize]{label=$\triangleright$,font=\bfseries}
+	\usepackage{tabularx}
+% ===========================================================
+
+% minted
+% ===========================================================
+\usepackage{minted}
+\setminted{%
+	style=bw,
+	fontsize=\normalsize,
+	breaklines,
+	breakanywhere=false,
+	breakbytoken=false,
+	breakbytokenanywhere=false,
+	breakafter={.,},
+	autogobble,
+	numbersep=3mm,
+	tabsize=4,
+	frame=lines
+}
+\setmintedinline{%
+	fontsize=\normalsize,
+	numbers=none,
+	numbersep=12pt,
+	tabsize=4,
+}
+% ===========================================================
+
+\input{MathCmds.tex}
