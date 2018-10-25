@@ -9,21 +9,31 @@
 \renewcommand{\bibfont}{\normalfont\small}
 \setlength{\biblabelsep}{0pt}
 \setlength{\bibitemsep}{0.5\baselineskip plus 0.5\baselineskip}
-\printbibliography[nottype=online]
-\printbibliography[heading=subbibliography,title={Webseiten},type=online,prefixnumbers={@}]
+\printbibliography
 }
+
+\vfill
+
+Diese Masterarbeit wurde mit \LaTeXe unter Verwendung der Vorlage \textit{Clean Thesis} von Ricardo Langner gesetzt.
+Für mehr Informationen siehe \url{http://cleanthesis.der-ric.de/}.
+
 \cleardoublepage
 
+\chapter*{Abbildungsverzeichnis}
+\addcontentsline{toc}{chapter}{Abbildungsverzeichnis}
+\renewcommand\listfigurename{}
+\vspace*{-2.35cm}
 \listoffigures
 \cleardoublepage
 
+\chapter*{Tabellenverzeichnis}
+\addcontentsline{toc}{chapter}{Tabellenverzeichnis}
+\renewcommand\listtablename{}
+\vspace*{-2.35cm}
 \listoftables
 \cleardoublepage
 
-\input{content/meta/colophon}
-\cleardoublepage
-
 \input{content/meta/declaration}
-\clearpage
-\newpage
-\mbox{}
+%\clearpage
+%\newpage
+%\mbox{}
