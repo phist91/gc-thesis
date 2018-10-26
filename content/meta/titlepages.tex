@@ -17,70 +17,95 @@
 
 % ------------------------------------  --> main title page
 \begin{titlepage}
-	\pdfbookmark[0]{Titlepage}{Titlepage}
+	\pdfbookmark[0]{Titelblatt}{Titelblatt}
 	\tgherosfont
+	
+	\begin{minipage}{0.4\textwidth}
+	\begin{flushleft}
+	\includegraphics[width=5.5cm,keepaspectratio]{img/wwulogo17.eps}\\[1cm]
+	\end{flushleft}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.5\textwidth}
+	\begin{flushright}
+	\vspace*{0.45cm}
+	\footnotesize
+	Westfälische Wilhelms-Universität Münster \\
+	Fachbereich 10 -- Mathematik und Informatik \\
+	Institut für Informatik
+%	\textsf{Westfälische Wilhelms-Universität Münster} \\
+%	\textsf{Fachbereich 10 -- Mathematik und Informatik} \\
+%	\textsf{Institut für Informatik}
+	\end{flushright}
+	\end{minipage}
+		
+	%{\Large \thesisUniversity} \\[4mm]
+	%\includegraphics[width=6cm]{gfx/Clean-Thesis-Logo} \\[2mm]
+	%\textsf{\thesisUniversityDepartment} \\
+	%\textsf{\thesisUniversityInstitute} \\
+	%\textsf{\thesisUniversityGroup} \\
+
+	\vfill
+	
 	\centering
-
-	{\Large \thesisUniversity} \\[4mm]
-	\includegraphics[width=6cm]{gfx/Clean-Thesis-Logo} \\[2mm]
-	\textsf{\thesisUniversityDepartment} \\
-	\textsf{\thesisUniversityInstitute} \\
-	\textsf{\thesisUniversityGroup} \\
-
-	\vfill
+	
 	{\large \thesisSubject} \\[5mm]
-	{\LARGE \color{ctcolortitle}\textbf{\thesisTitle} \\[10mm]}
-	{\Large \thesisName} \\
+	{\huge \color{ctcolortitle}\textbf{\thesisTitle} \\[10mm]}
+	{\LARGE \thesisName}
 
 	\vfill
-	\begin{minipage}[t]{.27\textwidth}
+	\begin{minipage}[t]{.4\textwidth}
 		\raggedleft
-		\textit{1. Reviewer}
+		\textit{Erstgutachter und Betreuung}
 	\end{minipage}
 	\hspace*{15pt}
-	\begin{minipage}[t]{.65\textwidth}
+	\begin{minipage}[t]{.45\textwidth}
 		{\Large \thesisFirstReviewer} \\
-	  	{\small \thesisFirstReviewerDepartment} \\[-1mm]
-		{\small \thesisFirstReviewerUniversity}
-	\end{minipage} \\[5mm]
-	\begin{minipage}[t]{.27\textwidth}
+	  	%{\small \thesisFirstReviewerDepartment} \\[-1mm]
+		%{\small \thesisFirstReviewerUniversity}
+	\end{minipage} \\[0mm]
+	\begin{minipage}[t]{.4\textwidth}
 		\raggedleft
-		\textit{2. Reviewer}
+		\textit{Zweitgutachter}
 	\end{minipage}
 	\hspace*{15pt}
-	\begin{minipage}[t]{.65\textwidth}
+	\begin{minipage}[t]{.45\textwidth}
 		{\Large \thesisSecondReviewer} \\
-	  	{\small \thesisSecondReviewerDepartment} \\[-1mm]
-		{\small \thesisSecondReviewerUniversity}
+	  	%{\small \thesisSecondReviewerDepartment} \\[-1mm]
+		%{\small \thesisSecondReviewerUniversity}
 	\end{minipage} \\[10mm]
-	\begin{minipage}[t]{.27\textwidth}
-		\raggedleft
-		\textit{Supervisors}
-	\end{minipage}
-	\hspace*{15pt}
-	\begin{minipage}[t]{.65\textwidth}
-		\thesisFirstSupervisor\ and \thesisSecondSupervisor
-	\end{minipage} \\[10mm]
+%	\begin{minipage}[t]{.27\textwidth}
+%		\raggedleft
+%		\textit{Betreuung}
+%	\end{minipage}
+%	\hspace*{15pt}
+%	\begin{minipage}[t]{.65\textwidth}
+%		\thesisFirstSupervisor\ and \thesisSecondSupervisor
+%	\end{minipage} \\[10mm]
 
-	\thesisDate \\
+	\thesisAuthorCity, \thesisDate \\
 
 \end{titlepage}
 
 
 % ------------------------------------  --> lower title back for single page layout
-%\hfill
-%\vfill
-%{
-%	\small
-%	\textbf{\thesisName} \\
-%	\textit{\thesisTitle} \\
-%	\thesisSubject, \thesisDate \\
-%	Reviewers: \thesisFirstReviewer\ and \thesisSecondReviewer \\
-%	Supervisors: \thesisFirstSupervisor\ and \thesisSecondSupervisor \\[1.5em]
-%	\textbf{\thesisUniversity} \\
-%	\textit{\thesisUniversityGroup} \\
-%	\thesisUniversityInstitute \\
-%	\thesisUniversityDepartment \\
-%	\thesisUniversityStreetAddress \\
-%	\thesisUniversityPostalCode\ and \thesisUniversityCity
-%}
+\hfill
+\vfill
+{
+	\small
+	\textbf{\thesisTitle} \\
+	\thesisSubject\ zur Erlangung des akademischen Grades \textit{\thesisDegree} \\
+	in den Fächern \thesisAuthorFirstSubject\ und \thesisAuthorSecondSubject \\
+	Erstgutachter und Betreuung: \thesisFirstReviewer \\
+	Zweitgutachter: \thesisSecondReviewer \\
+%	Betreuung: \thesisFirstSupervisor\ und \thesisSecondSupervisor \\
+	\thesisAuthorCity, \today \\[1.5em]	
+	\textbf{\thesisName} \\
+	\thesisAuthorStreet, \thesisAuthorPostalCode\ \thesisAuthorCity \\
+	\texttt{\thesisAuthorMail} \\
+	Matrikelnummer: \thesisAuthorId \\[1.5em]
+	\textbf{\thesisUniversity} \\
+	\thesisUniversityDepartment \\
+	\thesisUniversityInstitute \\
+	\thesisUniversityStreetAddress, \thesisUniversityPostalCode\ \thesisUniversityCity
+}
