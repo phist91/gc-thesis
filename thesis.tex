@@ -8,16 +8,25 @@
 
 \cleardoublepage
 
-\pagenumbering{arabic}			% arabic page numbering
-\setcounter{page}{1}			% set page counter
-\pagestyle{maincontentstyle} 	% fancy header and footer
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\pagestyle{maincontentstyle}
 
-\input{content/chapter-introduction} % INCLUDE: introduction
-%\input{content/chapter-related-work} % INCLUDE: related work
-%\input{content/chapter-system}	% INCLUDE: system
-%\input{content/chapter-concepts} % INCLUDE: concepts
-%\input{content/chapter-conclusion} % INCLUDE: conclusion
+\input{content/introduction.tex}
+\part{Algorithmen und Ansätze}
+\input{content/theorie/mark-sweep.tex}
+%\input{content/compacting.tex}
+%\input{content/copying.tex}
+%\input{content/reference-counting.tex}
+%\input{content/generational.tex}
+%\input{content/fazit.tex}
+
+\part{Entwurf und Realisierung eines Garbage-Collection-Simulators}
+\input{content/praxis/modellierung.tex}
 \cleardoublepage
+
+
+\input{content/appendix.tex}
 
 \input{content/meta/back.tex}
 \end{document}
