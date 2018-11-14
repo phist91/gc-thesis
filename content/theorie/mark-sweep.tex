@@ -92,3 +92,5 @@ Die Bereinigungsphase (engl. \textit{sweep}) beginnt unmittelbar nach der Markie
 Die Variable \Var{pos} wird mit der Speicheradresse initialisiert, an der sich das erste Objekt im Heap befindet.
 Wir gehen davon aus, dass eine Methode \Method{nextObject} zu Verfügung steht, die anhand einer übergebenen Speicheradresse die Adresse des nachfolgenden Objektes oder \Null zurückgibt, wenn dieses nicht existiert.
 Dadurch wird der Heap linear traversiert; nicht markierte Objekte werden freigegeben, während die Markierung erreichbarer Objekte zurückgesetzt wird.
+
+\todo[inline]{Markierungsmöglichkeiten (Tricolor, Bitmapping); Lazy Sweeping}
