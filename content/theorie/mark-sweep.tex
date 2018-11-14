@@ -24,31 +24,31 @@ Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekt
 \begin{algorithm}
 \begin{algorithmic}[1]
 	\State \MethodHead{collectGarbage}():
-	\State \quad \Method{markStart}()	\Comment{Starte Markierung}
-	\State \quad \Method{sweepHeap}()	\Comment{gesamten Heap traversieren}
+	\State \quad \Method{markStart}()
+	\State \quad \Method{sweepHeap}()
 	\State
 	\State \MethodHead{markStart}():
 	\State \quad \Var{toDo} $\gets$ $\emptyset$				\Comment{Noch abzuarbeitende Objekte}
 	\State \quad \FOREACH \Var{obj} $\in \Roots$		\Comment{Beginne mit Basisobjekten}
-	\State \quad \quad \IF (isNotMarked(\Var{obj}))
+	\State \quad \quad \IF (\Method{isNotMarked}(\Var{obj}))
 	\State \quad \quad \quad \Method{setMarked}(\Var{obj})	\Comment{Objekt als erreichbar markieren}
-	\State \quad \quad \quad \Method{add}(\Var{toDo}, \Var{obj})	\Comment{Objekt zu ToDo-Liste hinzufügen}
+	\State \quad \quad \quad \Method{add}(\Var{toDo}, \Var{obj})	
 	\State \quad \quad \quad \Method{mark}()			\Comment{Abarbeitung starten}
 	\State
 	\State \MethodHead{mark}():
 	\State \quad \WHILE \Var{toDo} $\neq \emptyset$
-	\State \quad \quad obj $\gets$ \Method{remove}(\Var{toDo})			\Comment{Hole nächstes abzuarbeitendes Objekt}
-	\State \quad \quad \FOREACH \Var{adr} $\in \Pointers(\Var{obj})$	\Comment{Hole alle referenzierten Objekte\dots}
-	\State \quad \quad \quad \IF (\Var{adr} $\neq$ \Null \&\& \Method{isNotMarked}(\Var{*adr}))	\Comment{\dots die unmarkiert sind}
-	\State \quad \quad \quad \quad \Method{setMarked}(\Var{*adr})	\Comment{Markiere diese und füge zu ToDo-Liste hinzu}
-	\State \quad \quad \quad \quad \Method{add}(toDo, \Var{*adr})
+	\State \quad \quad obj $\gets$ \Method{remove}(\Var{toDo})			\Comment{Hole nächstes Objekt}
+	\State \quad \quad \FOREACH \Var{adr} $\in \Pointers(\Var{obj})$	\Comment{Hole nächste Referenz auf Objekt}
+	\State \quad \quad \quad \IF (\Var{adr} $\neq$ \Null \&\& \Method{isNotMarked}(\Var{*adr}))	
+	\State \quad \quad \quad \quad \Method{setMarked}(\Var{*adr})	
+	\State \quad \quad \quad \quad \Method{add}(\Var{toDo}, \Var{*adr})
 \end{algorithmic}
-\caption[Naives Mark and Sweep]{Naives Mark and Sweep \cite[Kap. 2.2]{jones-lins}}
-\label{algo:naive-mark-sweep}
+\caption[Naives Mark and Sweep -- Markierung]{Naives Mark and Sweep -- Markierung (vgl. \cite[Kap. 2.2]{jones-lins})}
+\label{algo:naive-mark}
 \end{algorithm}
 
 Die Markierungsphase (engl. \textit{mark}) funktioniert wie folgt:
-Zunächst wird mittels der Methode \Method{markStart} eine Menge \Var{toDo} erzeugt, die diejenigen Objekte enthält, die bereits als erreichbar erkannt wurden, aber selbst noch nicht verarbeitet wurden (Zeile 6 in Algorithmus~\ref{algo:naive-mark-sweep}).
+Zunächst wird mittels der Methode \Method{markStart} eine Menge \Var{toDo} erzeugt, die diejenigen Objekte enthält, die bereits als erreichbar erkannt wurden, aber selbst noch nicht verarbeitet wurden (Zeile 6 in Algorithmus~\ref{algo:naive-mark}).
 In diese werden alle bislang unmarkierten Basisobjekte der Menge \Roots eingefügt und markiert, da sie in jedem Fall erreichbar sind (Zeile 7 bis 10).
 Ist ein Basisobjekt bereits markiert worden, so wurde es schon entdeckt -- etwa, weil es durch ein zuvor abgearbeitetes Objekt referenziert wird.
 Daraus folgt, dass es ebenfalls bereits abgearbeitet wurde oder sich noch in der Menge \Var{toDo} befindet.
@@ -74,3 +74,21 @@ Anstatt die Abarbeitung der \Var{toDo}-Menge zu beginnen, sobald das erste Basis
 Je nachdem, wie \Var{toDo} in der Praxis realisiert wird -- zum Beispiel in Form eines Stacks -- kann damit die Traversierung der Objekte beeinflusst werden.
 Dies kann einen erheblichen Einfluss auf die Performanz der Markierungsphase haben, wenn Caching-Effekte eine Rolle spielen. \todo{evtl. später genauer drauf eingehen}
 
+\begin{algorithm}
+\begin{algorithmic}[1]
+	\State \MethodHead{sweep}():
+	\State \quad \Var{pos} $\gets$ \Method{nextObject}(\Var{HEAP\_START})
+	\State \quad \WHILE \Var{pos} $\neq$ \Null
+	\State \quad \quad \IF \Method{isMarked}(\Var{*pos})
+	\State \quad \quad \quad \Method{unsetMarked}(\Var{*pos})
+	\State \quad \quad \ELSE \Method{free}(\Var{pos})
+	\State \quad \quad \Var{pos} $\gets$ \Method{nextObject}(\Var{pos})
+\end{algorithmic}
+\caption[Naives Mark and Sweep -- Bereinigung]{Naives Mark and Sweep -- Bereinigung (vgl. \cite[Kap. 2.2]{jones-lins})}
+\label{algo:naive-sweep}
+\end{algorithm}
+
+Die Bereinigungsphase (engl. \textit{sweep}) beginnt unmittelbar nach der Markierungsphase durch Aufruf der Methode \Method{sweep}.
+Die Variable \Var{pos} wird mit der Speicheradresse initialisiert, an der sich das erste Objekt im Heap befindet.
+Wir gehen davon aus, dass eine Methode \Method{nextObject} zu Verfügung steht, die anhand einer übergebenen Speicheradresse die Adresse des nachfolgenden Objektes oder \Null zurückgibt, wenn dieses nicht existiert.
+Dadurch wird der Heap linear traversiert; nicht markierte Objekte werden freigegeben, während die Markierung erreichbarer Objekte zurückgesetzt wird.
