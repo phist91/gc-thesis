@@ -137,6 +137,27 @@
 	numbersep=12pt,
 	tabsize=4,
 }
+
 % ===========================================================
 
+% algorithmics
+% ===========================================================
+\usepackage[chapter]{algorithm}
+\floatname{algorithm}{Algorithmus}
+\usepackage{algpseudocode}
+
+\newcommand{\Atomic}{\textbf{atomic}\ }
+\newcommand{\Deref}{\texttt{*}}
+\newcommand{\FOR}{\textbf{for}\ }
+\newcommand{\FOREACH}{\textbf{for each}\ }
+\newcommand{\IF}{\textbf{if}\ }
+\newcommand{\Method}[1]{\textit{#1}}
+\newcommand{\MethodHead}[1]{\textbf{\textit{#1}}}
+\newcommand{\Null}{\texttt{null}\ }
+\newcommand{\Var}[1]{\texttt{#1}}
+\newcommand{\WHILE}{\textbf{while}\ }
+
+\newcommand{\Pointers}{\textsc{Pointers}\xspace}
+\newcommand{\Roots}{\textsc{Roots}\xspace}
+% ===========================================================
 \input{MathCmds.tex}

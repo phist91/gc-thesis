@@ -14,3 +14,63 @@ Diese zweischrittige Vorgehensweise -- das Erkennen nicht mehr benötigter Speic
 
 \section{Naives Mark and Sweep}
 \label{sec:naive-mark-sweep}
+Der naive Mark-and-Sweep-Algorithmus arbeitet in zwei Schritten:
+Zunächst wird bestimmt, welche Objekte im Speicher unerreichbar sind, weil sie von keinem anderen erreichbaren Objekt referenziert werden.
+Diese Objekte können gefahrlos freigegeben werden, da auf ihre Informationen nicht mehr zugegriffen werden kann.
+Der zweite Schritt besteht aus einer Traversierung des gesamten Heaps.
+Dabei werden alle existierenden Objekte besucht und diejenigen freigegeben, die im ersten Schritt als unerreichbar identifiziert werden konnten.
+Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekte zu Verfügung.
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+	\State \MethodHead{collectGarbage}():
+	\State \quad \Method{markStart}()	\Comment{Starte Markierung}
+	\State \quad \Method{sweepHeap}()	\Comment{gesamten Heap traversieren}
+	\State
+	\State \MethodHead{markStart}():
+	\State \quad \Var{toDo} $\gets$ $\emptyset$				\Comment{Noch abzuarbeitende Objekte}
+	\State \quad \FOREACH \Var{obj} $\in \Roots$		\Comment{Beginne mit Basisobjekten}
+	\State \quad \quad \IF (isNotMarked(\Var{obj}))
+	\State \quad \quad \quad \Method{setMarked}(\Var{obj})	\Comment{Objekt als erreichbar markieren}
+	\State \quad \quad \quad \Method{add}(\Var{toDo}, \Var{obj})	\Comment{Objekt zu ToDo-Liste hinzufügen}
+	\State \quad \quad \quad \Method{mark}()			\Comment{Abarbeitung starten}
+	\State
+	\State \MethodHead{mark}():
+	\State \quad \WHILE \Var{toDo} $\neq \emptyset$
+	\State \quad \quad obj $\gets$ \Method{remove}(\Var{toDo})			\Comment{Hole nächstes abzuarbeitendes Objekt}
+	\State \quad \quad \FOREACH \Var{adr} $\in \Pointers(\Var{obj})$	\Comment{Hole alle referenzierten Objekte\dots}
+	\State \quad \quad \quad \IF (\Var{adr} $\neq$ \Null \&\& \Method{isNotMarked}(\Var{*adr}))	\Comment{\dots die unmarkiert sind}
+	\State \quad \quad \quad \quad \Method{setMarked}(\Var{*adr})	\Comment{Markiere diese und füge zu ToDo-Liste hinzu}
+	\State \quad \quad \quad \quad \Method{add}(toDo, \Var{*adr})
+\end{algorithmic}
+\caption[Naives Mark and Sweep]{Naives Mark and Sweep \cite[Kap. 2.2]{jones-lins}}
+\label{algo:naive-mark-sweep}
+\end{algorithm}
+
+Die Markierungsphase (engl. \textit{mark}) funktioniert wie folgt:
+Zunächst wird mittels der Methode \Method{markStart} eine Menge \Var{toDo} erzeugt, die diejenigen Objekte enthält, die bereits als erreichbar erkannt wurden, aber selbst noch nicht verarbeitet wurden (Zeile 6 in Algorithmus~\ref{algo:naive-mark-sweep}).
+In diese werden alle bislang unmarkierten Basisobjekte der Menge \Roots eingefügt und markiert, da sie in jedem Fall erreichbar sind (Zeile 7 bis 10).
+Ist ein Basisobjekt bereits markiert worden, so wurde es schon entdeckt -- etwa, weil es durch ein zuvor abgearbeitetes Objekt referenziert wird.
+Daraus folgt, dass es ebenfalls bereits abgearbeitet wurde oder sich noch in der Menge \Var{toDo} befindet.
+In beiden Fällen muss es folglich nicht erneut zu \Var{toDo} hinzugefügt werden.
+
+Bereits nach dem Hinzufügen des ersten Basisobjekts wird die Methode \Method{mark} aufgerufen, welche die \Var{toDo}-Menge abarbeitet.
+Für jedes Objekt in \Var{toDo} werden diejenigen Felder betrachtet, die eine Referenz auf ein Objekt enthalten (Zeile 15 und 16).
+Wenn dieses Objekt noch nicht markiert wurde, wird es in diesem Augenblick zum ersten Mal entdeckt.
+Da es somit erreichbar ist, kann es markiert und zu \Var{toDo} hinzugefügt werden, um zu einem späteren Zeitpunkt abgearbeitet zu werden (Zeile 17 und 18).
+Verweist die Referenz hingegen auf ein Objekt, das bereits markiert wurde, wurde dieses schon zuvor entdeckt.
+Auch hier ist ein erneutes Hinzufügen zu \Var{toDo} überflüssig.
+Sobald \Var{toDo} leer ist, erfolgt die Rückkehr zur Methode \Method{markStart}, sodass ggfs. das nächste Basisobjekt abgearbeitet wird.
+
+\todo[inline]{Kleines Beispiel hier, großes in den Anhang?}
+
+Es ist wesentlich, dass Objekte bereits markiert werden, wenn sie der Menge \Var{toDo} hinzugefügt werden, und nicht etwa, nachdem sie abgearbeitet wurden (Zeile 9 und 10 bzw. 18 und 19).
+Andernfalls besteht bei zyklischen Referenzen die Gefahr einer Endlosschleife, da unmarkierte Objekte mehrfach hinzugefügt würden.
+Präziser können wir festhalten, dass \Var{toDo} zu jedem Zeitpunkt ausschließlich bereits markierte Objekte enthält.
+Da keine Objekte hinzugefügt werden, die bereits markiert wurden (Zeile 8 und 16), wird kein Objekt doppelt verarbeitet.
+Da zudem mit jeder Iteration der \WHILE-Schleife mindestens ein Objekt aus \Var{toDo} entfernt wird (Zeile 15), die Anzahl aller Objekte endlich ist und wir voraussetzen, dass während der Ausführung des Garbage Collectors keine neuen Objekte entstehen, wird sowohl die \WHILE-Schleife, als auch die \FOREACH-Schleife nach endlich vielen Schritten terminieren.
+
+Anstatt die Abarbeitung der \Var{toDo}-Menge zu beginnen, sobald das erste Basisobjekt erfasst wurde, können statt dessen auch zunächst alle Basisobjekte zu \Var{toDo} hinzugefügt und die Methode \Method{mark} im Anschluss aufgerufen werden.
+Je nachdem, wie \Var{toDo} in der Praxis realisiert wird -- zum Beispiel in Form eines Stacks -- kann damit die Traversierung der Objekte beeinflusst werden.
+Dies kann einen erheblichen Einfluss auf die Performanz der Markierungsphase haben, wenn Caching-Effekte eine Rolle spielen. \todo{evtl. später genauer drauf eingehen}
+
