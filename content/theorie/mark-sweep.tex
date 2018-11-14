@@ -1,5 +1,16 @@
 %!TEX root = ../../thesis.tex
 \chapter{Mark and Sweep}
 \label{cha:mark-sweep}
+Wir beginnen mit einer Vorstellung des ersten Garbage-Collection-Algorithmus, der auf John \textsc{McCarthy} zurückgeht \cite[191--193]{mccarthy1960}.
+Im Rahmen eines im Jahr 1960 veröffentlichten Artikels über die Berechnung rekursiver Funktionen auf dem \textit{IBM 704} mithilfe des \textit{LISP Programming Systems} erläutert McCarthy die Speicherung von Daten in einer Listenstruktur.
+Diese besteht aus Paaren, deren erster Eintrag \texttt{car} die zu speichernde Information enthält, während im zweiten Eintrag \texttt{cdr} die Registeradresse des nachfolgenden Paares zu finden ist.
+Register, die aktuell nicht zur Speicherung von Daten genutzt werden, befinden sich in einer \textit{free storage list}.
+Bei der Anforderung von Speicher für ein zu speicherndes Datum werden Register aus dieser Liste entfernt.
+Durch die Manipulation der Registeradressen können Paare verwaisen, was zu Speicherlecks führt.
+Zur Auflösung dieser Problematik bietet LISP als erste Programmiersprache ihrer Zeit eine automatische Speicherverwaltung, die von McCarthy wie folgt grob umschrieben wird:
+Im Falle von Speicherknappheit wird -- ausgehend von einer Menge von Basisregistern -- ermittelt, welche Register über eine Folge von \texttt{cdr}-Einträgen erreichbar sind.
+Nicht erreichbare Register enthalten überschreibbare Inhalte, sodass diese zurück in die \textit{free storage list} eingefügt werden können und wieder als freie Speicherplätze zu Verfügung stehen.
+Diese zweischrittige Vorgehensweise -- das Erkennen nicht mehr benötigter Speicherbereiche und die anschließende Freigabe eben jener -- bildet die Grundlage des \textit{Mark-and-Sweep}-Algorithmus.
 
-\todo[inline]{Einleitung: Was ist Garbage Collection, wozu ist das relevant?}
+\section{Naives Mark and Sweep}
+\label{sec:naive-mark-sweep}
