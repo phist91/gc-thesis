@@ -2,7 +2,32 @@
 \chapter{Einleitung}
 \label{cha:intro}
 
-\todo[inline]{Einleitung: Was ist Garbage Collection, wozu ist das relevant?}
+Die Möglichkeiten einer dynamischen Speicherverwaltung haben sich in den meisten modernen Programmiersprachen etabliert.
+Die Vorteile, einen Teil des dynamischen Speichers -- oft auch als \textit{Heap} bezeichnet -- zur Laufzeit eines Programms anfordern zu können, sind unbestreitbar:
+Speicherbereiche, die zum Heap gehören, dienen als Ablagemöglichkeit für Unterprogramme jenseits ihrer eigenen \textit{Stacks}, sodass ihre Inhalte nach Terminierung erhalten und für weitere Unterprogramme zugänglich bleiben.
+Die Größe des angeforderten Speichers muss dabei nicht zur Compilezeit bekannt sein, was die Realisierung dynamischer Datenstrukturen ermöglicht und die Überschreitung hartkodierter Speicherbereiche vermeidet.
+
+Für die konkrete Verwendung einer dynamischen Speicherverwaltung sind grundsätzlich zwei diametrale Ansätze denkbar:
+Zum einen kann die Verantwortung für den korrekten Umgang mit dynamisch angefordertem Speicher gänzlich der Entwicklerin übertragen werden.
+Dies ist in der Regel mit zusätzlichem Aufwand verbunden:
+Speicheradressen müssen manuell verwaltet werden, Anweisungen zur Anforderung und Freigabe von Speicher müssen in den eigentlichen Code integriert werden und entsprechende Ausnahmefälle bei Fehlschlägen müssen ordnungsgemäß abgefangen werden.
+Neben einer komplexer werdenden Codestruktur führt dies zu weiteren Fehlerquellen:
+Die Freigabe noch benötigten Speichers führt zu so genannten \textit{hängenden Zeigern} (engl. \textit{dangling pointer}) -- Referenzen, die \textit{ins Leere zeigen} und in der Folge bestenfalls zu Programmabstürzen, schlimmstenfalls aber zu unerwartetem Verhalten und Datenverlust führen können.
+Nicht freigegebener, aber nicht mehr benötigter Speicher kann wiederum zu \textit{Speicherlecks} (engl. \textit{memory leaks}) und -- bei hinreichend langer Laufzeit des Programms -- zu einer Ausschöpfung des Speichers führen.
+\textit{Double frees}, bei denen Speicherbereiche doppelt freigegeben werden, sind eine weitere Ursache für unerwünschtes Programmverhalten.
+Während die Anforderung von Speicher in der Regel unproblematisch ist, ist die Frage, wann und an welcher Stelle angeforderter Speicher wieder freigegeben werden kann, deutlich komplizierter, und fehlerhafte Verwendungen werden gegebenenfalls erst bei langfristiger Ausführung des Programms bemerkt.
+
+Zum anderen existiert zur Vermeidung eben jener Schwierigkeiten der Ansatz, dem Compiler und der Laufzeitumgebung die adäquate Freigabe nicht mehr benötigten Speichers zu überlassen.
+Zuständig hierfür ist dann ein Mechanismus, der gemeinhin als \textit{Garbage Collection} (engl. für \textit{Abfallentsorgung}) bezeichnet wird.
+Eine Garbage Collection führt automatisch zu bestimmten Zeitpunkten -- etwa regelmäßig oder wenn akuter Speichermangel besteht -- eine Bereinigung des Speichers durch und gibt nicht mehr benötigte Speicherbereiche frei, ohne dass der Entwickler entsprechende Routinen in sein Programm integrieren muss.
+Nichtsdestoweniger wird dieser Komfortgewinn nicht ohne Nachteile erworben:
+Wie jede Programmanweisung besitzt auch eine Garbage Collection einen gewissen Bedarf an Rechenzeit und Ressourcen, der sich negativ auf die Performance der eigentlichen Anwendung auswirken kann.
+Vor allem in Anwendungen, die einen hohen Durchsatz erreichen wollen oder in denen Deadlines um jeden Preis eingehalten werden müssen, spielt die Auswahl eines geeigneten Garbage-Collection-Algorithmus eine nicht unerhebliche Rolle.
+
+In dieser Arbeit werden wir gängige Ansätze zur Garbage Collection vorstellen und miteinander vergleichen.
+Dabei soll auch ein Augenmerk auf Performance und Ressourcenbedarf gelegt sowie die Eignung in verschiedenen Anwendungsfällen beurteilt werden.
+Im zweiten Teil der Arbeit wird der Entwurf und die Implementation einer Anwendung beschrieben, die die diskutierten Garbage-Collection-Algorithmen grafisch visualisiert und in einem vereinfachten Speichermodell simuliert.
+Anhand dieser Anwendung soll die Arbeitsweise der Algorithmen veranschaulicht werden.
 
 \section{Problemstellung und Terminologie}
 \label{sec:intro:problem}
