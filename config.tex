@@ -115,6 +115,59 @@
 	\usepackage{tabularx}
 % ===========================================================
 
+% thmtools
+% ===========================================================
+%\usepackage{ntheorem}
+%\declaretheoremstyle[%
+%	headfont=\bfseries,
+%	notefont=\normalfont,
+%	bodyfont=\normalfont,
+%	headformat=\NAME \ \NUMBER \NOTE,
+%	headpunct={\\},
+%	postheadspace=1ex,
+%	spaceabove=15pt,spacebelow=10pt]%
+%{mainstyle}
+
+\usepackage{amsthm}
+\newtheoremstyle{satzstyle}%
+	{0pt}% space above
+	{0pt}% space below
+	{\normalfont}% body font
+	{}% indent amount
+	{\bfseries}% theorem head font
+	{:}% theorem head punctuation
+	{\newline}% space after theorem head
+	{}% theorem head spec
+	
+\newtheoremstyle{beweisstyle}%
+	{0pt}% space above
+	{0pt}% space below
+	{\normalfont}% body font
+	{}% indent amount
+	{\itshape}% theorem head font
+	{:}% theorem head punctuation
+	{\newline}% space after theorem head
+	{}% theorem head spec
+
+\theoremstyle{satzstyle}
+\newtheorem{satz}{Satz}[chapter]
+
+%\theoremstyle{beweisstyle}
+
+\makeatletter
+\renewenvironment{proof}[1][\proofname]{\par
+\pushQED{\qed}%
+\normalfont \topsep6\p@\@plus6\p@\relax
+\trivlist
+\item\relax
+{\itshape
+#1\@addpunct{:}}\hspace\labelsep\ignorespaces
+}{%
+\popQED\endtrivlist\@endpefalse
+}
+\makeatother
+% ===========================================================
+
 % minted
 % ===========================================================
 \usepackage{minted}

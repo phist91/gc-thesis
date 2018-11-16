@@ -39,7 +39,7 @@ Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekt
 	\State \quad \WHILE \Var{toDo} $\neq \emptyset$
 	\State \quad \quad obj $\gets$ \Method{remove}(\Var{toDo})			\Comment{Hole nächstes Objekt}
 	\State \quad \quad \FOREACH \Var{adr} $\in \Pointers(\Var{obj})$	\Comment{Hole nächste Referenz auf Objekt}
-	\State \quad \quad \quad \IF (\Var{adr} $\neq$ \Null \&\& \Method{isNotMarked}(\Var{*adr}))	
+	\State \quad \quad \quad \IF (\Var{adr} $\neq$ \Null $\wedge$ \Method{isNotMarked}(\Var{*adr}))	
 	\State \quad \quad \quad \quad \Method{setMarked}(\Var{*adr})	
 	\State \quad \quad \quad \quad \Method{add}(\Var{toDo}, \Var{*adr})
 \end{algorithmic}
@@ -92,5 +92,36 @@ Die Bereinigungsphase (engl. \textit{sweep}) beginnt unmittelbar nach der Markie
 Die Variable \Var{pos} wird mit der Speicheradresse initialisiert, an der sich das erste Objekt im Heap befindet.
 Wir gehen davon aus, dass eine Methode \Method{nextObject} zu Verfügung steht, die anhand einer übergebenen Speicheradresse die Adresse des nachfolgenden Objektes oder \Null zurückgibt, wenn dieses nicht existiert.
 Dadurch wird der Heap linear traversiert; nicht markierte Objekte werden freigegeben, während die Markierung erreichbarer Objekte zurückgesetzt wird.
+
+Wir halten zunächst fest, dass der Mark-and-Sweep-Algorithmus in seiner Gänze terminiert und korrekt ist, sofern während der Garbage Collection das laufende Programm angehalten wird:
+
+\begin{satz}
+	Der Mark-and-Sweep-Algorithmus terminiert und ist korrekt, wenn der Mutator während der Arbeit des Kollektors angehalten wird.
+\end{satz}
+
+\begin{proof}
+	Wie oben erläutert, terminiert die Markierungsphase in jedem Fall, da bei angehaltenem Mutator keine neuen Objekte erstellt werden.
+	Gleiches gilt für die Bereinigungsphase, in der alle Objekte des Heaps in endlicher Zeit besucht werden.
+	\todo[inline]{Korrektheit}
+\end{proof}
+
+Die Bedingung, dass der Mutator während des Markierens pausiert wird, ist tatsächlich notwendig, um vermeiden, dass fälschlicherweise keine erreichbaren Objekte entfernt werden, wie folgendes Beispiel zeigt (vgl. \cite[969]{dijkstra1978}):
+Betrachten wir etwa die Situation, dass zwei Basisobjekte $A$ und $B$ alternierend auf ein Objekt $C$ verweisen, das ausschließlich über $A$ oder $B$ erreichbar ist.
+Während der Kollektor aktiv ist, führe der Mutator folgenden Code aus: \todo{kleine Grafik einfügen}
+
+\begin{algorithmic}[1]
+	\State \Var{B.ref} $\gets$ \Var{\&C}
+	\State \Var{A.ref} $\gets$ \Null
+	\State \Var{A.ref} $\gets$ \Var{\&C}
+	\State \Var{B.ref} $\gets$ \Null
+\end{algorithmic}
+
+Es könnte passieren, dass der Kollektor gerade Objekt $A$ abarbeitet, unmittelbar nachdem Zeile~2 ausgeführt wurde.
+Es wird dann keine Referenz auf Objekt $C$ vorgefunden.
+Wenn der Kollektor nun Objekt $B$ betrachtet, nachdem bereits Zeile~4 abgearbeitet wurde, wird Objekt $C$ weiterhin nicht entdeckt.
+Insgesamt wird Objekt $C$ somit nicht markiert, obwohl es erreichbar ist.
+In der Folge würde $C$ irrtümlich freigegeben werden, sodass im schlimmsten Fall ein hängender Zeiger entsteht oder sogar Datenverlust verursacht wird -- der Algorithmus arbeitet also nicht korrekt.
+
+Algorithmen, die zur Vermeidung von \textit{race conditions} zwischen Kollektor und Mutator die Arbeit des letzteren unterbrechen, werden auch als \textit{Stop-the-World-Algorithmen} bezeichnet.
 
 \todo[inline]{Markierungsmöglichkeiten (Tricolor, Bitmapping); Lazy Sweeping}
