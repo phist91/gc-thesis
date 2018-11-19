@@ -9,7 +9,7 @@ Die Größe des angeforderten Speichers muss dabei nicht zur Compilezeit bekannt
 
 Für die konkrete Verwendung einer dynamischen Speicherverwaltung sind grundsätzlich zwei diametrale Ansätze denkbar:
 Zum einen kann die Verantwortung für den korrekten Umgang mit dynamisch angefordertem Speicher gänzlich der Entwicklerin übertragen werden.
-Dies ist in der Regel mit zusätzlichem Aufwand verbunden:
+Dies ist in der Regel mit zusätzlichem Aufwand verbunden (vgl. \cite[S. 1f]{wilson1992}):
 Speicheradressen müssen manuell verwaltet werden, Anweisungen zur Anforderung und Freigabe von Speicher müssen in den eigentlichen Code integriert werden und entsprechende Ausnahmefälle bei Fehlschlägen müssen ordnungsgemäß abgefangen werden.
 Neben einer komplexer werdenden Codestruktur führt dies zu weiteren Fehlerquellen:
 Die Freigabe noch benötigten Speichers führt zu so genannten \textit{hängenden Zeigern} (engl. \textit{dangling pointer}) -- Referenzen, die \textit{ins Leere zeigen} und in der Folge bestenfalls zu Programmabstürzen, schlimmstenfalls aber zu unerwartetem Verhalten und Datenverlust führen können.
@@ -18,7 +18,7 @@ Nicht freigegebener, aber nicht mehr benötigter Speicher kann wiederum zu \text
 Während die Anforderung von Speicher in der Regel unproblematisch ist, ist die Frage, wann und an welcher Stelle angeforderter Speicher wieder freigegeben werden kann, deutlich komplizierter, und fehlerhafte Verwendungen werden gegebenenfalls erst bei langfristiger Ausführung des Programms bemerkt.
 
 Zum anderen existiert zur Vermeidung eben jener Schwierigkeiten der Ansatz, dem Compiler und der Laufzeitumgebung die adäquate Freigabe nicht mehr benötigten Speichers zu überlassen.
-Zuständig hierfür ist dann ein Mechanismus, der gemeinhin als \textit{Garbage Collection} (engl. für \textit{Abfallentsorgung}) bezeichnet wird.
+Zuständig hierfür ist dann ein Mechanismus, der gemeinhin als \textbf{Garbage Collection} (engl. für \textit{Abfallentsorgung}) bezeichnet wird.
 Eine Garbage Collection führt automatisch zu bestimmten Zeitpunkten -- etwa regelmäßig oder wenn akuter Speichermangel besteht -- eine Bereinigung des Speichers durch und gibt nicht mehr benötigte Speicherbereiche frei, ohne dass der Entwickler entsprechende Routinen in sein Programm integrieren muss.
 Nichtsdestoweniger wird dieser Komfortgewinn nicht ohne Nachteile erworben:
 Wie jede Programmanweisung besitzt auch eine Garbage Collection einen gewissen Bedarf an Rechenzeit und Ressourcen, der sich negativ auf die Performance der eigentlichen Anwendung auswirken kann.
@@ -29,7 +29,62 @@ Dabei soll auch ein Augenmerk auf Performance und Ressourcenbedarf gelegt sowie 
 Im zweiten Teil der Arbeit wird der Entwurf und die Implementation einer Anwendung beschrieben, die die diskutierten Garbage-Collection-Algorithmen grafisch visualisiert und in einem vereinfachten Speichermodell simuliert.
 Anhand dieser Anwendung soll die Arbeitsweise der Algorithmen veranschaulicht werden.
 
-\section{Problemstellung und Terminologie}
-\label{sec:intro:problem}
+\section{Terminologie}
+\label{sec:intro:terminologie}
+Bevor wir genauer darauf eingehen, was unter einer Garbage Collection verstanden wird, soll zunächst die nötige Terminologie sowie ein Speichermodell eingeführt werden, das im Fortgang dieser Arbeit benutzt wird.
+Dieses Speichermodell ist bewusst so abstrakt gehalten, dass es möglichst allgemeine Betrachtungen lösgelöst von gängigen Programmiersprachen, Laufzeitumgebungen und Betriebssystemen ermöglicht, auch wenn an einigen Stellen exemplarisch Bezüge zu diesen hergestellt werden.
+Die eingeführten Begrifflichkeiten orientieren sich stark an der Terminologie aus \cite[Kap. 1]{jones-lins}.
 
-\todo[inline]{Was ist das Ziel einer GC? Wie kann man das möglichst formal ausdrücken? Grundbegriffe und Modellierung des Speichers?}
+\subsubsection*{Objekt}
+Unter einem \textbf{Objekt} verstehen wir stets eine konkrete Instanz einer definierten Datenstruktur, beispielsweise eines \code{struct} in C oder einer Java-Klasse.
+Ein Objekt besitzt eine festgelegte Anzahl von \textbf{Feldern}, die jeweils einen Wert eines festgelegten
+Datentyps (etwa ein Integer oder eine Referenz) enthalten.
+Der hier verwendete Objektbegriff ist wesentlich allgemeiner gehalten als in der Objektorientierung üblich:
+Auch einzelne Werte eines Basisdatentypen oder Arrays werden als Objekt aufgefasst, selbst wenn diese nicht Bestandteil eines im Programm definierten Datentyps sind.
+
+Wir setzen ferner voraus, dass Objekte und ihre Felder \textit{typisiert} sind.
+Das bedeutet, dass stets nachvollziehbar ist, aus welchen Feldern ein Objekt besteht und welchen Datentyp diese haben.
+Insbesondere ist unterscheidbar, ob ein Feld eines Objekts eine Referenz enthält oder nicht.
+Weiter nehmen wir an, dass jedes Objekt einen so genannten \textit{Header} besitzt.
+Dies ist ein separates Feld, das Metainformationen aufnimmt, die für den Compiler und die Laufzeitumgebung, nicht aber aus Sicht des Entwicklers, zugänglich sind.
+Diverse vorgestellte Algorithmen werden diesen Bereich nutzen, um für die Speicherverwaltung relevante Informationen zu hinterlegen.
+
+Den Zugriff auf das \code{i}-te Feld eines Objekts \code{a} notieren wir -- analog zur Syntax der Programmierspache C -- mit \code{a[i]}.
+Ebenso bezeichnen wir mit \code{\&a} die Adresse eines Objekts oder Feldes und mit \code{*p} die Dereferenzierung eines Zeigers \code{p}.
+Mit $\Pointers(\code{a})$ bezeichnen wir zudem die Menge aller Felder eines Objekts \code{a}, die eine Referenz enthalten können.
+
+\subsubsection*{Heap}
+Als \textbf{Heap} bezeichnen wir denjenigen Speicherbereich, in dem zur Laufzeit eines Programms Objekte in beliebiger Reihenfolge erzeugt und freigegeben werden können.
+Der Heap besteht aus Blöcken einer festen Größe, auf die über eine Speicheradresse zugegriffen werden kann; ein \textit{Block} ist dabei die kleinste zuweisbare Speichermenge und kann die Zustände \textit{belegt} (bzw. \textit{zugewiesen}) oder \textit{frei} annehmen.
+Sofern nichts anderes vereinbart ist, gehen wir davor aus, dass der Heap ein zusammenhängender linearer Speicherbereich ist\footnote{Tatsächlich ist dies eine starke Vereinfachung. In der Praxis ist der Bereich des physikalischen Speichers, der von einer Anwendung verwendet wird, häufig fragmentiert und inhomogen. Die Speicherverwaltung eines Betriebssystems bildet diesen Bereich auf einen \textit{virtuellen Speicher} ab, der der Anwendung zu Verfügung gestellt wird und aus ihrer Sicht linear zusammenhängend ist. Für einen Überblick hierzu siehe etwa \cite[Kap. 3.3]{tanenbaum}.}.
+
+\subsubsection*{Allokator, Mutator und Kollektor}
+Aufgabe des \textbf{Allokators}, der zur Laufzeitumgebung eines Programms gehärt, ist zum einen die Zuweisung von Heapspeicher bei dynmaischer Instanziierung eines neuen Objektes und zum anderen die Freigabe von Objekten.
+Der Allokator führt somit Buch über die belegten und freien Blöcke des Heaps.
+Die genaue Realisierung dieser Mechanismen werden in dieser Arbeit weitestgehend außen vor gelassen, jedoch setzen wir in gewissen Situationen das Vorhandensein bestimmter Funktionalitäten voraus.
+Beispielsweise verlangen wir, dass eine Prozedur \Method{new} zu Verfügung steht, die bei der Erzeugung eines neuen Objekts Speicher reserviert und die entsprechende Speicheradresse zurückgibt.
+Die Funktionsweise von \Method{new} kann dabei vom verwendeten Garbage-Collection-Algorithmus abhängen (siehe Algorithmus~\ref{algo:new}).
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+	\State \MethodHead{new}():
+	\State \quad \Var{adr} $\gets$ \Method{allocate}()		\Comment{Versuche Zuweisung von Speicher}
+	\State \quad \IF \Var{adr} $=$ \Null		\Comment{Nicht genügend freier Speicher}
+	\State \quad \quad \Method{collectGarbage}()	\Comment{Aufruf der Garbage Collection}
+	\State \quad \quad \Var{adr} $\gets$ \Method{allocate}()	\Comment{Neuer Versuch}
+	\State \quad \quad \IF \Var{adr} $=$ \Null
+	\State \quad \quad \quad \Method{error}(\Var{"Nicht genügend Speicher"})
+	\State \quad \Return \Var{adr}
+\end{algorithmic}
+\caption[Methode \Method{new} zur Erzeugung eines neuen Objekts]{Methode \Method{new} zur Erzeugung eines neuen Objekts. Die Garbage Collection wird hier bei Bedarf ausgelöst, wenn nicht genügend freier Speicher verfügbar ist.}
+\label{algo:new}
+\end{algorithm}
+
+Nach Dijkstra et al. besteht ein Programm zudem aus zwei funktional unterscheidbaren Bestandteilen \cite[S. 967]{dijkstra1978}:
+Der \textbf{Mutator} ist derjenige Thread (bzw. eine Menge von Threads), die den eigentlichen Programmcode ausführen.
+Für uns sind dabei vor allem Programmanweisungen von Bedeutung, die in Feldern von Objekten vorhandene Referenzen manipulieren und somit ursächlich für die Entstehung von nicht mehr benötigten Objekten sind.
+Im Gegensatz dazu ist es die Aufgabe des \textbf{Kollektors}, die nicht mehr benötigten Objekte zu identifizieren und ihre Freigabe zu veranlassen.
+Der Kollektor ist demnach derjenige Thread (bzw. eine Menge von Threads), die einen Garbage-Collection-Algorithmus ausführen.
+
+\section{Problemstellung}
+\todo[inline]{Was ist das Ziel einer GC? Wie kann man das möglichst formal ausdrücken? Lebendigkeit, Korrektheit, Erreichbarkeit}
