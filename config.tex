@@ -93,6 +93,7 @@
 }
 
 \usepackage{mathtools}
+\usepackage{amssymb}
 \usepackage[textsize=small,color=Red1!80!OrangeRed1!80]{todonotes}
 
 % TikZ
@@ -110,7 +111,7 @@
 	\usepackage{multicol}
 	\usepackage{multirow}
 	%\setlist{itemsep=0pt}
-	%\setlist[enumerate]{font=\sffamily\bfseries}
+	\setlist[enumerate]{font=\sffamily\bfseries}
 	%\setlist[itemize]{label=$\triangleright$,font=\bfseries}
 	\usepackage{tabularx}
 % ===========================================================
@@ -130,7 +131,7 @@
 
 \usepackage{amsthm}
 \newtheoremstyle{satzstyle}%
-	{0pt}% space above
+	{\parskip}% space above
 	{0pt}% space below
 	{\normalfont}% body font
 	{}% indent amount
@@ -151,6 +152,7 @@
 
 \theoremstyle{satzstyle}
 \newtheorem{satz}{Satz}[chapter]
+\newtheorem{defn}{Definition}[chapter]
 
 %\theoremstyle{beweisstyle}
 
@@ -215,5 +217,7 @@
 
 \newcommand{\Pointers}{\textsc{Pointers}\xspace}
 \newcommand{\Roots}{\textsc{Roots}\xspace}
+\newcommand{\Reach}{\ensuremath{\mathcal{R}}}
 % ===========================================================
 \input{MathCmds.tex}
+\raggedbottom
