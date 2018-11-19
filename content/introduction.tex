@@ -22,7 +22,7 @@ Zuständig hierfür ist dann ein Mechanismus, der gemeinhin als \textbf{Garbage 
 Eine Garbage Collection führt automatisch zu bestimmten Zeitpunkten -- etwa regelmäßig oder wenn akuter Speichermangel besteht -- eine Bereinigung des Speichers durch und gibt nicht mehr benötigte Speicherbereiche frei, ohne dass der Entwickler entsprechende Routinen in sein Programm integrieren muss.
 Nichtsdestoweniger wird dieser Komfortgewinn nicht ohne Nachteile erworben:
 Wie jede Programmanweisung besitzt auch eine Garbage Collection einen gewissen Bedarf an Rechenzeit und Ressourcen, der sich negativ auf die Performance der eigentlichen Anwendung auswirken kann.
-Vor allem in Anwendungen, die einen hohen Durchsatz erreichen wollen oder in denen Deadlines um jeden Preis eingehalten werden müssen, spielt die Auswahl eines geeigneten Garbage-Collection-Algorithmus eine nicht unerhebliche Rolle.
+Vor allem in Anwendungen, die einen hohen Durchsatz erreichen wollen oder in denen Deadlines um jeden Preis eingehalten werden müssen, spielt die Auswahl eines geeigneten Garbage-Collection-Algorithmus eine signifikante Rolle.
 
 In dieser Arbeit werden wir gängige Ansätze zur Garbage Collection vorstellen und miteinander vergleichen.
 Dabei soll auch ein Augenmerk auf Performance und Ressourcenbedarf gelegt sowie die Eignung in verschiedenen Anwendungsfällen beurteilt werden.
@@ -40,7 +40,7 @@ Unter einem \textbf{Objekt} verstehen wir stets eine konkrete Instanz einer defi
 Ein Objekt besitzt eine festgelegte Anzahl von \textbf{Feldern}, die jeweils einen Wert eines festgelegten
 Datentyps (etwa ein Integer oder eine Referenz) enthalten.
 Der hier verwendete Objektbegriff ist wesentlich allgemeiner gehalten als in der Objektorientierung üblich:
-Auch einzelne Werte eines Basisdatentypen oder Arrays werden als Objekt aufgefasst, selbst wenn diese nicht Bestandteil eines im Programm definierten Datentyps sind.
+Auch einzelne Werte eines Basisdatentyps oder Arrays werden als Objekt aufgefasst, selbst wenn diese nicht Bestandteil eines im Programm definierten Datentyps sind.
 
 Wir setzen ferner voraus, dass Objekte und ihre Felder \textit{typisiert} sind.
 Das bedeutet, dass stets nachvollziehbar ist, aus welchen Feldern ein Objekt besteht und welchen Datentyp diese haben.
@@ -56,12 +56,12 @@ Mit $\Pointers(\code{a})$ bezeichnen wir zudem die Menge aller Felder eines Obje
 \subsubsection*{Heap}
 Als \textbf{Heap} bezeichnen wir denjenigen Speicherbereich, in dem zur Laufzeit eines Programms Objekte in beliebiger Reihenfolge erzeugt und freigegeben werden können.
 Der Heap besteht aus Blöcken einer festen Größe, auf die über eine Speicheradresse zugegriffen werden kann; ein \textit{Block} ist dabei die kleinste zuweisbare Speichermenge und kann die Zustände \textit{belegt} (bzw. \textit{zugewiesen}) oder \textit{frei} annehmen.
-Sofern nichts anderes vereinbart ist, gehen wir davor aus, dass der Heap ein zusammenhängender linearer Speicherbereich ist\footnote{Tatsächlich ist dies eine starke Vereinfachung. In der Praxis ist der Bereich des physikalischen Speichers, der von einer Anwendung verwendet wird, häufig fragmentiert und inhomogen. Die Speicherverwaltung eines Betriebssystems bildet diesen Bereich auf einen \textit{virtuellen Speicher} ab, der der Anwendung zu Verfügung gestellt wird und aus ihrer Sicht linear zusammenhängend ist. Für einen Überblick hierzu siehe etwa \cite[Kap. 3.3]{tanenbaum}.}.
+Sofern nichts anderes vereinbart ist, gehen wir davon aus, dass der Heap ein zusammenhängender linearer Speicherbereich ist.\footnote{Tatsächlich ist dies eine starke Vereinfachung. In der Praxis ist der Bereich des physikalischen Speichers, der von einer Anwendung verwendet wird, häufig fragmentiert und inhomogen. Die Speicherverwaltung eines Betriebssystems bildet diesen Bereich auf einen \textit{virtuellen Speicher} ab, der der Anwendung zu Verfügung gestellt wird und aus ihrer Sicht linear zusammenhängend ist. Für einen Überblick hierzu siehe etwa \cite[Kap. 3.3]{tanenbaum}.}
 
 \todo[inline]{Grafik zu Heap und Objekten einfügen}
 
 \subsubsection*{Allokator, Mutator und Kollektor}
-Aufgabe des \textbf{Allokators}, der zur Laufzeitumgebung eines Programms gehärt, ist zum einen die Zuweisung von Heapspeicher bei dynmaischer Instanziierung eines neuen Objektes und zum anderen die Freigabe von Objekten.
+Aufgabe des \textbf{Allokators}, der zur Laufzeitumgebung eines Programms gehört, ist zum einen die Zuweisung von Heapspeicher bei dynmaischer Instanziierung eines neuen Objektes und zum anderen die Freigabe von Objekten.
 Der Allokator führt somit Buch über die belegten und freien Blöcke des Heaps.
 Die genaue Realisierung dieser Mechanismen werden in dieser Arbeit weitestgehend außen vor gelassen, jedoch setzen wir in gewissen Situationen das Vorhandensein bestimmter Funktionalitäten voraus.
 Beispielsweise verlangen wir, dass eine Prozedur \Method{new} zu Verfügung steht, die bei der Erzeugung eines neuen Objekts Speicher reserviert und die entsprechende Speicheradresse zurückgibt.
@@ -99,7 +99,7 @@ Anschließend folgt eine Spezifikation von Eigenschaften, die wir von einem Garb
 
 An dieser Stelle gehen wir darauf ein, was wir -- im Gegensatz zu \textit{lebendigen} Objekten -- unter \textit{nicht mehr benötigten Objekten} verstehen:
 Sobald der Mutator auf eine Objektinstanz im weiteren Programmverlauf nicht mehr zugreift -- weder lesend, noch schreibend -- ist ein Überschreiben des Objekts unproblematisch.
-Entsprechend kann eine Garbage Collection die Freigabe des entsprechenden Speicherbereichs veranlassen, sobald eine Stelle im Programmcode erreicht wurde, ab der der Bezeichner eines Objekts (bzw. eine Referenz auf dieses Objekt) nicht mehr verwendet wird -- auch, wenn theoretisch noch darauf zugegriffen werden könnte.
+Demzufolge darf eine Garbage Collection die Freigabe des entsprechenden Speicherbereichs veranlassen, sobald eine Stelle im Programmcode erreicht wurde, ab der der Bezeichner eines Objekts (bzw. eine Referenz auf dieses Objekt) nicht mehr verwendet wird -- auch, wenn theoretisch noch darauf zugegriffen werden könnte.
 Allerdings ist die Frage, ob dies der Fall ist oder nicht, nicht beantwortbar:
 
 \begin{satz}[Unentscheidbarkeit von Lebendigkeit]
@@ -190,6 +190,6 @@ Wir können nun ein Korrektheitskriterium für Garbage-Collection-Algorithmen fo
 
 Gemäß Definition~\ref{def:erreichbar} ist es folglich hinreichend zu zeigen, dass nur nicht erreichbare Objekte freigegeben werden, um Korrektheit nachzuweisen.
 
-An dieser Stelle mag man sich fragen, warum wir nicht voraussetzen, dass die Ausführung eines Garbage-Collection-Algorithmus nicht die Freigabe \textit{sämtlicher} nicht erreichbaren Objekte anfordert.
+An dieser Stelle mag man sich fragen, warum wir nicht voraussetzen, dass die Ausführung eines Garbage-Collection-Algorithmus die Freigabe \textit{sämtlicher} nicht erreichbaren Objekte anfordert.
 Tatsächlich werden wir sehen, dass es aus Performancegründen vorteilhaft sein kann, nur einen Teil des nicht mehr benötigten zugewiesenen Speichers zu bereinigen, um längere Wartezeiten zu vermeiden.
 Ein solches Kriterium wäre daher zu restriktiv.
