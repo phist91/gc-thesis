@@ -93,18 +93,22 @@ Der Kollektor ist demnach derjenige Thread (bzw. eine Menge von Threads), die ei
 Nachdem die nötigen Grundbegriffe eingeführt wurden, können wir nun definieren, was wir unter einer Garbage Collection verstehen.
 Anschließend folgt eine Spezifikation von Eigenschaften, die wir von einem Garbage-Collection-Algorithmus fordern.
 
+\begin{mybox}
 \begin{defn}[Garbage Collection]
 	Eine Garbage Collection ist ein Algorithmus zur automatischen Wiederverwendung bereits genutzten Heapspeichers durch Identifikation und Freigabe von Objekten, die im weiteren Programmverlauf nicht mehr benötigt werden.
 \end{defn}
+\end{mybox}
 
 An dieser Stelle gehen wir darauf ein, was wir -- im Gegensatz zu \textit{lebendigen} Objekten -- unter \textit{nicht mehr benötigten Objekten} verstehen:
 Sobald der Mutator auf eine Objektinstanz im weiteren Programmverlauf nicht mehr zugreift -- weder lesend, noch schreibend -- ist ein Überschreiben des Objekts unproblematisch.
 Demzufolge darf eine Garbage Collection die Freigabe des entsprechenden Speicherbereichs veranlassen, sobald eine Stelle im Programmcode erreicht wurde, ab der der Bezeichner eines Objekts (bzw. eine Referenz auf dieses Objekt) nicht mehr verwendet wird -- auch, wenn theoretisch noch darauf zugegriffen werden könnte.
 Allerdings ist die Frage, ob dies der Fall ist oder nicht, nicht beantwortbar:
 
+\begin{mybox}
 \begin{satz}[Unentscheidbarkeit von Lebendigkeit]
 	Es existiert kein Algorithmus, der die Lebendigkeit von Objekten entscheidet.
 \end{satz}
+\end{mybox}
 
 \begin{proof}
 	Dies ist ein Korollar aus der Unentscheidbarkeit des Halteproblems. \todo{evtl. noch ausführen?}
@@ -118,6 +122,7 @@ Alle weiteren Objekte, die zur Laufzeit dynamisch erzeugt werden, gelten als err
 Einfacher ausgedrückt: Ein Objekt ist erreichbar, wenn der Mutator die Möglichkeit hat, über Referenzen auf das Objekt zugreifen zu können.
 Formal definieren wir diese Eigenschaft wie folgt:
 
+\begin{mybox}
 \begin{defn}[Erreichbarkeit]
 	\label{def:erreichbar}
 	Die Menge $\Reach$ der erreichbaren Objekte ist durch endlich häufige Anwendung der folgenden beiden Schritte induktiv definiert:
@@ -126,6 +131,7 @@ Formal definieren wir diese Eigenschaft wie folgt:
 		\item Ist $\code{a} \in \Reach$, $\code{b}$ ein weiteres Objekt und existiert ein $i \in \NN$ mit $\code{*a[i]} = \code{b}$, so folgt $\code{b} \in \Reach$.
 	\end{enumerate}
 \end{defn}
+\end{mybox}
 
 Diese Definition garantiert zwar nicht, dass jedes erreichbare Objekt auch lebendig ist.
 Davon ausgehend, dass unerreichbare Objekte auch nicht \textit{wiedergefunden} werden können, können wir jedoch mit Sicherheit sagen, dass unerreichbare Objekte nicht mehr verwendet werden und gefahrlos durch den Kollektor freigegeben werden dürfen.
@@ -136,6 +142,7 @@ Besitzt ein Objekt \code{a} in mindestens einem seiner Felder eine Referenz auf 
 Ein Objekt ist somit nicht erreichbar, wenn es im Objektgraphen keinen Pfad zu ihm gibt, der in einem Basisobjekt startet.
 Objektgraphen werden uns im Rahmen dieser Arbeit bei der Veranschaulichng der vorgestellten Algorithmen dienlich sein.
 
+\begin{mybox}
 \begin{defn}[Objektgraph]
 	Ein Objektgraph $G = (V,E)$ besteht aus einer Menge von Knoten $V$ und einer Menge von gerichteten Kanten $E \subseteq V \times V$, die wie folgt definiert sind:
 	\begin{enumerate}[(1)]
@@ -143,50 +150,21 @@ Objektgraphen werden uns im Rahmen dieser Arbeit bei der Veranschaulichng der vo
 		\item Sind $\code{a}, \code{b} \in V$ und existiert ein $i \in \NN$ mit $\code{*a[i]} = \code{b}$, so ist $(\code{a},\code{b}) \in E$.
 	\end{enumerate}
 \end{defn}
+\end{mybox}
 
 \begin{figure}[h]
 	\centering
-	\begin{tikzpicture}[->, auto, node distance= 1.5cm and 3cm, on grid, semithick,%
-		state/.style={circle, draw, font=\ttfamily, minimum width= 1cm}]
-		%\draw (0,0) grid (10,-5);
-		\node[state] (A) {A};
-		\node[state] (B) [below=of A] {B};
-		\node[state] (C) [below=of B] {C};
-		\node[state] (D) [right=of A] {D};
-		\node[state] (G) [below right=of D] {G};
-		\node[state] (I) [above right=of G] {I};
-		\node[state] (E) [right=of B] {E};
-		\node[state] (C) [below=of B] {C};
-		\node[state] (F) [below=of E] {F};
-		\node[state] (L) [right=of F] {L};
-		\node[state] (M) [right=of L] {M};
-		\node[state] (H) [above=of M] {H};
-		
-		\path (A) edge (D);
-		\path (D) edge [loop above] (D);
-		\path (G) edge [bend left = 20] (D);
-		\path (D) edge [bend left = 20] (G);
-		\path (I) edge (G);
-		\path (A) edge (E);
-		\path (B) edge (E);
-		\path (C) edge (F);
-		\path (F) edge (B);
-		\path (L) edge (F);
-		\path (L) edge [bend left=20] (M);
-		\path (M) edge [bend left=20] (L);
-		\path (H) edge [loop left] (H);
-		
-		\draw [very thick,dashed] (-1,0.8) rectangle (1,-3.8);
-		\draw [draw=none] (0,0.8) node[above]{\Roots};
-	\end{tikzpicture}
+	\includegraphics[keepaspectratio]{img/tikz/ch1-objgraph.pdf}
 	\caption[Beispiel für einen Objektgraphen]{Beispiel für einen Objektgraphen. Die Objekte \code{A}, \code{B} und \code{C} sind Basisobjekte. Die Objekte \code{H}, \code{I}, \code{L} und \code{M} sind in dieser Kostellation nicht erreichbar.}
 \end{figure}
 
 Wir können nun ein Korrektheitskriterium für Garbage-Collection-Algorithmen formulieren:
 
+\begin{mybox}
 \begin{defn}[Korrektheit für Garbage-Collection-Algorithmen]
 	Ein Garbage-Collection-Algorithmus ist \textit{korrekt}, wenn er keine lebendigen Objekte freigibt.
 \end{defn}
+\end{mybox}
 
 Gemäß Definition~\ref{def:erreichbar} ist es folglich hinreichend zu zeigen, dass nur nicht erreichbare Objekte freigegeben werden, um Korrektheit nachzuweisen.
 

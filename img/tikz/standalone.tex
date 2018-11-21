@@ -1,0 +1,62 @@
+%!TEX TS-program = pdflatex
+% Author: Phil Steinhorst, p.st@wwu.de
+
+\documentclass[11pt]{standalone}
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+
+
+\usepackage[usenames, table, x11names, final]{xcolor}
+\definecolor{ctcolormain}{cmyk}{1, .50, .10, .01}%
+\definecolor{ctcoloraccessory}{cmyk}{.18, .98, .18, 0}%
+\definecolor{ctcolorblack}{gray}{0}
+\definecolor{ctcolorgray}{gray}{.5}
+\definecolor{ctcolorgraylight}{gray}{.8}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}	% font set: Latin Modern
+\usepackage{charter}	% font set: Charter
+
+\usepackage{microtype}			% typographic tuning
+\usepackage{setspace}			% for line spacing, e.g. \onehalfspacing
+\usepackage[]{graphicx}			% graphics import features
+\usepackage[shortlabels]{enumitem}			% for simple list modifications
+\usepackage{textcomp}			% different symbols
+\usepackage{hyperref} 			% interactive link inside the document
+
+\usepackage[					% advanced quotes
+	strict=true,					% 	- warning are errors now
+	style=german					% 	- german quotes
+]{csquotes}
+
+\setstretch{1.2}					% value for line spacing, use \setstretch{} or \singlespacing or \onehalfspacing or \doublespacing
+\setlength{\parindent}{0em}
+
+\usepackage{nimbusmononarrow}
+\usepackage{mathtools}
+\usepackage{amssymb}
+\usepackage{xspace}
+
+% TikZ
+% ===========================================================
+	\usepackage{tikz}
+	\usepackage{tikz-cd}					% kommutative Diagramme
+	\usetikzlibrary{arrows.meta}			% mehr Pfeile!
+	\usetikzlibrary{shadows}
+	\usetikzlibrary{calc}
+	\usetikzlibrary{positioning}
+	\tikzset{>=Latex}						% Standard-Pfeilspitze
+% ===========================================================
+
+\usepackage{pgfplots}
+\usepackage{wasysym}
+\usepackage{latexsym} 						% zusätzliche Symbole
+\usepackage{stmaryrd} 						% für Blitz
+\usepackage{nicefrac} 						% schräge Brüche
+\usepackage{cancel} 						% Befehle zum Durchstreichen
+\usepackage{extarrows}						% mehr Pfeile
+\usepackage{mathdots}
+\usepackage{stackrel}
+\usepackage{marvosym}
+
+\input{../../MathCmds.tex}

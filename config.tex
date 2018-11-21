@@ -111,7 +111,7 @@
 % ===========================================================
 	\usepackage{multicol}
 	\usepackage{multirow}
-	%\setlist{itemsep=0pt}
+	\setlist{itemsep=-0.7\baselineskip,topsep=-0.5\baselineskip}
 	\setlist[enumerate]{font=\sffamily\bfseries}
 	%\setlist[itemize]{label=$\triangleright$,font=\bfseries}
 	\usepackage{tabularx}
@@ -130,6 +130,14 @@
 %	spaceabove=15pt,spacebelow=10pt]%
 %{mainstyle}
 
+\usepackage[tikz]{mdframed}
+\newmdenv[%
+	backgroundcolor = gray!20,
+	linewidth=0pt,
+	skipabove = 0.5cm,
+	skipbelow = -0.2cm
+	]{mybox}
+
 \usepackage{amsthm}
 \newtheoremstyle{satzstyle}%
 	{\parskip}% space above
@@ -142,7 +150,7 @@
 	{}% theorem head spec
 	
 \newtheoremstyle{beweisstyle}%
-	{0pt}% space above
+	{0cm}% space above
 	{0pt}% space below
 	{\normalfont}% body font
 	{}% indent amount
@@ -202,23 +210,6 @@
 \floatname{algorithm}{Algorithmus}
 \usepackage{algpseudocode}
 
-\newcommand{\code}[1]{\texttt{#1}}
-
-\newcommand{\Atomic}{\textbf{atomic}\xspace}
-\newcommand{\Deref}{\texttt{*}}
-\newcommand{\ELSE}{\textbf{else}\xspace}
-\newcommand{\FOR}{\textbf{for}\xspace}
-\newcommand{\FOREACH}{\textbf{for each}\xspace}
-\newcommand{\IF}{\textbf{if}\xspace}
-\newcommand{\Method}[1]{\textit{#1}}
-\newcommand{\MethodHead}[1]{\textbf{\textit{#1}}}
-\newcommand{\Null}{\texttt{null}\xspace}
-\newcommand{\Var}[1]{\texttt{#1}}
-\newcommand{\WHILE}{\textbf{while}\xspace}
-
-\newcommand{\Pointers}{\textsc{Pointers}\xspace}
-\newcommand{\Roots}{\textsc{Roots}\xspace}
-\newcommand{\Reach}{\ensuremath{\mathcal{R}}}
 % ===========================================================
 \input{MathCmds.tex}
 \raggedbottom

@@ -95,9 +95,11 @@ Dadurch wird der Heap linear traversiert; nicht markierte Objekte werden freigeg
 
 Wir halten zunächst fest, dass der Mark-and-Sweep-Algorithmus in seiner Gänze terminiert und korrekt ist, sofern während der Garbage Collection das laufende Programm angehalten wird:
 
+\begin{mybox}
 \begin{satz}
 	Der Mark-and-Sweep-Algorithmus terminiert und ist korrekt, wenn der Mutator während der Arbeit des Kollektors angehalten wird.
 \end{satz}
+\end{mybox}
 
 \begin{proof}
 	Wie oben erläutert, terminiert die Markierungsphase in jedem Fall, da bei angehaltenem Mutator keine neuen Objekte erstellt werden.
