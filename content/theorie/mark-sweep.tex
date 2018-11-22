@@ -37,7 +37,7 @@ Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekt
 	\State
 	\State \MethodHead{mark}():
 	\State \quad \WHILE \Var{toDo} $\neq \emptyset$
-	\State \quad \quad obj $\gets$ \Method{remove}(\Var{toDo})			\Comment{Hole nächstes Objekt}
+	\State \quad \quad \Var{obj} $\gets$ \Method{remove}(\Var{toDo})			\Comment{Hole nächstes Objekt}
 	\State \quad \quad \FOREACH \Var{adr} $\in \Pointers(\Var{obj})$	\Comment{Hole nächste Referenz auf Objekt}
 	\State \quad \quad \quad \IF (\Var{adr} $\neq$ \Null $\wedge$ \Method{isNotMarked}(\Var{*adr}))	
 	\State \quad \quad \quad \quad \Method{setMarked}(\Var{*adr})	
@@ -104,19 +104,42 @@ Wir halten zunächst fest, dass der Mark-and-Sweep-Algorithmus in seiner Gänze 
 \begin{proof}
 	Wie oben erläutert, terminiert die Markierungsphase in jedem Fall, da bei angehaltenem Mutator keine neuen Objekte erstellt werden.
 	Gleiches gilt für die Bereinigungsphase, in der alle Objekte des Heaps in endlicher Zeit besucht werden.
-	\todo[inline]{Korrektheit}
+	Somit terminiert der gesamte Algorithmus.
+	
+	Weiter werden lediglich nicht markierte Objekte freigegeben (Zeile 4--6 in Algorithmus~\ref{algo:naive-sweep}).
+	Bleibt ein Objekt \code{obj} unmarkiert, so ist \code{obj} kein Basisobjekt, da \Method{markStart} alle Basisobjekte markiert.
+	Somit wird kein Basisobjekt freigegeben.
+	Wir zeigen, dass es nach der Markierungsphase zudem keine zwei Objekte $\Var{a}$, $\Var{b}$ mit $\Var{a} \rightarrow \Var{b}$ gibt, sodass $\Var{a}$ markiert und $\Var{b}$ unmarkiert ist:
+	Da $\Var{a}$ markiert ist, wurde $\Var{a}$ auch der Menge $\Var{toDo}$ hinzugefügt (Zeile 9f bzw. 18f in Algorithmus~\ref{algo:naive-mark}).
+	Entsprechend gab es eine Iteration der \WHILE-Schleife mit $\Var{obj} = \Var{a}$.
+	Gilt nun \Var{a} $\rightarrow$ \Var{b}, so ist $\Var{\&b} \in \Pointers(\Var{a})$.
+	Folglich wird in einer Iteration der \FOREACH-Schleife mit \Var{adr} $=$ \Var{\&b} auch \Var{*(\&b)} $=$ \Var{b} markiert, falls \Var{b} nicht schon zuvor markiert wurde.
+	Es existiert somit keine Referenz von einem erreichbaren auf ein unmarkiertes Objekt, weswegen keine erreichbaren Objekte freigegeben werden.
 \end{proof}
 
 Die Bedingung, dass der Mutator während des Markierens pausiert wird, ist tatsächlich notwendig, um vermeiden, dass fälschlicherweise keine erreichbaren Objekte entfernt werden, wie folgendes Beispiel zeigt (vgl. \cite[969]{dijkstra1978}):
-Betrachten wir etwa die Situation, dass zwei Basisobjekte $A$ und $B$ alternierend auf ein Objekt $C$ verweisen, das ausschließlich über $A$ oder $B$ erreichbar ist.
-Während der Kollektor aktiv ist, führe der Mutator folgenden Code aus: \todo{kleine Grafik einfügen}
+Betrachten wir etwa die Situation, dass zwei Basisobjekte $\Var{a}$ und $\Var{b}$ alternierend auf ein Objekt $\Var{c}$ verweisen, das ausschließlich über $\Var{a}$ oder $\Var{b}$ erreichbar ist.
+Während der Kollektor aktiv ist, führe der Mutator folgenden Code aus:
 
-\begin{algorithmic}[1]
-	\State \Var{B.ref} $\gets$ \Var{\&C}
-	\State \Var{A.ref} $\gets$ \Null
-	\State \Var{A.ref} $\gets$ \Var{\&C}
-	\State \Var{B.ref} $\gets$ \Null
-\end{algorithmic}
+\begin{center}
+\begin{minipage}{0.3\textwidth}
+	\centering
+	\begin{algorithmic}[1]
+		\State \Var{b.ref} $\gets$ \Var{\&c}
+		\State \Var{a.ref} $\gets$ \Null
+		\State \Var{a.ref} $\gets$ \Var{\&c}
+		\State \Var{b.ref} $\gets$ \Null
+	\end{algorithmic}
+\end{minipage}~
+\begin{minipage}{0.3\textwidth}
+	\centering
+	\includegraphics[keepaspectratio]{img/tikz/ch2-concurrent1.pdf}
+\end{minipage}~
+\begin{minipage}{0.3\textwidth}
+	\centering
+	\includegraphics[keepaspectratio]{img/tikz/ch2-concurrent2.pdf}
+\end{minipage}
+\end{center}
 
 Es könnte passieren, dass der Kollektor gerade Objekt $A$ abarbeitet, unmittelbar nachdem Zeile~2 ausgeführt wurde.
 Es wird dann keine Referenz auf Objekt $C$ vorgefunden.
