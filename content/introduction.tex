@@ -111,7 +111,10 @@ Allerdings ist die Frage, ob dies der Fall ist oder nicht, nicht beantwortbar:
 \end{mybox}
 
 \begin{proof}
-	Dies ist ein Korollar aus der Unentscheidbarkeit des Halteproblems. \todo{evtl. noch ausführen?}
+	Dies ist ein Korollar aus der Unentscheidbarkeit des Halteproblems:
+	Angenommen, es gäbe einen Algorithmus, der für ein beliebiges Programm entscheidet, ob Objekte zu einem bestimmten Zeitpunkt lebendig sind.
+	Dieser müsste insbesondere entscheiden, dass der Teil eines Programms, in dem ein Objekt lebendig ist, terminiert.
+	Ein solcher Algorithmus existiert jedoch nicht (vgl. \cite[Kap. 4.2]{sipser}).
 \end{proof}
 
 Aus diesem Grund betrachten wir eine schwächere Eigenschaft von Objekten: die Erreichbarkeit über Referenzen.
