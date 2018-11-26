@@ -30,7 +30,7 @@ Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekt
 	\State \MethodHead{markStart}():
 	\State \quad \Var{toDo} $\gets$ $\emptyset$				\Comment{Noch abzuarbeitende Objekte}
 	\State \quad \FOREACH \Var{obj} $\in \Roots$		\Comment{Beginne mit Basisobjekten}
-	\State \quad \quad \IF (\Method{isNotMarked}(\Var{obj}))
+	\State \quad \quad \IF \Method{isNotMarked}(\Var{obj})
 	\State \quad \quad \quad \Method{setMarked}(\Var{obj})	\Comment{Objekt als erreichbar markieren}
 	\State \quad \quad \quad \Method{add}(\Var{toDo}, \Var{obj})	
 	\State \quad \quad \quad \Method{mark}()			\Comment{Abarbeitung starten}
@@ -97,6 +97,7 @@ Wir halten zunächst fest, dass der Mark-and-Sweep-Algorithmus in seiner Gänze 
 
 \begin{mybox}
 \begin{satz}
+	\label{satz:mark-sweep-correctness}
 	Der Mark-and-Sweep-Algorithmus terminiert und ist korrekt, wenn der Mutator während der Arbeit des Kollektors angehalten wird.
 \end{satz}
 \end{mybox}
@@ -117,18 +118,18 @@ Wir halten zunächst fest, dass der Mark-and-Sweep-Algorithmus in seiner Gänze 
 	Es existiert somit keine Referenz von einem erreichbaren auf ein unmarkiertes Objekt, weswegen keine erreichbaren Objekte freigegeben werden.
 \end{proof}
 
-Die Bedingung, dass der Mutator während des Markierens pausiert wird, ist tatsächlich notwendig, um vermeiden, dass fälschlicherweise keine erreichbaren Objekte entfernt werden, wie folgendes Beispiel zeigt (vgl. \cite[969]{dijkstra1978}):
-Betrachten wir etwa die Situation, dass zwei Basisobjekte $\Var{a}$ und $\Var{b}$ alternierend auf ein Objekt $\Var{c}$ verweisen, das ausschließlich über $\Var{a}$ oder $\Var{b}$ erreichbar ist.
+Die Bedingung, dass der Mutator während des Markierens pausiert wird, ist tatsächlich notwendig, um zu vermeiden, dass fälschlicherweise keine erreichbaren Objekte entfernt werden, wie folgendes Beispiel zeigt (vgl. \cite[969]{dijkstra1978}):
+Betrachten wir etwa die Situation, dass zwei Basisobjekte $\Var{A}$ und $\Var{B}$ alternierend auf ein Objekt $\Var{C}$ verweisen, das ausschließlich über $\Var{A}$ oder $\Var{B}$ erreichbar ist.
 Während der Kollektor aktiv ist, führe der Mutator folgenden Code aus:
 
 \begin{center}
 \begin{minipage}{0.3\textwidth}
 	\centering
 	\begin{algorithmic}[1]
-		\State \Var{b.ref} $\gets$ \Var{\&c}
-		\State \Var{a.ref} $\gets$ \Null
-		\State \Var{a.ref} $\gets$ \Var{\&c}
-		\State \Var{b.ref} $\gets$ \Null
+		\State \Var{B.ref} $\gets$ \Var{\&C}
+		\State \Var{A.ref} $\gets$ \Null
+		\State \Var{A.ref} $\gets$ \Var{\&C}
+		\State \Var{B.ref} $\gets$ \Null
 	\end{algorithmic}
 \end{minipage}~
 \begin{minipage}{0.3\textwidth}
@@ -141,12 +142,123 @@ Während der Kollektor aktiv ist, führe der Mutator folgenden Code aus:
 \end{minipage}
 \end{center}
 
-Es könnte passieren, dass der Kollektor gerade Objekt $A$ abarbeitet, unmittelbar nachdem Zeile~2 ausgeführt wurde.
-Es wird dann keine Referenz auf Objekt $C$ vorgefunden.
-Wenn der Kollektor nun Objekt $B$ betrachtet, nachdem bereits Zeile~4 abgearbeitet wurde, wird Objekt $C$ weiterhin nicht entdeckt.
-Insgesamt wird Objekt $C$ somit nicht markiert, obwohl es erreichbar ist.
-In der Folge würde $C$ irrtümlich freigegeben werden, sodass im schlimmsten Fall ein hängender Zeiger entsteht oder sogar Datenverlust verursacht wird -- der Algorithmus arbeitet also nicht korrekt.
+Es könnte passieren, dass der Kollektor gerade Objekt $\Var{A}$ abarbeitet, unmittelbar nachdem Zeile~2 ausgeführt wurde.
+Es wird dann keine Referenz auf Objekt $\Var{C}$ vorgefunden.
+Wenn der Kollektor nun Objekt $\Var{B}$ betrachtet, nachdem bereits Zeile~4 abgearbeitet wurde, wird Objekt $\Var{C}$ weiterhin nicht entdeckt.
+Insgesamt wird Objekt $\Var{C}$ somit nicht markiert, obwohl es erreichbar ist.
+In der Folge würde $\Var{C}$ irrtümlich freigegeben werden, sodass im schlimmsten Fall ein hängender Zeiger entsteht oder sogar Datenverlust verursacht wird -- der Algorithmus arbeitet also nicht korrekt.
 
 Algorithmen, die zur Vermeidung von \textit{race conditions} zwischen Kollektor und Mutator die Arbeit des letzteren unterbrechen, werden auch als \textit{Stop-the-World-Algorithmen} bezeichnet.
+
+\section{Markierungsmöglichkeiten}
+\label{sec:marking-methods}
+Da das Anhalten des Mutators während eines gesamten Garbage-Collection-Zyklus zu vergleichsweise großen Verzögerungen führt, ist eine Optimierung der Markierungsphase zielführend.
+Wünschenswert ist, Kollektor und Mutator möglichst häufig eine nebenläufige Ausführung zu ermöglichen, ohne dabei die Korrektheit der Garbage Collection zu gefährden.
+Wir haben gesehen, dass die Manipulation von Referenzen während der Markierungsphase dazu führt, dass Verweise von markierten auf unmarkierte Objekte entstehen können, sodass erreichbare Objekte unmarkiert bleiben.
+Um dies zu vermeiden, könnte man als ersten Ansatz auf die Idee kommen, beim Schreiben einer neuen Referenz in ein Feld eines Objekts das Ziel dieser Referenz sofort zu markieren.
+Dies ist jedoch nur scheinbar eine Lösung:
+Da das Ziel ebenfalls Referenzen auf unmarkierte Objekte bereithalten könnte, entstehen dadurch möglicherweise neue Referenzen von markierten auf unmarkierte Objekte.
+Von Dijkstra et al. stammt ein Ansatz, der diese Idee aufgreift und um ein \textit{Zwischenstadium} erweitert \cite[S. 969f]{dijkstra1978}.
+Diese ermöglicht es, markierte Objekte, die bereits komplett abgearbeitet wurden, von solchen zu unterscheiden, die bislang lediglich entdeckt wurden.
+Dazu werden Objekte mit drei verschiedenen Farben markiert:
+
+\begin{description}
+	\item[weiß:] Das Objekt wurde bislang nicht als erreichbar identifiziert.
+		Bleibt es nach Ende der Markierungsphase weiß, kann es freigegeben werden.
+	\item[grau:] Das Objekt ist erreichbar, allerdings wurden die Felder des Objekts noch nicht auf Referenzen zu weiteren Objekten überprüft.
+	\item[schwarz:] Das Objekt ist erreichbar und alle Felder des Objekts wurden bereits überprüft.
+\end{description}
+
+Zu Beginn des Algorithmus sind alle existierenden Objekte weiß.
+Wir modifizieren den ursprünglichen Mark-and-Sweep-Algorithmus~\ref{algo:naive-mark} so, dass Objekte bei ihrer Entdeckung grau und nach Abarbeitung ihrer Felder schwarz markiert werden.
+Hierfür existiert eine atomare Prozedur \Method{setColor}, die die Markierung eines Objekts auf eine bestimmte Farbe \Var{WHITE}, \Var{GRAY} oder \Var{BLACK} setzt.
+Auf diese Art bleiben nicht mehr erreichbare Objekte weiß und können anschließend als löschbar identifiziert werden.
+Analog wird die \Method{sweep}-Prozedur in Algorithmus~\ref{algo:naive-sweep} so abgeändert, dass Objekte gelöscht werden, wenn sie weiß markiert sind.
+Andernfalls wird ihre Markierung zurück auf weiß gesetzt.
+
+\begin{algorithm}[h]
+\begin{algorithmic}[1]
+	\Pre Alle Objekte sind weiß markiert.
+	\State \MethodHead{markStart}():
+	\State \quad \Var{graySet} $\gets$ $\emptyset$				\Comment{Grau markierte Objekte}
+	\State \quad \FOREACH \Var{obj} $\in \Roots$
+	\State \quad \quad \IF \Method{isWhite}(\Var{obj})
+	\State \quad \quad \quad \Method{setColor}(\Var{obj}, \Var{GRAY})	
+	\State \quad \quad \quad \Method{add}(\Var{graySet}, \Var{obj})	
+	\State \quad \quad \quad \Method{mark}()
+	\Statex
+	\State \MethodHead{mark}():
+	\State \quad \WHILE \Var{graySet} $\neq \emptyset$
+	\State \quad \quad \Var{obj} $\gets$ \Method{remove}(\Var{graySet})
+	\State \quad \quad \Method{setColor}(\Var{obj}, \Var{BLACK})		\Comment{Objekt wird nun abgearbeitet}
+	\State \quad \quad \FOREACH \Var{adr} $\in \Pointers(\Var{obj})$
+	\State \quad \quad \quad \IF (\Var{adr} $\neq$ \Null $\wedge$ \Method{isWhite}(\Var{*adr}))	
+	\State \quad \quad \quad \quad \Method{setColor}(\Var{*adr}, \Var{GRAY})	\Comment{Referenzierte Objekte grau markieren}
+	\State \quad \quad \quad \quad \Method{add}(\Var{graySet}, \Var{*adr})
+	\Statex
+	\State \MethodHead{sweep}():
+	\State \quad \Var{pos} $\gets$ \Method{nextObject}(\Var{HEAP\_START})
+	\State \quad \WHILE \Var{pos} $\neq$ \Null
+	\State \quad \quad \IF \Method{isWhite}(\Var{*pos})
+	\State \quad \quad \quad \Method{free}(\Var{pos})
+	\State \quad \quad \ELSE \Method{setColor}(\Var{*pos}, \Var{WHITE})
+	\State \quad \quad \Var{pos} $\gets$ \Method{nextObject}(\Var{pos})
+\end{algorithmic}
+\caption[Markierung mit Drei-Farben-Abstraktion]{Markierung mit Drei-Farben-Abstraktion (vgl. \cite[S. 970]{dijkstra1978})}
+\label{algo:tricolor}
+\end{algorithm}
+
+Mithilfe dieser \textbf{Drei-Farben-Abstraktion} (engl. \textit{tri-color abstraction}) können wir nun Referenzmanipulationen zulassen, die parallel zur Markierungsphase der Garbage Collection stattfinden:
+Wird in einem Objekt \Var{a} eine Referenz auf ein Objekt \Var{b} hinterlegt, so kann dies dazu führen, dass \Var{b} erreichbar wird.
+Infolgedessen müssen auch alle von \Var{b} referenzierten Objekte als erreichbar identifiziert werden.
+Somit ist es zielführend, \Var{b} beim Setzen der Referenz grau zu markieren und zu \Var{graySet} hinzuzufügen, sofern dies noch nicht der Fall ist oder die Felder von \Var{b} bereits verfolgt wurden.
+Dies kann etwa mit einer \textit{Schreibbarriere} (engl. \textit{write barrier}) realisiert werden, die genau dann zum Einsatz kommt, wenn eine Referenz in ein Feld eines Objektes geschrieben wird (siehe Algorithmus~\ref{algo:tricolor-barrier}).
+Auf diese Art kann es jedoch vorkommen, dass Objekte unerreichbar werden, nachdem sie bereits grau oder schwarz markiert wurden.
+Entsprechend verbleiben sie im Speicher und werden erst im nächsten Garbage-Collection-Zyklus entfernt.
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+	\Input Objekt \Var{obj}, in dem Referenz gesetzt wird; Index des Feldes \Var{i}; zu setzende Referenz \Var{ref}
+	\State \Atomic \MethodHead{writeRef}(\Var{obj}, \Var{i}, \Var{ref}):
+	\State \quad \Var{obj[i]} $\gets$ \Var{ref}
+	\State \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Method{isWhite}(\Var{*ref}))
+	\State \quad \quad \Method{setColor}(\Var{*ref}, \Var{GRAY})
+	\State \quad \quad \Method{add}(\Var{grayList}, \Var{*ref})
+\end{algorithmic}
+\caption[Schreibbarriere zur Manipulation von Referenzen]{Schreibbarriere zur Manipulation von Referenzen in Objekten.}
+\label{algo:tricolor-barrier}
+\end{algorithm}
+
+An dieser Stelle gehen wir auf die Terminierung und Korrektheit des modifizierten Mark-and-Sweep-Algorithmus ein.
+
+\begin{mybox}
+\begin{satz}
+	Der Mark-and-Sweep-Algorithmus mit Drei-Farben-Abstraktion terminiert und ist korrekt, sofern während der Arbeit des Kollektors keine neuen Objekte erzeugt werden.
+\end{satz}
+\end{mybox}
+
+\begin{proof}
+	\textit{Zur Terminierung:} Wir halten zunächst fest, dass Objekte während der Markierungsphase ausschließlich \textit{dunkler} gefärbt werden:
+	In Algorithmus~\ref{algo:tricolor} werden lediglich weiß markierte Objekte grau gefärbt (Zeile~5 und 14); eine Weißfärbung geschieht in dieser Phase grundsätzlich nicht.
+	Analog zum ursprünglichen Algorithmus~\ref{algo:naive-mark} enthält \Var{graySet} nur grau markierte Objekte.
+	Jedes Objekt befindet sich dadurch höchstens einmal in dieser Menge.
+	Da \Var{graySet} nach jeder Iteration der \WHILE-Schleife um ein Objekt reduziert wird und keine neuen Objekte erzeugt werden, terminieren auch hier \WHILE- und \FOREACH-Schleife nach endlich vielen Schritten.
+	Zuletzt terminiert auch Bereinigungsphase (siehe Satz~\ref{satz:mark-sweep-correctness}).
+	
+	\textit{Zur Korrektheit:} Erneut ist zu zeigen, dass keine Objekte unmarkiert bleiben, die erreichbar sind.
+	Dies wäre genau dann der Fall, wenn nach der Markierungsphase ein schwarz markiertes Objekt eine Referenz auf ein weiß markiertes Objekt besitzt.
+	Wir zeigen daher die Gültigkeit folgender Schleifeninvariante für die \WHILE-Schleife:
+	\begin{description}
+		\item[(A)] Es existieren keine zwei Objekte \Var{a} und \Var{b} mit \Var{a} $\rightarrow$ \Var{b}, sodass \Var{a} schwarz markiert und \Var{b} weiß markiert ist.
+	\end{description}
+	Da zu Beginn laut Vorbedingung alle Objekte weiß markiert sind und bis zum Eintritt in die \WHILE-Schleife Objekte nur grau markiert werden, gilt (A) trivialerweise, da keine schwarz markierten Objekte existieren.
+	Gelte nun (A) zu Beginn einer Schleifeniteration und sei \Var{a} dasjenige Objekt, das der Menge \Var{graySet} entnommen und schwarz gefärbt wird (Zeile~10f).
+	Existiert nun ein weiteres Objekt \Var{b} mit \Var{a} $\rightarrow$ \Var{b}, so ist \Var{\&b} $\in \Pointers(\Var{a})$.
+	Ist \Var{b} bereits grau oder schwarz markiert, so geschieht nichts.
+	Andernfalls wird \Var{*(\&b)} $=$ \Var{b} grau markiert (Zeile~14).
+	In beiden Fällen ist \Var{b} am Ende der Schleife nicht weiß markiert.
+	Da \Var{a} das einzige Objekt ist, das in dieser Iteration schwarz gefärbt wird, ist (A) nach der Iteration weiterhin gültig.
+	Da die Schleife terminiert, die Invariante aufrecht erhalten bleibt und in der Bereinigungsphase nur weiß markierte Objekte freigegeben werden, ist der Algorithmus korrekt.
+\end{proof}
 
 \todo[inline]{Markierungsmöglichkeiten (Tricolor, Bitmapping); Lazy Sweeping}
