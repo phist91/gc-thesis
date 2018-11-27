@@ -148,7 +148,8 @@ Wenn der Kollektor nun Objekt $\Var{B}$ betrachtet, nachdem bereits Zeile~4 abge
 Insgesamt wird Objekt $\Var{C}$ somit nicht markiert, obwohl es erreichbar ist.
 In der Folge würde $\Var{C}$ irrtümlich freigegeben werden, sodass im schlimmsten Fall ein hängender Zeiger entsteht oder sogar Datenverlust verursacht wird -- der Algorithmus arbeitet also nicht korrekt.
 
-Algorithmen, die zur Vermeidung von \textit{race conditions} zwischen Kollektor und Mutator die Arbeit des letzteren unterbrechen, werden auch als \textit{Stop-the-World-Algorithmen} bezeichnet.
+Situationen, in denen die nebenläufige Ausführung von Programmsegmenten zu unvorhersehbarem Verhalten führt, werden als \textit{race conditions} bezeichnet.
+Algorithmen, die zur Vermeidung von \textit{race conditions} zwischen Kollektor und Mutator die Arbeit des letzteren unterbrechen, werden auch als \textit{Stop-the-World-Algorithmen} (vgl. \cite[S. 17]{handbook}) bezeichnet.
 
 \section{Markierungsmöglichkeiten}
 \label{sec:marking-methods}
