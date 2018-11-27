@@ -152,6 +152,9 @@ Algorithmen, die zur Vermeidung von \textit{race conditions} zwischen Kollektor 
 
 \section{Markierungsmöglichkeiten}
 \label{sec:marking-methods}
+
+\section{Drei-Farben-Abstraktion}
+\label{sec:tricolor}
 Da das Anhalten des Mutators während eines gesamten Garbage-Collection-Zyklus zu vergleichsweise großen Verzögerungen führt, ist eine Optimierung der Markierungsphase zielführend.
 Wünschenswert ist, Kollektor und Mutator möglichst häufig eine nebenläufige Ausführung zu ermöglichen, ohne dabei die Korrektheit der Garbage Collection zu gefährden.
 Wir haben gesehen, dass die Manipulation von Referenzen während der Markierungsphase dazu führt, dass Verweise von markierten auf unmarkierte Objekte entstehen können, sodass erreichbare Objekte unmarkiert bleiben.
@@ -214,16 +217,16 @@ Infolgedessen müssen auch alle von \Var{b} referenzierten Objekte als erreichba
 Somit ist es zielführend, \Var{b} beim Setzen der Referenz grau zu markieren und zu \Var{graySet} hinzuzufügen, sofern dies noch nicht der Fall ist oder die Felder von \Var{b} bereits verfolgt wurden.
 Dies kann etwa mit einer \textit{Schreibbarriere} (engl. \textit{write barrier}) realisiert werden, die genau dann zum Einsatz kommt, wenn eine Referenz in ein Feld eines Objektes geschrieben wird (siehe Algorithmus~\ref{algo:tricolor-barrier}).
 Auf diese Art kann es jedoch vorkommen, dass Objekte unerreichbar werden, nachdem sie bereits grau oder schwarz markiert wurden.
-Entsprechend verbleiben sie im Speicher und werden erst im nächsten Garbage-Collection-Zyklus entfernt.
+Entsprechend verbleiben sie zunächst im Speicher und werden erst im nächsten Garbage-Collection-Zyklus entfernt.
 
-\begin{algorithm}
+\begin{algorithm}[h]
 \begin{algorithmic}[1]
 	\Input Objekt \Var{obj}, in dem Referenz gesetzt wird; Index des Feldes \Var{i}; zu setzende Referenz \Var{ref}
 	\State \Atomic \MethodHead{writeRef}(\Var{obj}, \Var{i}, \Var{ref}):
-	\State \quad \Var{obj[i]} $\gets$ \Var{ref}
 	\State \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Method{isWhite}(\Var{*ref}))
 	\State \quad \quad \Method{setColor}(\Var{*ref}, \Var{GRAY})
 	\State \quad \quad \Method{add}(\Var{grayList}, \Var{*ref})
+	\State \quad \Var{obj[i]} $\gets$ \Var{ref}
 \end{algorithmic}
 \caption[Schreibbarriere zur Manipulation von Referenzen]{Schreibbarriere zur Manipulation von Referenzen in Objekten.}
 \label{algo:tricolor-barrier}
@@ -260,5 +263,11 @@ An dieser Stelle gehen wir auf die Terminierung und Korrektheit des modifizierte
 	Da \Var{a} das einzige Objekt ist, das in dieser Iteration schwarz gefärbt wird, ist (A) nach der Iteration weiterhin gültig.
 	Da die Schleife terminiert, die Invariante aufrecht erhalten bleibt und in der Bereinigungsphase nur weiß markierte Objekte freigegeben werden, ist der Algorithmus korrekt.
 \end{proof}
+
+Die Atomizität der Schreibbarriere \Method{writeRef} in Algorithmus~\ref{algo:tricolor-barrier} ist in der Tat notwendig, um die Korrektheit zu gewährleisten.
+Käme es unmittelbar nach der Markierung des Referenzziels, aber vor dem eigentlichen Setzen der Referenz in Zeile 5, zu einen kompletten Garbage-Collection-Zyklus, so würde die Markierung durch den Kollektor wieder aufgehoben.
+Damit bestünde im Anschluss die Möglichkeit, dass die Invariante (A) verletzt wird.
+Allerdings besteht die Möglichkeit, die Invariante (A) abzuschwächen und damit eine \textit{feingranularere} Lösung zu ermöglichen.
+Für Details hierzu verweisen wir auf \cite[S. 972ff]{dijkstra1978}.
 
 \todo[inline]{Markierungsmöglichkeiten (Tricolor, Bitmapping); Lazy Sweeping}
