@@ -134,11 +134,11 @@ Während der Kollektor aktiv ist, führe der Mutator folgenden Code aus:
 \end{minipage}~
 \begin{minipage}{0.3\textwidth}
 	\centering
-	\includegraphics[keepaspectratio]{img/tikz/ch2-concurrent1.pdf}
+	\includestandalone{img/tikz/ch2-concurrent1}
 \end{minipage}~
 \begin{minipage}{0.3\textwidth}
 	\centering
-	\includegraphics[keepaspectratio]{img/tikz/ch2-concurrent2.pdf}
+	\includestandalone{img/tikz/ch2-concurrent2}
 \end{minipage}
 \end{center}
 
@@ -151,8 +151,18 @@ In der Folge würde $\Var{C}$ irrtümlich freigegeben werden, sodass im schlimms
 Situationen, in denen die nebenläufige Ausführung von Programmsegmenten zu unvorhersehbarem Verhalten führt, werden als \textit{race conditions} bezeichnet.
 Algorithmen, die zur Vermeidung von \textit{race conditions} zwischen Kollektor und Mutator die Arbeit des letzteren unterbrechen, werden auch als \textit{Stop-the-World-Algorithmen} (vgl. \cite[S. 17]{handbook}) bezeichnet.
 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
 \section{Markierungsmöglichkeiten}
 \label{sec:marking-methods}
+
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 \section{Drei-Farben-Abstraktion}
 \label{sec:tricolor}
