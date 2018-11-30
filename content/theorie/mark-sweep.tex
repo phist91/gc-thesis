@@ -26,7 +26,7 @@ Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekt
 	\State \MethodHead{collectGarbage}():
 	\State \quad \Method{markStart}()
 	\State \quad \Method{sweepHeap}()
-	\State
+	\Statex
 	\State \MethodHead{markStart}():
 	\State \quad \Var{toDo} $\gets$ $\emptyset$				\Comment{Noch abzuarbeitende Objekte}
 	\State \quad \FOREACH \Var{obj} $\in \Roots$		\Comment{Beginne mit Basisobjekten}
@@ -34,7 +34,7 @@ Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekt
 	\State \quad \quad \quad \Method{setMarked}(\Var{obj})	\Comment{Objekt als erreichbar markieren}
 	\State \quad \quad \quad \Method{add}(\Var{toDo}, \Var{obj})	
 	\State \quad \quad \quad \Method{mark}()			\Comment{Abarbeitung starten}
-	\State
+	\Statex
 	\State \MethodHead{mark}():
 	\State \quad \WHILE \Var{toDo} $\neq \emptyset$
 	\State \quad \quad \Var{obj} $\gets$ \Method{remove}(\Var{toDo})			\Comment{Hole nächstes Objekt}
@@ -48,27 +48,27 @@ Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekt
 \end{algorithm}
 
 Die Markierungsphase (engl. \textit{mark}) funktioniert wie folgt:
-Zunächst wird mittels der Methode \Method{markStart} eine Menge \Var{toDo} erzeugt, die diejenigen Objekte enthält, die bereits als erreichbar erkannt wurden, aber selbst noch nicht verarbeitet wurden (Zeile 6 in Algorithmus~\ref{algo:naive-mark}).
-In diese werden alle bislang unmarkierten Basisobjekte der Menge \Roots eingefügt und markiert, da sie in jedem Fall erreichbar sind (Zeile 7 bis 10).
+Zunächst wird mittels der Methode \Method{markStart} eine Menge \Var{toDo} erzeugt, die diejenigen Objekte enthält, die bereits als erreichbar erkannt wurden, aber selbst noch nicht verarbeitet wurden (Zeile 5 in Algorithmus~\ref{algo:naive-mark}).
+In diese werden alle bislang unmarkierten Basisobjekte der Menge \Roots eingefügt und markiert, da sie in jedem Fall erreichbar sind (Zeile 6 bis 9).
 Ist ein Basisobjekt bereits markiert worden, so wurde es schon entdeckt -- etwa, weil es durch ein zuvor abgearbeitetes Objekt referenziert wird.
 Daraus folgt, dass es ebenfalls bereits abgearbeitet wurde oder sich noch in der Menge \Var{toDo} befindet.
 In beiden Fällen muss es folglich nicht erneut zu \Var{toDo} hinzugefügt werden.
 
 Bereits nach dem Hinzufügen des ersten Basisobjekts wird die Methode \Method{mark} aufgerufen, welche die \Var{toDo}-Menge abarbeitet.
-Für jedes Objekt in \Var{toDo} werden diejenigen Felder betrachtet, die eine Referenz auf ein Objekt enthalten (Zeile 15 und 16).
+Für jedes Objekt in \Var{toDo} werden diejenigen Felder betrachtet, die eine Referenz auf ein Objekt enthalten (Zeile 13 und 14).
 Wenn dieses Objekt noch nicht markiert wurde, wird es in diesem Augenblick zum ersten Mal entdeckt.
-Da es somit erreichbar ist, kann es markiert und zu \Var{toDo} hinzugefügt werden, um zu einem späteren Zeitpunkt abgearbeitet zu werden (Zeile 17 und 18).
+Da es somit erreichbar ist, kann es markiert und zu \Var{toDo} hinzugefügt werden, um zu einem späteren Zeitpunkt abgearbeitet zu werden (Zeile 15 und 16).
 Verweist die Referenz hingegen auf ein Objekt, das bereits markiert wurde, wurde dieses schon zuvor entdeckt.
 Auch hier ist ein erneutes Hinzufügen zu \Var{toDo} überflüssig.
 Sobald \Var{toDo} leer ist, erfolgt die Rückkehr zur Methode \Method{markStart}, sodass ggfs. das nächste Basisobjekt abgearbeitet wird.
 
 \todo[inline]{Kleines Beispiel hier, großes in den Anhang?}
 
-Es ist wesentlich, dass Objekte bereits markiert werden, wenn sie der Menge \Var{toDo} hinzugefügt werden, und nicht etwa, nachdem sie abgearbeitet wurden (Zeile 9 und 10 bzw. 18 und 19).
+Es ist wesentlich, dass Objekte bereits markiert werden, wenn sie der Menge \Var{toDo} hinzugefügt werden, und nicht etwa, nachdem sie abgearbeitet wurden (Zeile 8 und 9 bzw. 16 und 17).
 Andernfalls besteht bei zyklischen Referenzen die Gefahr einer Endlosschleife, da unmarkierte Objekte mehrfach hinzugefügt würden.
 Präziser können wir festhalten, dass \Var{toDo} zu jedem Zeitpunkt ausschließlich bereits markierte Objekte enthält.
-Da keine Objekte hinzugefügt werden, die bereits markiert wurden (Zeile 8 und 16), wird kein Objekt doppelt verarbeitet.
-Da zudem mit jeder Iteration der \WHILE-Schleife mindestens ein Objekt aus \Var{toDo} entfernt wird (Zeile 15), die Anzahl aller Objekte endlich ist und wir voraussetzen, dass während der Ausführung des Garbage Collectors keine neuen Objekte entstehen, wird sowohl die \WHILE-Schleife, als auch die \FOREACH-Schleife nach endlich vielen Schritten terminieren.
+Da keine Objekte hinzugefügt werden, die bereits markiert wurden (Zeile 7 und 16), wird kein Objekt doppelt verarbeitet.
+Da zudem mit jeder Iteration der \WHILE-Schleife mindestens ein Objekt aus \Var{toDo} entfernt wird (Zeile 13), die Anzahl aller Objekte endlich ist und wir voraussetzen, dass während der Ausführung des Garbage Collectors keine neuen Objekte entstehen, wird sowohl die \WHILE-Schleife, als auch die \FOREACH-Schleife nach endlich vielen Schritten terminieren.
 
 Anstatt die Abarbeitung der \Var{toDo}-Menge zu beginnen, sobald das erste Basisobjekt erfasst wurde, können statt dessen auch zunächst alle Basisobjekte zu \Var{toDo} hinzugefügt und die Methode \Method{mark} im Anschluss aufgerufen werden.
 Je nachdem, wie \Var{toDo} in der Praxis realisiert wird -- zum Beispiel in Form eines Stacks -- kann damit die Traversierung der Objekte beeinflusst werden.
@@ -111,7 +111,7 @@ Wir halten zunächst fest, dass der Mark-and-Sweep-Algorithmus in seiner Gänze 
 	Bleibt ein Objekt \code{obj} unmarkiert, so ist \code{obj} kein Basisobjekt, da \Method{markStart} alle Basisobjekte markiert.
 	Somit wird kein Basisobjekt freigegeben.
 	Wir zeigen, dass es nach der Markierungsphase zudem keine zwei Objekte $\Var{a}$, $\Var{b}$ mit $\Var{a} \rightarrow \Var{b}$ gibt, sodass $\Var{a}$ markiert und $\Var{b}$ unmarkiert ist:
-	Da $\Var{a}$ markiert ist, wurde $\Var{a}$ auch der Menge $\Var{toDo}$ hinzugefügt (Zeile 9f bzw. 18f in Algorithmus~\ref{algo:naive-mark}).
+	Da $\Var{a}$ markiert ist, wurde $\Var{a}$ auch der Menge $\Var{toDo}$ hinzugefügt (Zeile 8f bzw. 16f in Algorithmus~\ref{algo:naive-mark}).
 	Entsprechend gab es eine Iteration der \WHILE-Schleife mit $\Var{obj} = \Var{a}$.
 	Gilt nun \Var{a} $\rightarrow$ \Var{b}, so ist $\Var{\&b} \in \Pointers(\Var{a})$.
 	Folglich wird in einer Iteration der \FOREACH-Schleife mit \Var{adr} $=$ \Var{\&b} auch \Var{*(\&b)} $=$ \Var{b} markiert, falls \Var{b} nicht schon zuvor markiert wurde.
@@ -151,18 +151,11 @@ In der Folge würde $\Var{C}$ irrtümlich freigegeben werden, sodass im schlimms
 Situationen, in denen die nebenläufige Ausführung von Programmsegmenten zu unvorhersehbarem Verhalten führt, werden als \textit{race conditions} bezeichnet.
 Algorithmen, die zur Vermeidung von \textit{race conditions} zwischen Kollektor und Mutator die Arbeit des letzteren unterbrechen, werden auch als \textit{Stop-the-World-Algorithmen} (vgl. \cite[S. 17]{handbook}) bezeichnet.
 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
- % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
-\section{Markierungsmöglichkeiten}
-\label{sec:marking-methods}
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
-
-
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
- % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 \section{Drei-Farben-Abstraktion}
 \label{sec:tricolor}
@@ -282,4 +275,92 @@ Allerdings besteht die Möglichkeit, die Invariante (A) abzuschwächen und damit
 Für Details hierzu verweisen wir auf \cite[S. 972ff]{dijkstra1978}.
 Für einen Überblick über verschiedene Möglichkeiten von Lese- und Schreibbarrieren im Kontext der Drei-Farben-Abstraktion siehe zudem \cite{pirinen}.
 
-\todo[inline]{Markierungsmöglichkeiten (Tricolor, Bitmapping); Lazy Sweeping}
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Verzögerte Bereinigung}
+\label{sec:lazy-sweep}
+Die im vorigen Abschnitt vorgestellte Drei-Farben-Markierung dient vor allem dazu, die durch die Markierungsphase entstehenden Verzögerungen im Programmablauf zu reduzieren.
+In diesem Abschnitt wird eine Reduktion der Kosten der Sweep-Phase angestrebt.
+Meist können Mutator und Kollektor während der Bereinigung gleichzeitig tätig sein:
+Nicht mehr erreichbare Objekte sind ohne Nebenwirkungen zerstörbar und Markierungsinformationen werden so hinterlegt, dass sie für den Mutator grundsätzlich nicht zugänglich sind.
+Race conditions sind dadurch prinzipiell ausgeschlossen.
+Ferner ergibt sich hierdurch die Möglichkeit, die Bereinigungsphase nicht unmittelbar nach der Markierungsphase ausführen zu müssen.
+Für Systeme ohne hardware- oder softwareseitige Unterstützung für Multithreading, in denen die Aufgaben des Mutators und Kollektors grundsätzlich nicht gleichzeitig bearbeitet werden können, bietet sich daher die \textbf{verzögerte Bereinigung} (engl. \textit{lazy sweeping}) an.
+
+Bei der verzögerten Bereinigung ist der Heapspeicher in \textit{Bereiche} (engl. \textit{blocks}) eingeteilt.
+Jeder Bereich enthält Objekte einer festgelegten Größenordnung; zu jeder Größenordnung können mehrere Bereiche existieren.
+Die Idee ist nun, das Sweeping durch den Allokator ausführen zu lassen, wenn Speicher angefordert wird.
+Dabei werden die zuvor markierten Objekte freigegeben, allerdings nur in denjenigen Bereichen, die der angeforderten Speichermenge zugeordnet sind.
+Die Bereinigung beschränkt sich dadurch auf einen Bruchteil des Heaps.
+
+\begin{algorithm}[h]
+\begin{algorithmic}[1]
+	\State \MethodHead{new}(\Var{size}):
+	\State \quad \Var{adr} $\gets$ \Method{allocate}(\Var{size})
+	\State \quad \IF \Var{adr} $=$ \Null
+	\State \quad \quad \Method{lazySweep}(\Var{size})	\Comment{Starte Lazy-Sweep-Zyklus}
+	\State \quad \quad \Var{adr} $\gets$ \Method{allocate}(\Var{size})	\Comment{Zweiter Versuch}
+	\State \quad \quad \IF \Var{adr} $=$ \Null
+	\State \quad \quad \quad \Method{collect}()		\Comment{Nach weiteren unerreichbaren Objekten suchen}
+	\State \quad \quad \quad \Method{lazySweep}(\Var{size})	\Comment{Zweiter Lazy-Sweep-Zyklus}
+	\State \quad \quad \quad \Var{adr} $\gets$ \Method{allocate}(\Var{size})	\Comment{Dritter Versuch}
+	\State \quad \quad \quad \IF \Var{adr} $=$ \Null
+	\State \quad \quad \quad \quad \Method{error}(\Var{"Nicht genügend Speicher"})
+	\State \quad \Return \Var{adr}
+	\Statex
+	\State \MethodHead{collect()}:
+	\State \quad \Method{markStart()}		\Comment{Siehe Algorithmus~\ref{algo:naive-sweep} bzw. \ref{algo:tricolor}}
+	\State \quad \FOREACH \Var{blk} $\in \Blocks$
+	\State \quad \quad \IF \Method{isNotMarked}(\Var{blk})
+	\State \quad \quad \quad \Method{free}(\Var{blk})	\Comment{Gib komplett verwaisten Bereich sofort frei}
+	\State \quad \quad \ELSE \Method{add}(\Var{toSweep}, \Var{blk})
+	\Statex
+	\State \MethodHead{lazySweep}(\Var{size})
+	\State \quad \Do
+	\State \quad \quad \Var{blk} $\gets$ \Method{remove}(\Var{toSweep}, \Var{size})
+	\State \quad \quad \IF (\Var{blk} $\neq$ \Null $\wedge$ \Method{sweep}(\Method{start}(\Var{blk}), \Method{end}(\Var{blk})))
+	\State \quad \quad \quad \Return	\Comment{Beende, sobald Speicher gewonnen wurde}
+	\State \quad \WHILE \Var{blk} $\neq$ \Var{null}
+	\State \quad \Method{createBlock}(\Var{size})	\Comment{Initialisiere neuen Bereich, wenn nichts freigegeben}
+\end{algorithmic}
+\caption[Verzögertes Bereinigen des Heaps]{Verzögertes Bereinigen des Heaps (vgl. \cite[S. 25]{handbook}.}
+\label{algo:lazy-sweep}
+\end{algorithm}
+
+Dieser Ansatz geht mit einigen marginale Änderungen an unseren bisher verwendeten Algorithmen einher.
+Zum einen setzen wir voraus, dass beim Markieren eines Objekts auch der entsprechende Bereich markiert wird, in dem sich das Objekt befindet.
+Dies kann recht einfach realisiert werden, indem bei der Initialisierung eines Bereichs durch den Allokator zusätzlich Platz für einen Header reserviert wird, welcher Metadaten wie die Größenordnung der enthaltenen Objekte aufnimmt\todo{Mark table für enthaltenen Objekte}.
+Weiter verlangen wir, dass der Allokator zusätzlich Informationen über Anzahl, Lage und Größenordnung der existierenden Bereiche besitzt.
+Zuletzt wandeln wir die Methode \Method{sweep} aus den Algorithmen~\ref{algo:naive-sweep} und \ref{algo:tricolor} dahingehend ab, dass sie nur einen eingeschränkten Teil des Heaps traversiert -- etwa, indem zwei Parameter für Start- und Endadresse übergeben werden.
+Zudem soll \Method{sweep} den Wahrheitswert \Var{true} zurückgeben, wenn zumindest ein Objekt entfernt wurde, und andernfalls \Var{false}.
+
+Nach Abschluss der Markierungsphase kann anhand der zusätzlichen Markierung der Bereiche festgestellt werden, welche Bereiche nur verwaiste Objekte enthalten.
+In diesem Fall kann der Allokator den gesamten Bereich ad hoc freigeben (Zeile~17 von Algorithmus~\ref{algo:lazy-sweep}).
+Hingegen werden Bereiche, die mindestens ein erreichbares Objekt enthalten und somit markiert sind, nach Abschluss der Markierungsphase einer Menge \Var{toSweep} zugefügt (Zeile~18).
+In dieser wird Buch geführt, welche Bereiche differenzierter bereinigt werden müssen, da sie unerreichbare Objekte enthalten könnten.
+
+Im Gegensatz zu den bisher betrachteten Mark-and-Sweep-Algorithmen beginnt die Bereinigungsphase nicht unmittelbar nach Abschluss der Markierung, sondern erst bei Anforderung von Speicher mittels \Method{new}:
+Falls dabei kein freier Speicherbereich geeigneter Größe gefunden werden kann, weil etwa die entsprechenden Bereiche ausgeschöpft sind, beginnt ein \textit{Lazy-Sweep-Zyklus} (Zeile~20 bis~24).
+Dabei werden nach und nach Bereiche aus \Var{toSweep} entfernt und bereinigt, die Objekte der angeforderten Speichergröße verwalten.
+Sobald ein Bereich um ein Objekt reduziert werden konnte, wird der Zyklus beendet und der Allokator kann den gewonnenen Speicher neu zuordnen (Zeile~22f).
+Falls aus keinem Bereich ein Objekt freigegeben werden konnte, bedeutet dies, dass alle Bereiche der entsprechenden Objektgröße mit erreichbaren Objekten gefüllt sind.
+In diesem Fall muss der Allokator einen neuen Bereich initialisieren, der neue Objekte aufnehmen kann (Zeile~25).
+
+Was geschieht nun, wenn nicht genügend freier Speicher zu Verfügung steht, um einen weiteren Bereich zu erzeugen?
+In diesem Fall schlägt auch der zweite Allokationsversuch fehl (Zeile~5f).
+Der letzte Versuch besteht nun darin, die Markierungen der Objekte zu aktualisieren, indem eine Markierungsphase gestartet wird (Zeile~7).
+Da die letzte Markierungsphase nicht unmittelbar vor der Speicheranforderung, sondern möglicherweise wesentlich früher stattgefunden hat, könnten in der Zwischenzeit weitere Objekte verwaist sein.
+Diese werden nachfolgend in einem zweiten Lazy-Sweep-Zyklus freigegeben, sodass zuletzt Platz innerhalb eines Bereichs bzw. für einen neuen Bereich geschaffen werden kann (Zeile~8).
+
+\todo[inline]{Referenzen, Vor-/Nachteile}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\section{Variationsmöglichkeiten}
+\label{sec:variations}
+
+\todo[inline]{Markierungsmöglichkeiten}
