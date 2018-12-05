@@ -1,7 +1,7 @@
 %!TEX root = ../../thesis.tex
 \chapter{Mark and Sweep}
 \label{cha:mark-sweep}
-Wir beginnen mit einer Vorstellung des ersten Garbage-Collection-Algorithmus, der auf John \textsc{McCarthy} zurückgeht \cite[191--193]{mccarthy1960}.
+Wir beginnen mit einer Vorstellung des ersten Garbage-Collection-Algorithmus, der auf John McCarthy zurückgeht \cite[191--193]{mccarthy1960}.
 Im Rahmen eines im Jahr 1960 veröffentlichten Artikels über die Berechnung rekursiver Funktionen auf dem \textit{IBM 704} mithilfe des \textit{LISP Programming Systems} erläutert McCarthy die Speicherung von Daten in einer Listenstruktur.
 Diese besteht aus Paaren, deren erster Eintrag \texttt{car} die zu speichernde Information enthält, während im zweiten Eintrag \texttt{cdr} die Registeradresse des nachfolgenden Paares zu finden ist.
 Register, die aktuell nicht zur Speicherung von Daten genutzt werden, befinden sich in einer \textit{free storage list}.
@@ -48,7 +48,8 @@ Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekt
 \end{algorithm}
 
 Die Markierungsphase (engl. \textit{mark}) funktioniert wie folgt:
-Zunächst wird mittels der Methode \Method{markStart} eine Menge \Var{toDo} erzeugt, die diejenigen Objekte enthält, die bereits als erreichbar erkannt wurden, aber selbst noch nicht verarbeitet wurden (Zeile 5 in Algorithmus~\ref{algo:naive-mark}).
+Ein Objekt zu markieren bedeutet, es als erreichbar zu kennzeichnen, indem in seinem Header ein entsprechender Wert -- etwa ein Bit -- gesetzt wird.
+Zunächst wird mittels der Methode \Method{markStart} eine Menge \Var{toDo} erzeugt, die diejenigen Objekte enthält, die bereits als erreichbar erkannt, aber selbst noch nicht verarbeitet wurden (Zeile 5 in Algorithmus~\ref{algo:naive-mark}).
 In diese werden alle bislang unmarkierten Basisobjekte der Menge \Roots eingefügt und markiert, da sie in jedem Fall erreichbar sind (Zeile 6 bis 9).
 Ist ein Basisobjekt bereits markiert worden, so wurde es schon entdeckt -- etwa, weil es durch ein zuvor abgearbeitetes Objekt referenziert wird.
 Daraus folgt, dass es ebenfalls bereits abgearbeitet wurde oder sich noch in der Menge \Var{toDo} befindet.
@@ -69,10 +70,6 @@ Andernfalls besteht bei zyklischen Referenzen die Gefahr einer Endlosschleife, d
 Präziser können wir festhalten, dass \Var{toDo} zu jedem Zeitpunkt ausschließlich bereits markierte Objekte enthält.
 Da keine Objekte hinzugefügt werden, die bereits markiert wurden (Zeile 7 und 16), wird kein Objekt doppelt verarbeitet.
 Da zudem mit jeder Iteration der \WHILE-Schleife mindestens ein Objekt aus \Var{toDo} entfernt wird (Zeile 13), die Anzahl aller Objekte endlich ist und wir voraussetzen, dass während der Ausführung des Garbage Collectors keine neuen Objekte entstehen, wird sowohl die \WHILE-Schleife, als auch die \FOREACH-Schleife nach endlich vielen Schritten terminieren.
-
-Anstatt die Abarbeitung der \Var{toDo}-Menge zu beginnen, sobald das erste Basisobjekt erfasst wurde, können statt dessen auch zunächst alle Basisobjekte zu \Var{toDo} hinzugefügt und die Methode \Method{mark} im Anschluss aufgerufen werden.
-Je nachdem, wie \Var{toDo} in der Praxis realisiert wird -- zum Beispiel in Form eines Stacks -- kann damit die Traversierung der Objekte beeinflusst werden.
-Dies kann einen erheblichen Einfluss auf die Performanz der Markierungsphase haben, wenn Caching-Effekte eine Rolle spielen. \todo{evtl. später genauer drauf eingehen}
 
 \begin{algorithm}
 \begin{algorithmic}[1]
@@ -272,8 +269,8 @@ Die Atomizität der Schreibbarriere \Method{writeRef} in Algorithmus~\ref{algo:t
 Käme es unmittelbar nach der Markierung des Referenzziels, aber vor dem eigentlichen Setzen der Referenz in Zeile 5, zu einen kompletten Garbage-Collection-Zyklus, so würde die Markierung durch den Kollektor wieder aufgehoben.
 Damit bestünde im Anschluss die Möglichkeit, dass die Invariante (A) verletzt wird.
 Allerdings besteht die Möglichkeit, die Invariante (A) abzuschwächen und damit eine \textit{feingranularere} Lösung zu ermöglichen.
-Für Details hierzu verweisen wir auf \cite[S. 972ff]{dijkstra1978}.
-Für einen Überblick über verschiedene Möglichkeiten von Lese- und Schreibbarrieren im Kontext der Drei-Farben-Abstraktion siehe zudem \cite{pirinen}.
+Für Details hierzu verweisen wir auf die Publikation von Dijkstra \cite[S. 972ff]{dijkstra1978}.
+Pirinen liefert darüber hinaus einen Überblick über verschiedene Möglichkeiten von Lese- und Schreibbarrieren im Kontext der Drei-Farben-Abstraktion \cite{pirinen}.
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
  % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -287,7 +284,7 @@ Meist können Mutator und Kollektor während der Bereinigung gleichzeitig tätig
 Nicht mehr erreichbare Objekte sind ohne Nebenwirkungen zerstörbar und Markierungsinformationen werden so hinterlegt, dass sie für den Mutator grundsätzlich nicht zugänglich sind.
 Race conditions sind dadurch prinzipiell ausgeschlossen.
 Ferner ergibt sich hierdurch die Möglichkeit, die Bereinigungsphase nicht unmittelbar nach der Markierungsphase ausführen zu müssen.
-Für Systeme ohne hardware- oder softwareseitige Unterstützung für Multithreading, in denen die Aufgaben des Mutators und Kollektors grundsätzlich nicht gleichzeitig bearbeitet werden können, bietet sich daher die \textbf{verzögerte Bereinigung} (engl. \textit{lazy sweeping}) an.
+Für Systeme ohne hardware- oder softwareseitige Unterstützung für Multithreading, in denen die Aufgaben des Mutators und Kollektors nicht gleichzeitig bearbeitet werden können, bietet sich daher die \textbf{verzögerte Bereinigung} (engl. \textit{lazy sweeping}) nach Hughes \cite[Kap. 2.5]{handbook} an.
 
 Bei der verzögerten Bereinigung ist der Heapspeicher in \textit{Bereiche} (engl. \textit{blocks}) eingeteilt.
 Jeder Bereich enthält Objekte einer festgelegten Größenordnung; zu jeder Größenordnung können mehrere Bereiche existieren.
@@ -325,7 +322,7 @@ Die Bereinigung beschränkt sich dadurch auf einen Bruchteil des Heaps.
 	\State \quad \WHILE \Var{blk} $\neq$ \Var{null}
 	\State \quad \Method{createBlock}(\Var{size})	\Comment{Initialisiere neuen Bereich, wenn nichts freigegeben}
 \end{algorithmic}
-\caption[Verzögertes Bereinigen des Heaps]{Verzögertes Bereinigen des Heaps (vgl. \cite[S. 25]{handbook}.}
+\caption[Verzögertes Bereinigen des Heaps]{Verzögertes Bereinigen des Heaps (vgl. \cite[S. 25]{handbook}).}
 \label{algo:lazy-sweep}
 \end{algorithm}
 
@@ -342,7 +339,7 @@ Hingegen werden Bereiche, die mindestens ein erreichbares Objekt enthalten und s
 In dieser wird Buch geführt, welche Bereiche differenzierter bereinigt werden müssen, da sie unerreichbare Objekte enthalten könnten.
 
 Im Gegensatz zu den bisher betrachteten Mark-and-Sweep-Algorithmen beginnt die Bereinigungsphase nicht unmittelbar nach Abschluss der Markierung, sondern erst bei Anforderung von Speicher mittels \Method{new}:
-Falls dabei kein freier Speicherbereich geeigneter Größe gefunden werden kann, weil etwa die entsprechenden Bereiche ausgeschöpft sind, beginnt ein \textit{Lazy-Sweep-Zyklus} (Zeile~20 bis~24).
+Falls dabei kein freier Speicher geeigneter Größe gefunden werden kann, weil etwa die entsprechenden Bereiche ausgeschöpft sind, beginnt ein \textit{Lazy-Sweep-Zyklus} (Zeile~20 bis~24).
 Dabei werden nach und nach Bereiche aus \Var{toSweep} entfernt und bereinigt, die Objekte der angeforderten Speichergröße verwalten.
 Sobald ein Bereich um ein Objekt reduziert werden konnte, wird der Zyklus beendet und der Allokator kann den gewonnenen Speicher neu zuordnen (Zeile~22f).
 Falls aus keinem Bereich ein Objekt freigegeben werden konnte, bedeutet dies, dass alle Bereiche der entsprechenden Objektgröße mit erreichbaren Objekten gefüllt sind.
@@ -354,13 +351,44 @@ Der letzte Versuch besteht nun darin, die Markierungen der Objekte zu aktualisie
 Da die letzte Markierungsphase nicht unmittelbar vor der Speicheranforderung, sondern möglicherweise wesentlich früher stattgefunden hat, könnten in der Zwischenzeit weitere Objekte verwaist sein.
 Diese werden nachfolgend in einem zweiten Lazy-Sweep-Zyklus freigegeben, sodass zuletzt Platz innerhalb eines Bereichs bzw. für einen neuen Bereich geschaffen werden kann (Zeile~8).
 
-\todo[inline]{Referenzen, Vor-/Nachteile}
+Während die Einschränkung der Bereinigung auf einzelne Bereiche zwar einen Performancevorteil mit sich bringt, besitzt diese Variante des Mark-and-Sweep-Algorithmus auch einige Nachteile:
+Eine ungünstige Kombination von Speicheranforderungen und Sweep-Zyklen könnte dazu führen, dass viele Bereiche einer Größenordnung angelegt werden, die jeweils nur wenige Objekte enthalten und größtenteils ungenutzt sind.
+Wenn jeder Bereich allerdings mindestens ein erreichbares Objekt enthält, können sie nicht in Gänze freigegeben werden.
+Eine hohe Zahl dieser ineffizient genutzten Bereiche führt dazu, dass möglicherweise nicht mehr genügend freier Speicher zu Verfügung steht, um Bereiche anderer Größenordnung zu initialisieren, obwohl ausreichend Speicher vorhanden wäre, der nicht durch Objekte belegt wird.
+Eine Lösung dieses Problems wäre eine zusätzliche Konsolidierungsphase, bei der Bereiche gleicher Größenordnung zusammengelegt werden.
+Dies bedeutet jedoch zusätzlicher Aufwand für die Verschiebung von Objekten\todo{Ref zu Defrag}.
+Der zweite Nachteil ist, dass nicht mehr erreichbare Objekte eventuell erst sehr spät freigegeben werden, wenn primär Objekte anderer Größenordnungen angefordert werden.
+In so einem Fall können auch Bereiche, die keine erreichbare Objekte mehr enthalten, über lange Zeit im Speicher verweilen, sodass diese für einen gewissen Zeitraum ein Speicherleck darstellen.
+Zuletzt kann auch die Aufteilung des Heaps nach Objektgrößen nicht zielführend sein:
+Je nach Anwendungsfall und verwendeter Programmiersprache besteht die Möglichkeit, dass zwischen den meisten Objekten keine signifikanten Größenunterschiede bestehen und die Bereiche einer bestimmten Größenordnung besonders stark beansprucht werden.
+Der Vorteil, nur einen beschränktes Gebiet des Heaps zu bereinigen, würde damit deutlich geschmälert werden.
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
  % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
-\section{Variationsmöglichkeiten}
-\label{sec:variations}
+\begin{center}
+	\begin{tikzpicture}
+		\draw[round cap-round cap, line width=1.25pt,ctcolorfooterline] (0,0) to (0.8\linewidth,0);
+	\end{tikzpicture}
+\end{center}
+
+Der in diesem Kapitel betrachtete Mark-and-Sweep-Algorithmus gilt als der erste Algorithmus zur automatischen Speicherverwaltung, weswegen zahlreiche Varianten existieren, die für bestimmte Anwendungen und Systeme optimiert sind.
+Allen gemein ist das Auffinden erreichbarer Objekte durch Verfolgung von Referenzen in der Markierungsphase.
+Obwohl die erreichbaren Objekte weniger Speicher belegen als während der Bereinigungsphase traversiert werden muss, ist die Markierungsphase in der Praxis die aufwendigere.
+Häufig befinden sich Objekte, die aufeinander verweisen, nicht in unmittelbarer Nähe zueinander.
+Das Auffinden erreichbarer Objekte verursacht daher schwer vorhersehbare Speicherzugriffe.
+Caching- und Prefetch-Mechanismen, die durch vorweggenommenes Bereitstellen von Speicherinhalten Zugriffe beschleunigen, profitieren hingegen von zeitlicher und räumlicher \textit{Lokalität} von Daten, die in einer Beziehung zueinander stehen.
+In der Markierungsphase können sie daher Speicherzugriffe nicht so effektiv beschleunigen wie in der Bereinigungsphase \cite[S. 21f]{handbook}.
+
+Um diesen Makel zu beheben, kann die Zugriffsreihenfolge auf Objekte variiert werden.
+Anstatt etwa im naiven Algorithmu~\ref{algo:naive-mark} die Abarbeitung der \Var{toDo}-Menge zu beginnen, sobald das erste Basisobjekt erfasst wurde, können statt dessen auch zunächst alle Basisobjekte zu \Var{toDo} hinzugefügt und die Methode \Method{mark} im Anschluss aufgerufen werden.
+Je nachdem, wie \Var{toDo} in der Praxis realisiert wird -- zum Beispiel in Form eines Stacks -- kann die Traversierung der Objekte -- und damit die Performanz der Markierungsphase -- signifikant beeinflusst werden \cite[S. 19]{handbook}.
+
+
+Zusätzlich zu den hier vorgestellten Varianten gibt es etwa solche, 
+
+%\section{Variationsmöglichkeiten}
+%\label{sec:variations}
 
 \todo[inline]{Markierungsmöglichkeiten}
