@@ -284,13 +284,15 @@ Meist können Mutator und Kollektor während der Bereinigung gleichzeitig tätig
 Nicht mehr erreichbare Objekte sind ohne Nebenwirkungen zerstörbar und Markierungsinformationen werden so hinterlegt, dass sie für den Mutator grundsätzlich nicht zugänglich sind.
 Race conditions sind dadurch prinzipiell ausgeschlossen.
 Ferner ergibt sich hierdurch die Möglichkeit, die Bereinigungsphase nicht unmittelbar nach der Markierungsphase ausführen zu müssen.
-Für Systeme ohne hardware- oder softwareseitige Unterstützung für Multithreading, in denen die Aufgaben des Mutators und Kollektors nicht gleichzeitig bearbeitet werden können, bietet sich daher die \textbf{verzögerte Bereinigung} (engl. \textit{lazy sweeping}) nach Hughes \cite[Kap. 2.5]{handbook} an.
+Für Systeme ohne hardware- oder softwareseitige Unterstützung für Multithreading, in denen die Aufgaben des Mutators und Kollektors nicht gleichzeitig bearbeitet werden können, bietet sich daher die \textbf{verzögerte Bereinigung} (engl. \textit{lazy sweeping}) nach Hughes \cite{hughes} an.
 
-Bei der verzögerten Bereinigung ist der Heapspeicher in \textit{Bereiche} (engl. \textit{blocks}) eingeteilt.
-Jeder Bereich enthält Objekte einer festgelegten Größenordnung; zu jeder Größenordnung können mehrere Bereiche existieren.
+Bei der verzögerten Bereinigung ist der Heapspeicher in \textit{Regionen} (engl. \textit{blocks}) eingeteilt.
+Jede Region enthält Objekte einer festgelegten Größenordnung; zu jeder Größenordnung können mehrere Regionen existieren.
 Die Idee ist nun, das Sweeping durch den Allokator ausführen zu lassen, wenn Speicher angefordert wird.
-Dabei werden die zuvor markierten Objekte freigegeben, allerdings nur in denjenigen Bereichen, die der angeforderten Speichermenge zugeordnet sind.
+Dabei werden die zuvor markierten Objekte freigegeben, allerdings nur in denjenigen Regionen, die der angeforderten Speichermenge zugeordnet sind.
 Die Bereinigung beschränkt sich dadurch auf einen Bruchteil des Heaps.
+
+\todo[inline]{Skizze}
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
@@ -311,7 +313,7 @@ Die Bereinigung beschränkt sich dadurch auf einen Bruchteil des Heaps.
 	\State \quad \Method{markStart()}		\Comment{Siehe Algorithmus~\ref{algo:naive-sweep} bzw. \ref{algo:tricolor}}
 	\State \quad \FOREACH \Var{blk} $\in \Blocks$
 	\State \quad \quad \IF \Method{isNotMarked}(\Var{blk})
-	\State \quad \quad \quad \Method{free}(\Var{blk})	\Comment{Gib komplett verwaisten Bereich sofort frei}
+	\State \quad \quad \quad \Method{free}(\Var{blk})	\Comment{Gib komplett verwaiste Region sofort frei}
 	\State \quad \quad \ELSE \Method{add}(\Var{toSweep}, \Var{blk})
 	\Statex
 	\State \MethodHead{lazySweep}(\Var{size})
@@ -320,58 +322,55 @@ Die Bereinigung beschränkt sich dadurch auf einen Bruchteil des Heaps.
 	\State \quad \quad \IF (\Var{blk} $\neq$ \Null $\wedge$ \Method{sweep}(\Method{start}(\Var{blk}), \Method{end}(\Var{blk})))
 	\State \quad \quad \quad \Return	\Comment{Beende, sobald Speicher gewonnen wurde}
 	\State \quad \WHILE \Var{blk} $\neq$ \Var{null}
-	\State \quad \Method{createBlock}(\Var{size})	\Comment{Initialisiere neuen Bereich, wenn nichts freigegeben}
+	\State \quad \Method{createBlock}(\Var{size})	\Comment{Initialisiere neue Region, wenn nichts freigegeben}
 \end{algorithmic}
 \caption[Verzögertes Bereinigen des Heaps]{Verzögertes Bereinigen des Heaps (vgl. \cite[S. 25]{handbook}).}
 \label{algo:lazy-sweep}
 \end{algorithm}
 
 Dieser Ansatz geht mit einigen marginale Änderungen an unseren bisher verwendeten Algorithmen einher.
-Zum einen setzen wir voraus, dass beim Markieren eines Objekts auch der entsprechende Bereich markiert wird, in dem sich das Objekt befindet.
-Dies kann recht einfach realisiert werden, indem bei der Initialisierung eines Bereichs durch den Allokator zusätzlich Platz für einen Header reserviert wird, welcher Metadaten wie die Größenordnung der enthaltenen Objekte aufnimmt\todo{Mark table für enthaltenen Objekte}.
-Weiter verlangen wir, dass der Allokator zusätzlich Informationen über Anzahl, Lage und Größenordnung der existierenden Bereiche besitzt.
+Zum einen setzen wir voraus, dass beim Markieren eines Objekts auch die entsprechende Region markiert wird, in dem sich das Objekt befindet.
+Dies kann recht einfach realisiert werden, indem bei der Initialisierung einer Region durch den Allokator zusätzlich Platz für einen Header reserviert wird, welcher Metadaten wie die Größenordnung der enthaltenen Objekte aufnimmt.
+Weiter verlangen wir, dass der Allokator zusätzlich Informationen über Anzahl, Lage und Größenordnung der existierenden Region besitzt.
 Zuletzt wandeln wir die Methode \Method{sweep} aus den Algorithmen~\ref{algo:naive-sweep} und \ref{algo:tricolor} dahingehend ab, dass sie nur einen eingeschränkten Teil des Heaps traversiert -- etwa, indem zwei Parameter für Start- und Endadresse übergeben werden.
 Zudem soll \Method{sweep} den Wahrheitswert \Var{true} zurückgeben, wenn zumindest ein Objekt entfernt wurde, und andernfalls \Var{false}.
 
-Nach Abschluss der Markierungsphase kann anhand der zusätzlichen Markierung der Bereiche festgestellt werden, welche Bereiche nur verwaiste Objekte enthalten.
-In diesem Fall kann der Allokator den gesamten Bereich ad hoc freigeben (Zeile~17 von Algorithmus~\ref{algo:lazy-sweep}).
-Hingegen werden Bereiche, die mindestens ein erreichbares Objekt enthalten und somit markiert sind, nach Abschluss der Markierungsphase einer Menge \Var{toSweep} zugefügt (Zeile~18).
-In dieser wird Buch geführt, welche Bereiche differenzierter bereinigt werden müssen, da sie unerreichbare Objekte enthalten könnten.
+Nach Abschluss der Markierungsphase kann anhand der zusätzlichen Markierung der Regionen festgestellt werden, welche nur verwaiste Objekte enthalten.
+In diesem Fall kann der Allokator eine Region ad hoc freigeben (Zeile~17 von Algorithmus~\ref{algo:lazy-sweep}).
+Hingegen werden Regionen, die mindestens ein erreichbares Objekt enthalten und somit markiert sind, nach Abschluss der Markierungsphase einer Menge \Var{toSweep} zugefügt (Zeile~18).
+In dieser wird Buch geführt, welche Regionen differenzierter bereinigt werden müssen, da sie unerreichbare Objekte enthalten könnten.
 
 Im Gegensatz zu den bisher betrachteten Mark-and-Sweep-Algorithmen beginnt die Bereinigungsphase nicht unmittelbar nach Abschluss der Markierung, sondern erst bei Anforderung von Speicher mittels \Method{new}:
-Falls dabei kein freier Speicher geeigneter Größe gefunden werden kann, weil etwa die entsprechenden Bereiche ausgeschöpft sind, beginnt ein \textit{Lazy-Sweep-Zyklus} (Zeile~20 bis~24).
-Dabei werden nach und nach Bereiche aus \Var{toSweep} entfernt und bereinigt, die Objekte der angeforderten Speichergröße verwalten.
-Sobald ein Bereich um ein Objekt reduziert werden konnte, wird der Zyklus beendet und der Allokator kann den gewonnenen Speicher neu zuordnen (Zeile~22f).
-Falls aus keinem Bereich ein Objekt freigegeben werden konnte, bedeutet dies, dass alle Bereiche der entsprechenden Objektgröße mit erreichbaren Objekten gefüllt sind.
-In diesem Fall muss der Allokator einen neuen Bereich initialisieren, der neue Objekte aufnehmen kann (Zeile~25).
+Falls dabei kein freier Speicher geeigneter Größe gefunden werden kann, weil etwa die entsprechenden Regionen ausgeschöpft sind, beginnt ein \textit{Lazy-Sweep-Zyklus} (Zeile~20 bis~24).
+Dabei werden nach und nach Regionen aus \Var{toSweep} entfernt und bereinigt, die Objekte der angeforderten Speichergröße verwalten.
+Sobald eine Region um ein Objekt reduziert werden konnte, wird der Zyklus beendet und der Allokator kann den gewonnenen Speicher neu zuordnen (Zeile~22f).
+Falls aus keiner Region ein Objekt freigegeben werden konnte, bedeutet dies, dass alle Regionen der entsprechenden Objektgröße mit erreichbaren Objekten gefüllt sind.
+In diesem Fall muss der Allokator eine neue Region initialisieren, die neue Objekte aufnehmen kann (Zeile~25).
 
-Was geschieht nun, wenn nicht genügend freier Speicher zu Verfügung steht, um einen weiteren Bereich zu erzeugen?
+Was geschieht nun, wenn nicht genügend freier Speicher zu Verfügung steht, um eine weitere Region zu erzeugen?
 In diesem Fall schlägt auch der zweite Allokationsversuch fehl (Zeile~5f).
 Der letzte Versuch besteht nun darin, die Markierungen der Objekte zu aktualisieren, indem eine Markierungsphase gestartet wird (Zeile~7).
 Da die letzte Markierungsphase nicht unmittelbar vor der Speicheranforderung, sondern möglicherweise wesentlich früher stattgefunden hat, könnten in der Zwischenzeit weitere Objekte verwaist sein.
-Diese werden nachfolgend in einem zweiten Lazy-Sweep-Zyklus freigegeben, sodass zuletzt Platz innerhalb eines Bereichs bzw. für einen neuen Bereich geschaffen werden kann (Zeile~8).
+Diese werden nachfolgend in einem zweiten Lazy-Sweep-Zyklus freigegeben, sodass zuletzt Platz innerhalb einer Region bzw. für eine neue Region geschaffen werden kann (Zeile~8).
 
-Während die Einschränkung der Bereinigung auf einzelne Bereiche zwar einen Performancevorteil mit sich bringt, besitzt diese Variante des Mark-and-Sweep-Algorithmus auch einige Nachteile:
-Eine ungünstige Kombination von Speicheranforderungen und Sweep-Zyklen könnte dazu führen, dass viele Bereiche einer Größenordnung angelegt werden, die jeweils nur wenige Objekte enthalten und größtenteils ungenutzt sind.
-Wenn jeder Bereich allerdings mindestens ein erreichbares Objekt enthält, können sie nicht in Gänze freigegeben werden.
-Eine hohe Zahl dieser ineffizient genutzten Bereiche führt dazu, dass möglicherweise nicht mehr genügend freier Speicher zu Verfügung steht, um Bereiche anderer Größenordnung zu initialisieren, obwohl ausreichend Speicher vorhanden wäre, der nicht durch Objekte belegt wird.
-Eine Lösung dieses Problems wäre eine zusätzliche Konsolidierungsphase, bei der Bereiche gleicher Größenordnung zusammengelegt werden.
+Während die Einschränkung der Bereinigung auf einzelne Regionen zwar einen Performancevorteil mit sich bringt, besitzt diese Variante des Mark-and-Sweep-Algorithmus auch einige Nachteile:
+Eine ungünstige Kombination von Speicheranforderungen und Sweep-Zyklen könnte dazu führen, dass viele Regionen einer Größenordnung angelegt werden, die jeweils nur wenige Objekte enthalten und größtenteils ungenutzt sind.
+Wenn jede Region allerdings mindestens ein erreichbares Objekt enthält, können sie nicht in Gänze freigegeben werden.
+Eine hohe Zahl dieser ineffizient genutzter Regionen führt dazu, dass möglicherweise nicht mehr genügend freier Speicher zu Verfügung steht, um Regionen anderer Größenordnung zu initialisieren, obwohl ausreichend Speicher vorhanden wäre, der nicht durch Objekte belegt wird.
+Eine Lösung dieses Problems wäre eine zusätzliche Konsolidierungsphase, bei der Regionen gleicher Größenordnung zusammengelegt werden.
 Dies bedeutet jedoch zusätzlicher Aufwand für die Verschiebung von Objekten\todo{Ref zu Defrag}.
 Der zweite Nachteil ist, dass nicht mehr erreichbare Objekte eventuell erst sehr spät freigegeben werden, wenn primär Objekte anderer Größenordnungen angefordert werden.
-In so einem Fall können auch Bereiche, die keine erreichbare Objekte mehr enthalten, über lange Zeit im Speicher verweilen, sodass diese für einen gewissen Zeitraum ein Speicherleck darstellen.
+In so einem Fall können auch Regionen, die keine erreichbare Objekte mehr enthalten, über lange Zeit im Speicher verweilen, sodass diese für einen gewissen Zeitraum ein Speicherleck darstellen.
 Zuletzt kann auch die Aufteilung des Heaps nach Objektgrößen nicht zielführend sein:
-Je nach Anwendungsfall und verwendeter Programmiersprache besteht die Möglichkeit, dass zwischen den meisten Objekten keine signifikanten Größenunterschiede bestehen und die Bereiche einer bestimmten Größenordnung besonders stark beansprucht werden.
+Je nach Anwendungsfall und verwendeter Programmiersprache besteht die Möglichkeit, dass zwischen den meisten Objekten keine signifikanten Größenunterschiede bestehen und die Regionen einer bestimmten Größenordnung besonders stark beansprucht werden.
 Der Vorteil, nur einen beschränktes Gebiet des Heaps zu bereinigen, würde damit deutlich geschmälert werden.
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
  % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
-\begin{center}
-	\begin{tikzpicture}
-		\draw[round cap-round cap, line width=1.25pt,ctcolorfooterline] (0,0) to (0.8\linewidth,0);
-	\end{tikzpicture}
-\end{center}
+\section{Weitere Varianten und Vergleich}
+\label{sec:mark-sweep-variations}
 
 Der in diesem Kapitel betrachtete Mark-and-Sweep-Algorithmus gilt als der erste Algorithmus zur automatischen Speicherverwaltung, weswegen zahlreiche Varianten existieren, die für bestimmte Anwendungen und Systeme optimiert sind.
 Allen gemein ist das Auffinden erreichbarer Objekte durch Verfolgung von Referenzen in der Markierungsphase.
@@ -380,15 +379,43 @@ Häufig befinden sich Objekte, die aufeinander verweisen, nicht in unmittelbarer
 Das Auffinden erreichbarer Objekte verursacht daher schwer vorhersehbare Speicherzugriffe.
 Caching- und Prefetch-Mechanismen, die durch vorweggenommenes Bereitstellen von Speicherinhalten Zugriffe beschleunigen, profitieren hingegen von zeitlicher und räumlicher \textit{Lokalität} von Daten, die in einer Beziehung zueinander stehen.
 In der Markierungsphase können sie daher Speicherzugriffe nicht so effektiv beschleunigen wie in der Bereinigungsphase \cite[S. 21f]{handbook}.
-
 Um diesen Makel zu beheben, kann die Zugriffsreihenfolge auf Objekte variiert werden.
-Anstatt etwa im naiven Algorithmu~\ref{algo:naive-mark} die Abarbeitung der \Var{toDo}-Menge zu beginnen, sobald das erste Basisobjekt erfasst wurde, können statt dessen auch zunächst alle Basisobjekte zu \Var{toDo} hinzugefügt und die Methode \Method{mark} im Anschluss aufgerufen werden.
-Je nachdem, wie \Var{toDo} in der Praxis realisiert wird -- zum Beispiel in Form eines Stacks -- kann die Traversierung der Objekte -- und damit die Performanz der Markierungsphase -- signifikant beeinflusst werden \cite[S. 19]{handbook}.
+Anstatt etwa im naiven Algorithmus~\ref{algo:naive-mark} die Abarbeitung der \Var{toDo}-Menge zu beginnen, sobald das erste Basisobjekt erfasst wurde, können statt dessen auch zunächst alle Basisobjekte zu \Var{toDo} hinzugefügt und die Methode \Method{mark} im Anschluss aufgerufen werden.
+Je nachdem, wie \Var{toDo} in der Praxis realisiert wird -- zum Beispiel in Form eines Stacks -- kann die Traversierung der Objekte -- und damit die Performanz des Kollektors in der Markierungsphase -- signifikant beeinflusst werden (vgl. \cite[S. 19]{handbook}).
 
+Statt Markierungsinformationen im Header zu speichern, können diese auch in Bitmaps oder tabellenähnlichen Strukturen außerhalb eines Objekts verwaltet werden.
+Dies vermeidet schreibende Zugriffe auf Objekte während der Markierungsphase, sodass Objekte ohne Referenzfelder übersprungen werden können und die Garbage Collection das Caching weniger stark beeinträchtigt.
+Im Falle eines in Regionen eingeteilten Heaps bietet es sich beispielsweise an, pro Region eine Bitmap anzulegen.
+Somit kann während der Bereinigung schnell erkannt werden, ob größere Teile einer Region freigegeben werden können, ohne sie komplett traversieren zu müssen.
 
-Zusätzlich zu den hier vorgestellten Varianten gibt es etwa solche, 
+\begin{center}
+	\begin{tikzpicture}
+		\draw[round cap-round cap, line width=1.25pt,ctcolorfooterline] (0,0) to (0.8\linewidth,0);
+	\end{tikzpicture}
+\end{center}
 
-%\section{Variationsmöglichkeiten}
-%\label{sec:variations}
+Wir beenden dieses Kapitel mit einer Betrachtung der Komplexität der vorgestellten Mark-Sweep-Varianten.
+In seiner einfachsten Form erweist sich der Mark-and-Sweep-Algorithmus als vergleichsweise platzsparend:
+Werden Markierungsinformationen unmittelbar in den Objekten gespeichert, wird pro Objekt lediglich ein einzelnes Bit oder Byte beansprucht.
+Zwischen verschiedenen Mark-Sweep-Zyklen müssen ferner keinerlei zusätzliche Informationen bereitgehalten werden.
+Während eines Mark-Sweep-Zyklus muss jedoch die Menge \Var{toDo} der noch zu untersuchenden Objekte verwaltet werden.
+Da wir bereits festgestellt haben, dass keine Objekte mehrfach zu \Var{toDo} hinzugefügt werden, ist ihre Mächtigkeit durch die Anzahl $|\ObjectSet|$ aller Objekte beschränkt.
+Davon ausgehend, dass in \Var{toDo} ausschließlich Referenzen konstanter Größe gespeichert werden, ergibt sich insgesamt ein Platzbedarf von $\oh(|\ObjectSet|)$.
 
-\todo[inline]{Markierungsmöglichkeiten}
+Während der Speicherbedarf der Markierungsphase also linear mit der Anzahl der Objekte wächst, spielt für die Laufzeit auch die Anzahl der Referenzen eine Rolle.
+Im schlimmsten Fall müssen alle existierenden Objekte und jede Referenz verfolgt werden, um auszuschließen, dass ein erreichbares Objekt nicht unmarkiert bleibt.
+Die Komplexität dieser Operation ist analog zur vollständigen Traversierung eines beliebigen Graphen $(V,E)$, die durch $\oh(|V|+|E|)$ gegeben ist \cite[Kap. 22]{cormen-leiserson}.
+
+\begin{mybox}
+\begin{satz}[Speicherbedarf und Komplexität des Mark-Sweep-Algorithmus]
+	Für den naiven Mark-and-Sweep-Algorithmus gelten folgende Eigenschaften:
+	\begin{enumerate}[(1)]
+		\item Der Speicherbedarf des gesamten Algorithmus ist $\oh(|\ObjectSet|)$, wobei $\ObjectSet$ die Menge aller Objekte ist.
+		\item Die Laufzeit der Markierungsphase ist $\oh\enb{|\ObjectSet|+\sum\limits_{o \in \ObjectSet}^{} \abs{\Pointers(o)}}$.
+		\item Die Laufzeit der Bereinigungsphase ist $\oh(|\HeapSize|)$, wobei $|\HeapSize|$ die Größe des Heaps bezeichnet.
+	\end{enumerate}
+\end{satz}
+\end{mybox}
+
+Für die Drei-Farben-Abstraktion ergeben sich identische asymptotische Laufzeiten; in der Praxis ermöglicht die Nebenläufigkeit von Kollektor und Mutator jedoch geringere Verzögerungen im Programmablauf.
+Die Kosten der Bereinigungsphase des Lazy Sweeping nach Hughes sind nur schwer abschätzbar, da sie unter anderem von der Strukturierung des Heaps in Regionen abhängen, welche wiederum je nach Anwendungsfall einen starken Einfluss auf die Ausführungshäufigkeit der Garbage Collection haben kann.
