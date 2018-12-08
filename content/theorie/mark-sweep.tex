@@ -369,7 +369,7 @@ Der Vorteil, nur einen beschränktes Gebiet des Heaps zu bereinigen, würde dami
  % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
-\section{Weitere Varianten und Vergleich}
+\section{Weitere Varianten und Komplexität}
 \label{sec:mark-sweep-variations}
 
 Der in diesem Kapitel betrachtete Mark-and-Sweep-Algorithmus gilt als der erste Algorithmus zur automatischen Speicherverwaltung, weswegen zahlreiche Varianten existieren, die für bestimmte Anwendungen und Systeme optimiert sind.
@@ -388,34 +388,36 @@ Dies vermeidet schreibende Zugriffe auf Objekte während der Markierungsphase, s
 Im Falle eines in Regionen eingeteilten Heaps bietet es sich beispielsweise an, pro Region eine Bitmap anzulegen.
 Somit kann während der Bereinigung schnell erkannt werden, ob größere Teile einer Region freigegeben werden können, ohne sie komplett traversieren zu müssen.
 
-\begin{center}
-	\begin{tikzpicture}
-		\draw[round cap-round cap, line width=1.25pt,ctcolorfooterline] (0,0) to (0.8\linewidth,0);
-	\end{tikzpicture}
-\end{center}
+%\begin{center}
+%	\begin{tikzpicture}
+%		\draw[round cap-round cap, line width=1.25pt,ctcolorfooterline] (0,0) to (0.8\linewidth,0);
+%	\end{tikzpicture}
+%\end{center}
 
 Wir beenden dieses Kapitel mit einer Betrachtung der Komplexität der vorgestellten Mark-Sweep-Varianten.
 In seiner einfachsten Form erweist sich der Mark-and-Sweep-Algorithmus als vergleichsweise platzsparend:
 Werden Markierungsinformationen unmittelbar in den Objekten gespeichert, wird pro Objekt lediglich ein einzelnes Bit oder Byte beansprucht.
 Zwischen verschiedenen Mark-Sweep-Zyklen müssen ferner keinerlei zusätzliche Informationen bereitgehalten werden.
 Während eines Mark-Sweep-Zyklus muss jedoch die Menge \Var{toDo} der noch zu untersuchenden Objekte verwaltet werden.
-Da wir bereits festgestellt haben, dass keine Objekte mehrfach zu \Var{toDo} hinzugefügt werden, ist ihre Mächtigkeit durch die Anzahl $|\ObjectSet|$ aller Objekte beschränkt.
-Davon ausgehend, dass in \Var{toDo} ausschließlich Referenzen konstanter Größe gespeichert werden, ergibt sich insgesamt ein Platzbedarf von $\oh(|\ObjectSet|)$.
+Da wir bereits festgestellt haben, dass keine Objekte mehrfach zu \Var{toDo} hinzugefügt werden, ist ihre Mächtigkeit durch die Anzahl $|\Reach|$ der erreichbare Objekte beschränkt.
+Davon ausgehend, dass in \Var{toDo} ausschließlich Referenzen konstanter Größe gespeichert werden, ergibt sich insgesamt ein Platzbedarf von $\Theta(|\Reach|)$.
 
 Während der Speicherbedarf der Markierungsphase also linear mit der Anzahl der Objekte wächst, spielt für die Laufzeit auch die Anzahl der Referenzen eine Rolle.
-Im schlimmsten Fall müssen alle existierenden Objekte und jede Referenz verfolgt werden, um auszuschließen, dass ein erreichbares Objekt nicht unmarkiert bleibt.
+Für jedes erreichbare Objekt müssen alle enthaltenen Referenzen verfolgt werden, um auszuschließen, dass ein erreichbares Objekt nicht unmarkiert bleibt.
 Die Komplexität dieser Operation ist analog zur vollständigen Traversierung eines beliebigen Graphen $(V,E)$, die durch $\oh(|V|+|E|)$ gegeben ist \cite[Kap. 22]{cormen-leiserson}.
 
 \begin{mybox}
 \begin{satz}[Speicherbedarf und Komplexität des Mark-Sweep-Algorithmus]
 	Für den naiven Mark-and-Sweep-Algorithmus gelten folgende Eigenschaften:
 	\begin{enumerate}[(1)]
-		\item Der Speicherbedarf des gesamten Algorithmus ist $\oh(|\ObjectSet|)$, wobei $\ObjectSet$ die Menge aller Objekte ist.
-		\item Die Laufzeit der Markierungsphase ist $\oh\enb{|\ObjectSet|+\sum\limits_{o \in \ObjectSet}^{} \abs{\Pointers(o)}}$.
-		\item Die Laufzeit der Bereinigungsphase ist $\oh(|\HeapSize|)$, wobei $|\HeapSize|$ die Größe des Heaps bezeichnet.
+		\item Der Speicherbedarf des gesamten Algorithmus ist $\Theta(|\Reach|)$.
+		\item Die Laufzeit der Markierungsphase ist $\oh\enb{|\Reach|+\sum\limits_{\Var{a} \in \Reach}^{} \abs{\Pointers(\Var{a})}}$.
+		\item Die Laufzeit der Bereinigungsphase ist $\Theta(|\HeapSize|)$, wobei $|\HeapSize|$ die Größe des Heaps bezeichnet.
 	\end{enumerate}
 \end{satz}
 \end{mybox}
 
 Für die Drei-Farben-Abstraktion ergeben sich identische asymptotische Laufzeiten; in der Praxis ermöglicht die Nebenläufigkeit von Kollektor und Mutator jedoch geringere Verzögerungen im Programmablauf.
 Die Kosten der Bereinigungsphase des Lazy Sweeping nach Hughes sind nur schwer abschätzbar, da sie unter anderem von der Strukturierung des Heaps in Regionen abhängen, welche wiederum je nach Anwendungsfall einen starken Einfluss auf die Ausführungshäufigkeit der Garbage Collection haben kann.
+Grundsätzlich ist es für Mark-Sweep-Ansätze empfehlenswert, einen größeren Puffer für die Arbeit des Kollektors zu reservieren, um eine hohe Zahl an Speicheranforderungen seitens des Allokators bewältigen zu können.
+Andernfalls besteht die Gefahr, dass die Garbage Collection zu häufig aufgerufen wird und den Mutator nach und nach verdrängt (vgl. \cite[S. 70]{jones-lins}).
