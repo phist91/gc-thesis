@@ -1,3 +1,9 @@
 %!TEX root = ../../thesis.tex
 \chapter{Referenzzählung}
 \label{cha:reference-counting}
+Der zweite Garbage-Collection-Algorithmus, der in dieser Arbeit vorgestellt wird, stammt von George Collins und aus dem selben Jahr wie der Mark-Sweep-Algorithmus.
+Collins betrachtet wie McCarthy das \textit{LISP Programming System} auf IBM-Großrechnern und das Problem, wann Listenelemente, die prinzipiell in mehreren Listen vorkommen können, wieder freigegeben werden dürfen.
+McCarthys Ansatz bezeichnet er jedoch als \enquote{elegant but inefficient} \cite[S. 655]{collins1960}, da er sowohl zeitaufwändig sei als auch den Speicherplatz für Nutzdaten einschränke.
+Stattdessen schlägt Collins vor, zusätzlich zu einem Datum die Anzahl der Referenzen auf dieses zu speichern.
+Anhand dieses Zählers, der bei der Manipulation von Referenzen aktualisiert wird, kann unmittelbar festgestellt werden, ob ein Datum verwaist ist und der entsprechende Speicherplatz freigegeben werden kann \cite[S. 656f]{collins1960}.
+Diesen Ansatz -- die \textit{Referenzzählung} -- werden wir in diesem Kapitel ausführlich betrachten.

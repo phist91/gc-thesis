@@ -3,7 +3,8 @@
 \label{cha:mark-sweep}
 Wir beginnen mit einer Vorstellung des ersten Garbage-Collection-Algorithmus, der auf John McCarthy zurückgeht \cite[191--193]{mccarthy1960}.
 Im Rahmen eines im Jahr 1960 veröffentlichten Artikels über die Berechnung rekursiver Funktionen auf dem \textit{IBM 704} mithilfe des \textit{LISP Programming Systems} erläutert McCarthy die Speicherung von Daten in einer Listenstruktur.
-Diese besteht aus Paaren, deren erster Eintrag \texttt{car} die zu speichernde Information enthält, während im zweiten Eintrag \texttt{cdr} die Registeradresse des nachfolgenden Paares zu finden ist.
+Diese besteht aus Paaren, deren erster Eintrag \texttt{car} die zu speichernde Information enthält\footnote{Genauer: Die Adresse des Registers, in der die zu speichernde Information gelagert wird.}, während im zweiten Eintrag \texttt{cdr} die Registeradresse des nachfolgenden Paares zu finden ist.
+Diese Struktur hat den Vorteil, dass ein Datum, das in mehreren Listen vorkommt, nur ein einziges Register belegt.
 Register, die aktuell nicht zur Speicherung von Daten genutzt werden, befinden sich in einer \textit{free storage list}.
 Bei der Anforderung von Speicher für ein zu speicherndes Datum werden Register aus dieser Liste entfernt.
 Durch die Manipulation der Registeradressen können Paare verwaisen, was zu Speicherlecks führt.
