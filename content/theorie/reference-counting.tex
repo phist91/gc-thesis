@@ -6,4 +6,50 @@ Collins betrachtet wie McCarthy das \textit{LISP Programming System} auf IBM-Gro
 McCarthys Ansatz bezeichnet er jedoch als \enquote{elegant but inefficient} \cite[S. 655]{collins1960}, da er sowohl zeitaufwändig sei als auch den Speicherplatz für Nutzdaten einschränke.
 Stattdessen schlägt Collins vor, zusätzlich zu einem Datum die Anzahl der Referenzen auf dieses zu speichern.
 Anhand dieses Zählers, der bei der Manipulation von Referenzen aktualisiert wird, kann unmittelbar festgestellt werden, ob ein Datum verwaist ist und der entsprechende Speicherplatz freigegeben werden kann \cite[S. 656f]{collins1960}.
-Diesen Ansatz -- die \textit{Referenzzählung} -- werden wir in diesem Kapitel ausführlich betrachten.
+Diesen Ansatz -- die \textit{Referenzzählung} (engl. \textit{reference counting}) -- werden wir in diesem Kapitel ausführlich betrachten.
+
+\section{Naive Referenzzählung}
+\label{sec:naive-rc}
+Zur Realisierung des Algorithmus von Collins in unserem Speichermodell nutzen wir erneut den Header eines Objekts \Var{a}, um dort einen ganzzahligen, nicht negativen Wert \Var{rc}(\Var{a}) zu hinterlegen, den wir als \textit{Referenzzähler} bezeichnen.
+Dieser gibt an, wie viele Referenzen von anderen Objekten auf \Var{a} existieren, und wird bei der Erzeugung von \Var{a} mit dem Wert $0$ initialisiert.
+Auf diese Art erhalten wir unmittelbar eine notwendige Bedingung für die Erreichbarkeit eines Objekts:
+Ist $\Var{a} \in \Reach$, so existiert mindestens ein Objekt $\Var{b} \neq \Var{a}$ mit $\Var{b} \rightarrow \Var{a}$ und somit gilt $\Var{rc}(\Var{a}) \geq 1$.
+
+\begin{mybox}
+\begin{lemma}[Notwendige Bedingung für Erreichbarkeit]
+\label{lemma:notwendig-rc}
+	Für ein Objekt $\Var{a}$ gilt: Ist $\Var{a} \in \Reach$, so folgt $\Var{rc}(\Var{a}) \geq 1$.
+\end{lemma}
+\end{mybox}
+
+Diese Bedingung ist allerdings nicht hinreichend, da die Objekte, von denen die Referenzen ausgehen, gegebenenfalls nicht erreichbar sind und die Erreichbarkeit von \Var{a} somit nicht garantiert werden kann.
+Jedoch folgt als Kontraposition von Lemma~\ref{lemma:notwendig-rc} sofort, dass ein Objekt $\Var{a}$ mit $\Var{rc}(\Var{a}) = 0$ nicht erreichbar ist und freigegeben werden kann.
+
+Wie kann \Var{rc}(\Var{a}) nun verwendet werden, um automatisch ein nicht erreichbares Objekt freizugeben?
+Immer, wenn eine Referenz auf \Var{a} in ein Feld eines anderen Objekts geschrieben wird, so muss \Var{rc}(\Var{a}) inkrementiert werden.
+Gleichzeitig muss der Referenzzähler des Objekts \Var{b}, welches das Ziel der überschriebenen Referenz war, dekrementiert werden.
+Wenn dieser anschließend den Wert $0$ aufweist, kann \Var{b} sofort freigegeben werden.
+Diese Manipulationen der Referenzzähler sind unmittelbar auszuführen, nachdem eine Referenz manipuliert wurde.
+Daher bieten sich zur Realisierung Schreibbarrieren an, die bereits in Abschnitt~\ref{sec:tricolor} eingeführt wurden.
+
+\begin{algorithm}[h]
+\begin{algorithmic}[1]
+	\Input Objekt \Var{obj}, in dem Referenz gesetzt wird; Index des Feldes \Var{i}; zu setzende Referenz \Var{ref}
+	\State \Atomic \MethodHead{writeRef}(\Var{obj}, \Var{i}, \Var{ref}):
+	\State \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Var{*ref} $\neq$ \Var{obj})	\Comment{Erhöhe \Var{rc}, falls nicht \Null oder}
+	\State \quad \quad $\Var{rc}(\Var{*ref}) \gets \Var{rc}(\Var{*ref}) + 1$ \Comment{Selbstreferenz geschrieben wird}
+	\State \quad \IF (\Var{obj[i]} $\neq$ \Null $\wedge$ \Var{*obj[i]} $\neq$ \Var{obj})	\Comment{Reduziere \Var{rc}, falls nicht \Null oder}
+	\State \quad \quad \Method{decRefCount}(\Var{*obj[i]})	\Comment{Selbstreferenz überschrieben wird}
+	\State \quad \Var{obj[i]} $\gets$ \Var{ref}
+	\Statex
+	\State \MethodHead{decRefCount}(\Var{obj}):
+	\State \quad $\Var{rc}(\Var{obj}) \gets \Var{rc}(\Var{obj}) - 1$
+	\State \quad \IF $\Var{rc}(\Var{obj}) = 0$
+	\State \quad \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
+	\State \quad \quad \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Var{*ref} $\neq$ \Var{obj}) \Comment{Reduziere rekursiv \Var{rc}}
+	\State \quad \quad \quad \quad \Method{decRefCount}(\Var{*ref}) \Comment{referenzierter Objekte}
+	\State \quad \quad \Method{free}(\Var{\&obj})
+\end{algorithmic}
+\caption[Naive Referenzzählung]{Naive Referenzzählung mittels Schreibbarriere (vgl. \cite[S. 58]{handbook}).}
+\label{algo:naive-rc}
+\end{algorithm}

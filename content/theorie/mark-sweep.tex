@@ -13,6 +13,8 @@ Im Falle von Speicherknappheit wird -- ausgehend von einer Menge von Basisregist
 Nicht erreichbare Register enthalten überschreibbare Inhalte, sodass diese zurück in die \textit{free storage list} eingefügt werden können und wieder als freie Speicherplätze zu Verfügung stehen.
 Diese zweischrittige Vorgehensweise -- das Erkennen nicht mehr benötigter Speicherbereiche und die anschließende Freigabe eben jener -- bildet die Grundlage des \textit{Mark-and-Sweep}-Algorithmus.
 
+\todo[inline]{Bild Listenstruktur}
+
 \section{Naives Mark and Sweep}
 \label{sec:naive-mark-sweep}
 Der naive Mark-and-Sweep-Algorithmus arbeitet in zwei Schritten:
