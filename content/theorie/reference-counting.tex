@@ -113,9 +113,11 @@ Zeitliche Lokalität ist somit gegeben.
 Trotz dieser Vorteile ist die naive Referenzzählung jedoch kein Allheilmittel.
 Dadurch, dass bei jeglicher Referenzänderung eine Manipulation der Zähler erfolgt, werden Operationen des Mutators, die ursprünglich nur lesend auf Objekte zugreifen, zu Schreibzugriffen.
 Diese Problematik wird in Verbindung mit dynamischen Datenstrukturen besonders deutlich:
-Betrachten wir etwa die lineare Suche auf einer einfach verketteten Liste, so fällt auf, dass bei jeder Iteration die Referenzvariable auf das aktuell betrachtete Element neu gesetzt wird.
+Betrachten wir etwa die lineare Suche auf einer einfach verketteten Liste, so fällt auf, dass bei jeder Iteration die Referenzvariable auf das aktuell betrachtete Element neu gesetzt wird (Zeile 4 in Algorithmus~\ref{algo:linsearch}).
 Dadurch werden zwei Schreibzugriffe notwendig, die die Zähler des zuletzt betrachteten Objekts reduzieren und des nächsten Objekts erhöhen, obwohl deren Erreichbarkeit tatsächlich nicht beeinflusst wird.
 Die Anzahl an Speicheroperationen wird also signifikant vergrößert.
+Durch den rekursiven Aufruf von \Method{decRefCount} kann es zudem zu einer Kaskade an Freigaben und Zählermanipulationen kommen, sobald ein Objekt freigegeben wird.
+In Verbindung mit der Atomizität der Schreibbarriere können dadurch größere und unerwartete Verzögerungen im Programmablauf entstehen, die bei zeitkritischen Anwendungen um jeden Preis zu vermeiden sind.
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
@@ -128,3 +130,14 @@ Die Anzahl an Speicheroperationen wird also signifikant vergrößert.
 \caption[Lineare Suche]{Lineare Suche in einer verketteten Liste. Obwohl der Algorithmus keine Objekte manipuliert, verursacht jede Änderung an der Referenzvariablen \Var{cur} die Manipulation von zwei Referenzzählern.}
 \label{algo:linsearch}
 \end{algorithm}
+
+Ein weiteres Problem entsteht, wenn zyklische Datenstrukturen wie etwa doppelt verkettete Listen verwendet werden.
+Die gesamte Struktur kann unerreichbar sein, obwohl die Referenzzähler der einzelnen Objekte nicht $0$ sind (siehe Abbildung~\ref{fig:rc-cycle}).
+Die einzelnen Objekte werden dann nicht als löschbar erkannt, was zu einem Speicherleck führt.
+
+\begin{figure}[h]
+	\centering
+	\includestandalone{img/tikz/ch3-cycle}
+	\caption[Referenzzählung in zyklischen Datenstrukturen]{Referenzzählung in zyklischen Datenstrukturen. Wird Objekt \Var{L} entfernt, sind \Var{a} und \Var{b} nicht mehr erreichbar. Jedoch fallen ihre Referenzzähler nicht auf $0$, sodass sie als Speicherlecks im Speicher verbleiben.}
+	\label{fig:rc-cycle}
+\end{figure}

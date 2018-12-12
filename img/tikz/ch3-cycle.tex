@@ -1,0 +1,25 @@
+\input{standalone.tex}
+\begin{document}
+	\begin{tikzpicture}[->, auto, node distance= 1.5cm and 3cm, on grid, semithick,%
+		state/.style={circle, draw, font=\ttfamily, minimum width= 1cm}]
+		%\draw (0,0) grid (10,-5);
+		\node[state] (L) {L};
+		\node[state] (a) [above right=of L] {a};
+		\node[state] (b) [right=of a] {b};
+				
+		\draw[->] (L) -- (a) node[midway,above,sloped,font=\ttfamily]{first};
+		\draw[->] (a) to[bend angle=20,bend left] node[midway,above,font=\ttfamily]{next} (b);
+		\draw[->] (b) to[bend angle=20,bend left] node[midway,below,font=\ttfamily]{prev} (a);
+		\draw (a) node[below=0.5cm,ctcolormain,font=\bfseries]{2};
+		\draw (b) node[below=0.5cm,ctcolormain,font=\bfseries]{1};
+		
+		\draw [very thick,->,dashed] (7,1.5) -- (8.5,1.5);
+		
+		\node[state] (a2) at (9.5,1.5) {a};
+		\node[state] (b2) [right=of a2] {b};
+		\draw[->] (a2) to[bend angle=20,bend left] node[midway,above,font=\ttfamily]{next} (b2);
+		\draw[->] (b2) to[bend angle=20,bend left] node[midway,below,font=\ttfamily]{prev} (a2);
+		\draw (a2) node[below=0.5cm,ctcolormain,font=\bfseries]{1};
+		\draw (b2) node[below=0.5cm,ctcolormain,font=\bfseries]{1};
+	\end{tikzpicture}
+\end{document}
