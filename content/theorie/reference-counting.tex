@@ -3,7 +3,7 @@
 \label{cha:reference-counting}
 Der zweite Garbage-Collection-Algorithmus, der in dieser Arbeit vorgestellt wird, stammt von George Collins und aus dem selben Jahr wie der Mark-Sweep-Algorithmus.
 Collins betrachtet wie McCarthy das \textit{LISP Programming System} auf IBM-Großrechnern und das Problem, wann Listenelemente, die prinzipiell in mehreren Listen vorkommen können, wieder freigegeben werden dürfen.
-McCarthys Ansatz bezeichnet er jedoch als \enquote{elegant but inefficient} \cite[S. 655]{collins1960}, da er sowohl zeitaufwändig sei als auch den Speicherplatz für Nutzdaten einschränke.
+McCarthys Ansatz bezeichnet er jedoch als \enquote{elegant but inefficient} \cite[S. 655]{collins1960}, da dieser sowohl zeitaufwändig sei als auch den Speicherplatz für Nutzdaten einschränke.
 Stattdessen schlägt Collins vor, zusätzlich zu einem Datum die Anzahl der Referenzen auf dieses zu speichern.
 Anhand dieses Zählers, der bei der Manipulation von Referenzen aktualisiert wird, kann unmittelbar festgestellt werden, ob ein Datum verwaist ist und der entsprechende Speicherplatz freigegeben werden kann \cite[S. 656f]{collins1960}.
 Diesen Ansatz -- die \textit{Referenzzählung} (engl. \textit{reference counting}) -- werden wir in diesem Kapitel ausführlich betrachten.
@@ -53,3 +53,44 @@ Daher bieten sich zur Realisierung Schreibbarrieren an, die bereits in Abschnitt
 \caption[Naive Referenzzählung]{Naive Referenzzählung mittels Schreibbarriere (vgl. \cite[S. 58]{handbook}).}
 \label{algo:naive-rc}
 \end{algorithm}
+
+Die in Algorithmus~\ref{algo:naive-rc} aufgeführte Schreibbarriere kommt genau dann zum Einsatz, wenn mittels $\Var{obj}[i] \gets \Var{ref}$ in ein Feld eines Objekts eine Referenz geschrieben wird.
+Dabei wird zunächst geprüft, ob eine Selbstreferenz oder \Null geschrieben werden soll (Zeile 2f).
+In beiden Fällen ist der Referenzzähler des Ziels nicht zu erhöhen, da die Operation die Erreichbarkeit des Ziels nicht beeinflusst.
+Analog wird überprüft, ob im betroffenen Feld bereits eine Referenz auf ein anderes Objekt gespeichert ist (Zeile 4f).
+Wenn ja, muss dessen Referenzzähler entsprechend dekrementiert werden.
+Im Anschluss kann die neue Referenz in das Feld des Objekts geschrieben werden.
+
+Das Herabsetzen des Referenzzählers wird durch die Prozedur \Method{decRefCount} übernommen.
+Dabei wird zugleich geprüft, ob dieser anschließend $0$ ist (Zeile 9).
+In diesem Fall wird das entsprechende Objekt \Var{obj} freigegeben.
+Die Freigabe führt allerdings dazu, dass auch die Zähler derjenigen Objekte verringert werden müssen, die von \Var{obj} referenziert werden.
+Ensprechend wird für jede Referenz in den Feldern von \Var{obj}, die nicht \Null oder eine Selbstreferenz ist, \Method{decRefCount} rekursiv aufgerufen (Zeile 10 bis 12).
+
+Die Atomizität der Schreibbarriere verhindert die Entstehung von \textit{race conditions} bei gleichzeitigen Zugriffen auf Referenzzähler und ist daher unabdingbar.
+Ebenso ist es wesentlich, dass der Referenzzähler des neuen Ziels zunächst inkrementiert wird, bevor der des alten Ziels dekrementiert wird.
+Andernfalls könnte es, wenn altes und neues Ziel identisch sind, passieren, dass der Zähler auf $0$ reduziert würde.
+In der Folge würde das Ziel sofort freigegeben werden, obwohl es weiterhin erreichbar bliebe.
+
+\begin{mybox}
+\begin{satz}[]
+\label{satz:rc-correctness}
+	Der Algorithmus~\ref{algo:naive-rc} zur Referenzzählung ist korrekt und terminiert.
+\end{satz}
+\end{mybox}
+
+\begin{proof}
+	Zu zeigen ist zunächst, dass die rekursiven Aufrufe von \Method{decRefCount} in Zeile 12 terminieren.
+	Angenommen, es gäbe eine nicht terminierende Folge von Aufrufen $\Method{decRefCount}(\Var{a}_1), \Method{decRefCount}(\Var{a}_2), \dots$
+	für Objekte $\Var{a}_i, i \in \NN$.
+	Da jedes Objekt nur endlich viele Referenzen auf andere Objekte besitzt, ist $\Pointers(\Var{a}_i)$ endlich für alle $i \in \NN$.
+	Weiter ist die Anzahl aller Objekte endlich; es muss also ein Objekt $\Var{a}_j$ existieren, für welches $\Method{decRefCount}(\Var{a}_j)$ unendlich oft aufgerufen wird.
+	Allerdings wird $\Method{decRefCount}(\Var{a}_j)$ nur aufgerufen, wenn ein Objekt $\Var{b}$ mit $\Var{b} \rightarrow \Var{a}_j$ existiert, für welches zuvor $\Var{rc}(\Var{b})$ auf $0$ gesetzt wurde.
+	Da während der rekursiven Aufrufe von \Method{decRefCount} keine Referenzzähler erhöht werden, müssen also unendlich viele verschiedene Objekte \Var{b} mit dieser Eigenschaft existieren.
+	Das ist jedoch ein Widerspruch zur Endlichkeit der Anzahl aller Objekte.
+	
+	Es bleibt zu zeigen, dass der Algorithmus korrekt ist.
+	Die Freigabe eines Objekts \Var{a} durch den Algorithmus erfolgt ausschließlich in Zeile 13.
+	Diese wird nur ausgelöst, wenn $\Var{rc}(\Var{a}) = 0$ gilt.
+	Aus Lemma~\ref{lemma:notwendig-rc} folgt, dass \Var{a} nicht erreichbar ist.
+\end{proof}
