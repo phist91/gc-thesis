@@ -67,6 +67,8 @@ In diesem Fall wird das entsprechende Objekt \Var{obj} freigegeben.
 Die Freigabe führt allerdings dazu, dass auch die Zähler derjenigen Objekte verringert werden müssen, die von \Var{obj} referenziert werden.
 Ensprechend wird für jede Referenz in den Feldern von \Var{obj}, die nicht \Null oder eine Selbstreferenz ist, \Method{decRefCount} rekursiv aufgerufen (Zeile 10 bis 12).
 
+\todo[inline]{Beispiel}
+
 Die Atomizität der Schreibbarriere verhindert die Entstehung von \textit{race conditions} bei gleichzeitigen Zugriffen auf Referenzzähler und ist daher unabdingbar.
 Ebenso ist es wesentlich, dass der Referenzzähler des neuen Ziels zunächst inkrementiert wird, bevor der des alten Ziels dekrementiert wird.
 Andernfalls könnte es, wenn altes und neues Ziel identisch sind, passieren, dass der Zähler auf $0$ reduziert würde.
@@ -94,3 +96,35 @@ In der Folge würde das Ziel sofort freigegeben werden, obwohl es weiterhin erre
 	Diese wird nur ausgelöst, wenn $\Var{rc}(\Var{a}) = 0$ gilt.
 	Aus Lemma~\ref{lemma:notwendig-rc} folgt, dass \Var{a} nicht erreichbar ist.
 \end{proof}
+
+Die Garbage Collection mithilfe naive Referenzzählung bietet im Vergleich zum Mark-Sweep-Algorithmus einige Vorteile:
+Der Mechanismus zur Freigabe von Objekten wird durch die Entstehung von verwaisten Objekten ausgelöst und nicht etwa, wenn nicht genügend freier Speicher zu Verfügung steht.
+Dadurch wird die Allokation von Speicher für neu erzeugte Objekte nicht verzögert.
+Verwaiste Objekte werden beim Löschen ihrer letzten Referenz unmittelbar erkannt und freigegeben und nicht erst beim nächsten Mark-Sweep-Zyklus.
+Speichermangel kann de facto nur dadurch entstehen, dass der gesamte Speicher von erreichbaren Objekten belegt wird -- in diesem Fall bietet allerdings kein Garbage-Collection-Algorithmus Abhilfe.
+Referenzzählung benötigt zudem keine Kenntnis über die Struktur des Objektgraphen:
+Da kein Aufspüren aller erreichbaren Objekte durchgeführt wird, muss nicht bekannt sein, welche Objekte Basisobjekte sind.
+Weiter lässt sich erahnen, dass Referenzzählung weniger stark dazu neigt, Cache-Mechanismen zu beeinträchtigen.
+Im Gegensatz zu Mark and Sweep finden kaum unvorhersehbare Objektzugriffe statt.
+Wird der Referenzzähler eines Objektes erhöht, so wird gerade eine neue Referenz hierauf angelegt.
+Die Wahrscheinlichkeit, dass im Programmablauf kurz danach auch ein Zugriff auf dieses Objekt vorgesehen ist, ist daher relativ hoch.
+Zeitliche Lokalität ist somit gegeben.
+
+Trotz dieser Vorteile ist die naive Referenzzählung jedoch kein Allheilmittel.
+Dadurch, dass bei jeglicher Referenzänderung eine Manipulation der Zähler erfolgt, werden Operationen des Mutators, die ursprünglich nur lesend auf Objekte zugreifen, zu Schreibzugriffen.
+Diese Problematik wird in Verbindung mit dynamischen Datenstrukturen besonders deutlich:
+Betrachten wir etwa die lineare Suche auf einer einfach verketteten Liste, so fällt auf, dass bei jeder Iteration die Referenzvariable auf das aktuell betrachtete Element neu gesetzt wird.
+Dadurch werden zwei Schreibzugriffe notwendig, die die Zähler des zuletzt betrachteten Objekts reduzieren und des nächsten Objekts erhöhen, obwohl deren Erreichbarkeit tatsächlich nicht beeinflusst wird.
+Die Anzahl an Speicheroperationen wird also signifikant vergrößert.
+
+\begin{algorithm}[h]
+\begin{algorithmic}[1]
+	\State \MethodHead{linSearch}(\Var{list}, \Var{x})):
+	\State \quad \Var{cur} $\gets$ \Method{first}(\Var{list})
+	\State \quad \WHILE $(\Var{cur} \neq \Null \wedge \Var{*cur} \neq \Var{x})$
+	\State \quad \quad \Var{cur} $\gets$ \Method{next}(\Var{list})
+	\State \quad \Return \Var{cur} 
+\end{algorithmic}
+\caption[Lineare Suche]{Lineare Suche in einer verketteten Liste. Obwohl der Algorithmus keine Objekte manipuliert, verursacht jede Änderung an der Referenzvariablen \Var{cur} die Manipulation von zwei Referenzzählern.}
+\label{algo:linsearch}
+\end{algorithm}
