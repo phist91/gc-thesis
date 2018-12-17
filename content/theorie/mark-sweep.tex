@@ -13,7 +13,12 @@ Im Falle von Speicherknappheit wird -- ausgehend von einer Menge von Basisregist
 Nicht erreichbare Register enthalten überschreibbare Inhalte, sodass diese zurück in die \textit{free storage list} eingefügt werden können und wieder als freie Speicherplätze zu Verfügung stehen.
 Diese zweischrittige Vorgehensweise -- das Erkennen nicht mehr benötigter Speicherbereiche und die anschließende Freigabe eben jener -- bildet die Grundlage des \textit{Mark-and-Sweep}-Algorithmus.
 
-\todo[inline]{Bild Listenstruktur}
+\begin{figure}[h]
+	\centering
+	\includestandalone{img/tikz/ch2-lisp}
+	\caption[Visualisierung einer LISP-Liste]{Visualisierung der LISP-Liste \texttt{a = (13,42,7,42)}.}
+	\label{fig:lisp-list}
+\end{figure}
 
 \section{Naives Mark and Sweep}
 \label{sec:naive-mark-sweep}

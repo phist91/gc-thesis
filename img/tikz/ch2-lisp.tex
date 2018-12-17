@@ -1,0 +1,23 @@
+\input{standalone.tex}
+\begin{document}
+	\begin{tikzpicture}
+		\lispbox{0}{0}
+		\lispbox{3}{0}
+		\lispbox{6}{0}
+		\lispbox{9}{0}
+		
+		\node[font=\ttfamily] (A) at (2.5,-1.5) {13};
+		\node[font=\ttfamily] (B) at (5.5,-1.5) {42};
+		\node[font=\ttfamily] (C) at (8.5,-1.5) {7};
+		
+		\draw[thick,->] (0.5,0.5) -- (A);
+		\draw[thick,->] (1.5,0.5) -- (3,0.5);
+		\draw[thick,->] (3.5,0.5) -- (B);
+		\draw[thick,->] (4.5,0.5) -- (6,0.5);
+		\draw[thick,->] (6.5,0.5) -- (C);
+		\draw[thick,->] (7.5,0.5) -- (9,0.5);
+		\draw[thick,->] (9.5,0.5) -- (B);
+		\draw[thick,->] (-1,0.5) node[left,font=\ttfamily]{a} -- (0,0.5);
+	\end{tikzpicture}
+\end{document}
+
