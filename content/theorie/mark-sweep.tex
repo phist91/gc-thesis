@@ -294,13 +294,18 @@ Race conditions sind dadurch prinzipiell ausgeschlossen.
 Ferner ergibt sich hierdurch die Möglichkeit, die Bereinigungsphase nicht unmittelbar nach der Markierungsphase ausführen zu müssen.
 Für Systeme ohne hardware- oder softwareseitige Unterstützung für Multithreading, in denen die Aufgaben des Mutators und Kollektors nicht gleichzeitig bearbeitet werden können, bietet sich daher die \textbf{verzögerte Bereinigung} (engl. \textit{lazy sweeping}) nach Hughes \cite{hughes} an.
 
+\begin{figure}[h]
+	\centering
+	\includestandalone{img/tikz/ch2-heap-region}
+	\caption[Visualisierung eines in Regionen aufgeteilten Heaps]{Visualisierung eines in Regionen aufgeteilten Heaps. Jede Region kann Objekten einer festgelegten Größenordnung zugewiesen werden. Für eine Größenordnung können allerdings mehrere Regionen verwendet werden.}
+	\label{fig:heap-region}
+\end{figure}
+
 Bei der verzögerten Bereinigung ist der Heapspeicher in \textit{Regionen} (engl. \textit{blocks}) eingeteilt.
-Jede Region enthält Objekte einer festgelegten Größenordnung; zu jeder Größenordnung können mehrere Regionen existieren.
+Jede Region enthält Objekte einer festgelegten Größenordnung; zu jeder Größenordnung können mehrere Regionen existieren (Abbildung~\ref{fig:heap-region}).
 Die Idee ist nun, das Sweeping durch den Allokator ausführen zu lassen, wenn Speicher angefordert wird.
 Dabei werden die zuvor markierten Objekte freigegeben, allerdings nur in denjenigen Regionen, die der angeforderten Speichermenge zugeordnet sind.
 Die Bereinigung beschränkt sich dadurch auf einen Bruchteil des Heaps.
-
-\todo[inline]{Skizze}
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
