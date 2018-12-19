@@ -98,7 +98,7 @@ In der Folge würde das Ziel sofort freigegeben werden, obwohl es weiterhin erre
 \end{proof}
 
 Die Garbage Collection mithilfe naive Referenzzählung bietet im Vergleich zum Mark-Sweep-Algorithmus einige Vorteile:
-Der Mechanismus zur Freigabe von Objekten wird durch die Entstehung von verwaisten Objekten ausgelöst und nicht etwa, wenn nicht genügend freier Speicher zu Verfügung steht.
+Der Mechanismus zur Freigabe von Objekten wird durch die Entstehung von verwaisten Objekten ausgelöst und nicht etwa, wenn unzureichend freier Speicher zu Verfügung steht.
 Dadurch wird die Allokation von Speicher für neu erzeugte Objekte nicht verzögert.
 Verwaiste Objekte werden beim Löschen ihrer letzten Referenz unmittelbar erkannt und freigegeben und nicht erst beim nächsten Mark-Sweep-Zyklus.
 Speichermangel kann de facto nur dadurch entstehen, dass der gesamte Speicher von erreichbaren Objekten belegt wird -- in diesem Fall bietet allerdings kein Garbage-Collection-Algorithmus Abhilfe.
@@ -121,7 +121,7 @@ In Verbindung mit der Atomizität der Schreibbarriere können dadurch größere 
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
-	\State \MethodHead{linSearch}(\Var{list}, \Var{x})):
+	\State \MethodHead{linSearch}(\Var{list}, \Var{x}):
 	\State \quad \Var{cur} $\gets$ \Method{first}(\Var{list})
 	\State \quad \WHILE $(\Var{cur} \neq \Null \wedge \Var{*cur} \neq \Var{x})$
 	\State \quad \quad \Var{cur} $\gets$ \Method{next}(\Var{list})

@@ -11,7 +11,7 @@ Durch die Manipulation der Registeradressen können Paare verwaisen, was zu Spei
 Zur Auflösung dieser Problematik bietet LISP als erste Programmiersprache ihrer Zeit eine automatische Speicherverwaltung, die von McCarthy wie folgt grob umschrieben wird:
 Im Falle von Speicherknappheit wird -- ausgehend von einer Menge von Basisregistern -- ermittelt, welche Register über eine Folge von \texttt{cdr}-Einträgen erreichbar sind.
 Nicht erreichbare Register enthalten überschreibbare Inhalte, sodass diese zurück in die \textit{free storage list} eingefügt werden können und wieder als freie Speicherplätze zu Verfügung stehen.
-Diese zweischrittige Vorgehensweise -- das Erkennen nicht mehr benötigter Speicherbereiche und die anschließende Freigabe eben jener -- bildet die Grundlage des \textit{Mark-and-Sweep}-Algorithmus.
+Diese zweischrittige Vorgehensweise -- das Erkennen nicht mehr benötigter Speicherbereiche und die anschließende Freigabe eben jener -- bildet die Grundlage des \textit{Mark-Sweep-Algorithmus}.
 
 \begin{figure}[h]
 	\centering
@@ -22,7 +22,7 @@ Diese zweischrittige Vorgehensweise -- das Erkennen nicht mehr benötigter Speic
 
 \section{Naives Mark and Sweep}
 \label{sec:naive-mark-sweep}
-Der naive Mark-and-Sweep-Algorithmus arbeitet in zwei Schritten:
+Der naive Mark-Sweep-Algorithmus arbeitet in zwei Schritten:
 Zunächst wird bestimmt, welche Objekte im Speicher unerreichbar sind, weil sie von keinem anderen erreichbaren Objekt referenziert werden.
 Diese Objekte können gefahrlos freigegeben werden, da auf ihre Informationen nicht mehr zugegriffen werden kann.
 Der zweite Schritt besteht aus einer Traversierung des gesamten Heaps.
@@ -76,7 +76,7 @@ Sobald \Var{toDo} leer ist, erfolgt die Rückkehr zur Methode \Method{markStart}
 Es ist wesentlich, dass Objekte bereits markiert werden, wenn sie der Menge \Var{toDo} hinzugefügt werden, und nicht etwa, nachdem sie abgearbeitet wurden (Zeile 8 und 9 bzw. 16 und 17).
 Andernfalls besteht bei zyklischen Referenzen die Gefahr einer Endlosschleife, da unmarkierte Objekte mehrfach hinzugefügt würden.
 Präziser können wir festhalten, dass \Var{toDo} zu jedem Zeitpunkt ausschließlich bereits markierte Objekte enthält.
-Da keine Objekte hinzugefügt werden, die bereits markiert wurden (Zeile 7 und 16), wird kein Objekt doppelt verarbeitet.
+Da keine Objekte hinzugefügt werden, die bereits markiert wurden (Zeile 7 und 16), wird kein Objekt mehrfach verarbeitet.
 Da zudem mit jeder Iteration der \WHILE-Schleife mindestens ein Objekt aus \Var{toDo} entfernt wird (Zeile 13), die Anzahl aller Objekte endlich ist und wir voraussetzen, dass während der Ausführung des Garbage Collectors keine neuen Objekte entstehen, wird sowohl die \WHILE-Schleife, als auch die \FOREACH-Schleife nach endlich vielen Schritten terminieren.
 
 \begin{algorithm}
@@ -95,15 +95,15 @@ Da zudem mit jeder Iteration der \WHILE-Schleife mindestens ein Objekt aus \Var{
 
 Die Bereinigungsphase (engl. \textit{sweep}) beginnt unmittelbar nach der Markierungsphase durch Aufruf der Methode \Method{sweep}.
 Die Variable \Var{pos} wird mit der Speicheradresse initialisiert, an der sich das erste Objekt im Heap befindet.
-Wir gehen davon aus, dass eine Methode \Method{nextObject} zu Verfügung steht, die anhand einer übergebenen Speicheradresse die Adresse des nachfolgenden Objektes oder \Null zurückgibt, wenn dieses nicht existiert.
+Wir gehen davon aus, dass eine Methode \Method{nextObject} des Allokators zu Verfügung steht, die anhand einer übergebenen Speicheradresse die Adresse des nachfolgenden Objektes oder \Null zurückgibt, wenn dieses nicht existiert.
 Dadurch wird der Heap linear traversiert; nicht markierte Objekte werden freigegeben, während die Markierung erreichbarer Objekte zurückgesetzt wird.
 
-Wir halten zunächst fest, dass der Mark-and-Sweep-Algorithmus in seiner Gänze terminiert und korrekt ist, sofern während der Garbage Collection das laufende Programm angehalten wird:
+Wir halten zunächst fest, dass der Mark-Sweep-Algorithmus in seiner Gänze terminiert und korrekt ist, sofern während der Garbage Collection das laufende Programm angehalten wird:
 
 \begin{mybox}
 \begin{satz}
 	\label{satz:mark-sweep-correctness}
-	Der Mark-and-Sweep-Algorithmus terminiert und ist korrekt, wenn der Mutator während der Arbeit des Kollektors angehalten wird.
+	Der Mark-Sweep-Algorithmus terminiert und ist korrekt, wenn der Mutator während der Arbeit des Kollektors angehalten wird.
 \end{satz}
 \end{mybox}
 
@@ -123,7 +123,7 @@ Wir halten zunächst fest, dass der Mark-and-Sweep-Algorithmus in seiner Gänze 
 	Es existiert somit keine Referenz von einem erreichbaren auf ein unmarkiertes Objekt, weswegen keine erreichbaren Objekte freigegeben werden.
 \end{proof}
 
-Die Bedingung, dass der Mutator während des Markierens pausiert wird, ist tatsächlich notwendig, um zu vermeiden, dass fälschlicherweise keine erreichbaren Objekte entfernt werden, wie folgendes Beispiel zeigt (vgl. \cite[969]{dijkstra1978}):
+Die Bedingung, dass der Mutator während des Markierens pausiert wird, ist tatsächlich notwendig, um zu vermeiden, dass fälschlicherweise erreichbaren Objekte entfernt werden, wie folgendes Beispiel zeigt (vgl. \cite[969]{dijkstra1978}):
 Betrachten wir etwa die Situation, dass zwei Basisobjekte $\Var{A}$ und $\Var{B}$ alternierend auf ein Objekt $\Var{C}$ verweisen, das ausschließlich über $\Var{A}$ oder $\Var{B}$ erreichbar ist.
 Während der Kollektor aktiv ist, führe der Mutator folgenden Code aus:
 
@@ -164,8 +164,8 @@ Algorithmen, die zur Vermeidung von \textit{race conditions} zwischen Kollektor 
 
 \section{Drei-Farben-Abstraktion}
 \label{sec:tricolor}
-Da das Anhalten des Mutators während eines gesamten Garbage-Collection-Zyklus zu vergleichsweise großen Verzögerungen führt, ist eine Optimierung der Markierungsphase zielführend.
-Wünschenswert ist, Kollektor und Mutator möglichst häufig eine nebenläufige Ausführung zu ermöglichen, ohne dabei die Korrektheit der Garbage Collection zu gefährden.
+Da das Anhalten des Mutators während eines gesamten Garbage-Collection-Zyklus zu vergleichsweise großen Verzögerungen führt, ist eine Optimierung der Markierungsphase wünschenswert.
+Zielführend ist, Kollektor und Mutator möglichst häufig eine nebenläufige Ausführung zu ermöglichen, ohne dabei die Korrektheit der Garbage Collection zu gefährden.
 Wir haben gesehen, dass die Manipulation von Referenzen während der Markierungsphase dazu führt, dass Verweise von markierten auf unmarkierte Objekte entstehen können, sodass erreichbare Objekte unmarkiert bleiben.
 Um dies zu vermeiden, könnte man als ersten Ansatz auf die Idee kommen, beim Schreiben einer neuen Referenz in ein Feld eines Objekts das Ziel dieser Referenz sofort zu markieren.
 Dies ist jedoch nur scheinbar eine Lösung:
@@ -182,8 +182,8 @@ Dazu werden Objekte mit drei verschiedenen Farben markiert:
 \end{description}
 
 Zu Beginn des Algorithmus sind alle existierenden Objekte weiß.
-Wir modifizieren den ursprünglichen Mark-and-Sweep-Algorithmus~\ref{algo:naive-mark} so, dass Objekte bei ihrer Entdeckung grau und nach Abarbeitung ihrer Felder schwarz markiert werden.
-Hierfür existiert eine atomare Prozedur \Method{setColor}, die die Markierung eines Objekts auf eine bestimmte Farbe \Var{WHITE}, \Var{GRAY} oder \Var{BLACK} setzt.
+Wir modifizieren den ursprünglichen Mark-Sweep-Algorithmus~\ref{algo:naive-mark} so, dass Objekte bei ihrer Entdeckung grau und nach Abarbeitung ihrer Felder schwarz markiert werden.
+Hierfür existiert eine atomare Prozedur \Method{setColor}, die die Markierung eines Objekts auf eine bestimmte Farbe \Var{WHITE}, \Var{GRAY} oder \Var{BLACK}\footnote{Die Farbinformation kann dadurch realisiert werden, dass jede Farbe mit einer eindeutigen Konstante identifiziert wird. Entsprechend ist darauf zu achten, dass dies mehr Speicherplatz zur Verwaltung der Markierungsinformationen benötigt.} setzt.
 Auf diese Art bleiben nicht mehr erreichbare Objekte weiß und können anschließend als löschbar identifiziert werden.
 Analog wird die \Method{sweep}-Prozedur in Algorithmus~\ref{algo:naive-sweep} so abgeändert, dass Objekte gelöscht werden, wenn sie weiß markiert sind.
 Andernfalls wird ihre Markierung zurück auf weiß gesetzt.
@@ -241,21 +241,21 @@ Entsprechend verbleiben sie zunächst im Speicher und werden erst im nächsten G
 \label{algo:tricolor-barrier}
 \end{algorithm}
 
-An dieser Stelle gehen wir auf die Terminierung und Korrektheit des modifizierten Mark-and-Sweep-Algorithmus ein.
+An dieser Stelle gehen wir auf die Terminierung und Korrektheit des modifizierten Mark-Sweep-Algorithmus ein.
 
 \begin{mybox}
 \begin{satz}
-	Der Mark-and-Sweep-Algorithmus mit Drei-Farben-Abstraktion terminiert und ist korrekt, sofern während der Arbeit des Kollektors keine neuen Objekte erzeugt werden.
+	Der Mark-Sweep-Algorithmus mit Drei-Farben-Abstraktion terminiert und ist korrekt, sofern während der Arbeit des Kollektors keine neuen Objekte erzeugt werden.
 \end{satz}
 \end{mybox}
 
-\begin{proof}
-	\textit{Zur Terminierung:} Wir halten zunächst fest, dass Objekte während der Markierungsphase ausschließlich \textit{dunkler} gefärbt werden:
+\begin{proof}[Beweis der Terminierung:]
+	Wir halten zunächst fest, dass Objekte während der Markierungsphase ausschließlich \textit{dunkler} gefärbt werden:
 	In Algorithmus~\ref{algo:tricolor} werden lediglich weiß markierte Objekte grau gefärbt (Zeile~5 und 14); eine Weißfärbung geschieht in dieser Phase grundsätzlich nicht.
 	Analog zum ursprünglichen Algorithmus~\ref{algo:naive-mark} enthält \Var{graySet} nur grau markierte Objekte.
 	Jedes Objekt befindet sich dadurch höchstens einmal in dieser Menge.
 	Da \Var{graySet} nach jeder Iteration der \WHILE-Schleife um ein Objekt reduziert wird und keine neuen Objekte erzeugt werden, terminieren auch hier \WHILE- und \FOREACH-Schleife nach endlich vielen Schritten.
-	Zuletzt terminiert auch Bereinigungsphase (siehe Satz~\ref{satz:mark-sweep-correctness}).
+	Zuletzt terminiert auch die Bereinigungsphase (siehe Satz~\ref{satz:mark-sweep-correctness}).
 	
 	\textit{Zur Korrektheit:} Erneut ist zu zeigen, dass keine Objekte unmarkiert bleiben, die erreichbar sind.
 	Dies wäre genau dann der Fall, wenn nach der Markierungsphase ein schwarz markiertes Objekt eine Referenz auf ein weiß markiertes Objekt besitzt.
@@ -264,7 +264,7 @@ An dieser Stelle gehen wir auf die Terminierung und Korrektheit des modifizierte
 		\item[(A)] Es existieren keine zwei Objekte \Var{a} und \Var{b} mit \Var{a} $\rightarrow$ \Var{b}, sodass \Var{a} schwarz markiert und \Var{b} weiß markiert ist.
 	\end{description}
 	Da zu Beginn laut Vorbedingung alle Objekte weiß markiert sind und bis zum Eintritt in die \WHILE-Schleife Objekte nur grau markiert werden, gilt (A) trivialerweise, da keine schwarz markierten Objekte existieren.
-	Gelte nun (A) zu Beginn einer Schleifeniteration und sei \Var{a} dasjenige Objekt, das der Menge \Var{graySet} entnommen und schwarz gefärbt wird (Zeile~10f).
+	Gelte nun (A) zu Beginn einer Schleifeniteration und sei $\Var{obj} = \Var{a}$ dasjenige Objekt, das der Menge \Var{graySet} entnommen und schwarz gefärbt wird (Zeile~10f).
 	Existiert nun ein weiteres Objekt \Var{b} mit \Var{a} $\rightarrow$ \Var{b}, so ist \Var{\&b} $\in \Pointers(\Var{a})$.
 	Ist \Var{b} bereits grau oder schwarz markiert, so geschieht nichts.
 	Andernfalls wird \Var{*(\&b)} $=$ \Var{b} grau markiert (Zeile~14).
@@ -277,7 +277,7 @@ Die Atomizität der Schreibbarriere \Method{writeRef} in Algorithmus~\ref{algo:t
 Käme es unmittelbar nach der Markierung des Referenzziels, aber vor dem eigentlichen Setzen der Referenz in Zeile 5, zu einen kompletten Garbage-Collection-Zyklus, so würde die Markierung durch den Kollektor wieder aufgehoben.
 Damit bestünde im Anschluss die Möglichkeit, dass die Invariante (A) verletzt wird.
 Allerdings besteht die Möglichkeit, die Invariante (A) abzuschwächen und damit eine \textit{feingranularere} Lösung zu ermöglichen.
-Für Details hierzu verweisen wir auf die Publikation von Dijkstra \cite[S. 972ff]{dijkstra1978}.
+Für Details hierzu verweisen wir auf die Publikation von Dijkstra et al \cite[S. 972ff]{dijkstra1978}.
 Pirinen liefert darüber hinaus einen Überblick über verschiedene Möglichkeiten von Lese- und Schreibbarrieren im Kontext der Drei-Farben-Abstraktion \cite{pirinen}.
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -290,9 +290,9 @@ Die im vorigen Abschnitt vorgestellte Drei-Farben-Markierung dient vor allem daz
 In diesem Abschnitt wird eine Reduktion der Kosten der Sweep-Phase angestrebt.
 Meist können Mutator und Kollektor während der Bereinigung gleichzeitig tätig sein:
 Nicht mehr erreichbare Objekte sind ohne Nebenwirkungen zerstörbar und Markierungsinformationen werden so hinterlegt, dass sie für den Mutator grundsätzlich nicht zugänglich sind.
-Race conditions sind dadurch prinzipiell ausgeschlossen.
+\textit{Race conditions} sind dadurch prinzipiell ausgeschlossen.
 Ferner ergibt sich hierdurch die Möglichkeit, die Bereinigungsphase nicht unmittelbar nach der Markierungsphase ausführen zu müssen.
-Für Systeme ohne hardware- oder softwareseitige Unterstützung für Multithreading, in denen die Aufgaben des Mutators und Kollektors nicht gleichzeitig bearbeitet werden können, bietet sich daher die \textbf{verzögerte Bereinigung} (engl. \textit{lazy sweeping}) nach Hughes \cite{hughes} an.
+Für Systeme ohne hardware- oder softwareseitige Unterstützung für Multithreading, in denen die Aufgaben des Mutators und Kollektors nicht gleichzeitig bearbeitet werden können, bietet sich hingegen die \textbf{verzögerte Bereinigung} (engl. \textit{lazy sweeping}) nach Hughes \cite{hughes} an.
 
 \begin{figure}[h]
 	\centering
@@ -351,9 +351,9 @@ Zudem soll \Method{sweep} den Wahrheitswert \Var{true} zurückgeben, wenn zumind
 Nach Abschluss der Markierungsphase kann anhand der zusätzlichen Markierung der Regionen festgestellt werden, welche nur verwaiste Objekte enthalten.
 In diesem Fall kann der Allokator eine Region ad hoc freigeben (Zeile~17 von Algorithmus~\ref{algo:lazy-sweep}).
 Hingegen werden Regionen, die mindestens ein erreichbares Objekt enthalten und somit markiert sind, nach Abschluss der Markierungsphase einer Menge \Var{toSweep} zugefügt (Zeile~18).
-In dieser wird Buch geführt, welche Regionen differenzierter bereinigt werden müssen, da sie unerreichbare Objekte enthalten könnten.
+In dieser wird Buch geführt, welche Regionen differenzierter bereinigt werden müssen, da sie sowohl erreichbare als auch unerreichbare Objekte enthalten können.
 
-Im Gegensatz zu den bisher betrachteten Mark-and-Sweep-Algorithmen beginnt die Bereinigungsphase nicht unmittelbar nach Abschluss der Markierung, sondern erst bei Anforderung von Speicher mittels \Method{new}:
+Im Gegensatz zu den bisher betrachteten Mark-Sweep-Algorithmen beginnt die Bereinigungsphase nicht unmittelbar nach Abschluss der Markierung, sondern erst bei Anforderung von Speicher mittels \Method{new}.
 Falls dabei kein freier Speicher geeigneter Größe gefunden werden kann, weil etwa die entsprechenden Regionen ausgeschöpft sind, beginnt ein \textit{Lazy-Sweep-Zyklus} (Zeile~20 bis~24).
 Dabei werden nach und nach Regionen aus \Var{toSweep} entfernt und bereinigt, die Objekte der angeforderten Speichergröße verwalten.
 Sobald eine Region um ein Objekt reduziert werden konnte, wird der Zyklus beendet und der Allokator kann den gewonnenen Speicher neu zuordnen (Zeile~22f).
@@ -366,7 +366,7 @@ Der letzte Versuch besteht nun darin, die Markierungen der Objekte zu aktualisie
 Da die letzte Markierungsphase nicht unmittelbar vor der Speicheranforderung, sondern möglicherweise wesentlich früher stattgefunden hat, könnten in der Zwischenzeit weitere Objekte verwaist sein.
 Diese werden nachfolgend in einem zweiten Lazy-Sweep-Zyklus freigegeben, sodass zuletzt Platz innerhalb einer Region bzw. für eine neue Region geschaffen werden kann (Zeile~8).
 
-Während die Einschränkung der Bereinigung auf einzelne Regionen zwar einen Performancevorteil mit sich bringt, besitzt diese Variante des Mark-and-Sweep-Algorithmus auch einige Nachteile:
+Während die Einschränkung der Bereinigung auf einzelne Regionen zwar einen Performancevorteil mit sich bringt, besitzt diese Variante des Mark-Sweep-Algorithmus auch einige Nachteile:
 Eine ungünstige Kombination von Speicheranforderungen und Sweep-Zyklen könnte dazu führen, dass viele Regionen einer Größenordnung angelegt werden, die jeweils nur wenige Objekte enthalten und größtenteils ungenutzt sind.
 Wenn jede Region allerdings mindestens ein erreichbares Objekt enthält, können sie nicht in Gänze freigegeben werden.
 Eine hohe Zahl dieser ineffizient genutzter Regionen führt dazu, dass möglicherweise nicht mehr genügend freier Speicher zu Verfügung steht, um Regionen anderer Größenordnung zu initialisieren, obwohl ausreichend Speicher vorhanden wäre, der nicht durch Objekte belegt wird.
@@ -385,12 +385,12 @@ Der Vorteil, nur einen beschränktes Gebiet des Heaps zu bereinigen, würde dami
 \section{Weitere Varianten und Komplexität}
 \label{sec:mark-sweep-variations}
 
-Der in diesem Kapitel betrachtete Mark-and-Sweep-Algorithmus gilt als der erste Algorithmus zur automatischen Speicherverwaltung, weswegen zahlreiche Varianten existieren, die für bestimmte Anwendungen und Systeme optimiert sind.
+Der in diesem Kapitel betrachtete Mark-Sweep-Algorithmus gilt als der erste Algorithmus zur automatischen Speicherverwaltung, weswegen zahlreiche Varianten existieren, die für bestimmte Anwendungen und Systeme optimiert sind.
 Allen gemein ist das Auffinden erreichbarer Objekte durch Verfolgung von Referenzen in der Markierungsphase.
 Obwohl die erreichbaren Objekte weniger Speicher belegen als während der Bereinigungsphase traversiert werden muss, ist die Markierungsphase in der Praxis die aufwendigere.
 Häufig befinden sich Objekte, die aufeinander verweisen, nicht in unmittelbarer Nähe zueinander.
 Das Auffinden erreichbarer Objekte verursacht daher schwer vorhersehbare Speicherzugriffe.
-Caching- und Prefetch-Mechanismen, die durch vorweggenommenes Bereitstellen von Speicherinhalten Zugriffe beschleunigen, profitieren hingegen von zeitlicher und räumlicher \textit{Lokalität} von Daten, die in einer Beziehung zueinander stehen.
+Caching- und Prefetch-Mechanismen, die durch vorweggenommenes Bereitstellen von Speicherinhalten Zugriffe beschleunigen, profitieren hingegen von \textit{zeitlicher} und \textit{räumlicher Lokalität} von Daten, die in einer Beziehung zueinander stehen.
 In der Markierungsphase können sie daher Speicherzugriffe nicht so effektiv beschleunigen wie in der Bereinigungsphase \cite[S. 21f]{handbook}.
 Um diesen Makel zu beheben, kann die Zugriffsreihenfolge auf Objekte variiert werden.
 Anstatt etwa im naiven Algorithmus~\ref{algo:naive-mark} die Abarbeitung der \Var{toDo}-Menge zu beginnen, sobald das erste Basisobjekt erfasst wurde, können statt dessen auch zunächst alle Basisobjekte zu \Var{toDo} hinzugefügt und die Methode \Method{mark} im Anschluss aufgerufen werden.
@@ -401,31 +401,25 @@ Dies vermeidet schreibende Zugriffe auf Objekte während der Markierungsphase, s
 Im Falle eines in Regionen eingeteilten Heaps bietet es sich beispielsweise an, pro Region eine Bitmap anzulegen.
 Somit kann während der Bereinigung schnell erkannt werden, ob größere Teile einer Region freigegeben werden können, ohne sie komplett traversieren zu müssen.
 
-%\begin{center}
-%	\begin{tikzpicture}
-%		\draw[round cap-round cap, line width=1.25pt,ctcolorfooterline] (0,0) to (0.8\linewidth,0);
-%	\end{tikzpicture}
-%\end{center}
-
 Wir beenden dieses Kapitel mit einer Betrachtung der Komplexität der vorgestellten Mark-Sweep-Varianten.
-In seiner einfachsten Form erweist sich der Mark-and-Sweep-Algorithmus als vergleichsweise platzsparend:
+In seiner einfachsten Form erweist sich der Mark-Sweep-Algorithmus als vergleichsweise platzsparend:
 Werden Markierungsinformationen unmittelbar in den Objekten gespeichert, wird pro Objekt lediglich ein einzelnes Bit oder Byte beansprucht.
 Zwischen verschiedenen Mark-Sweep-Zyklen müssen ferner keinerlei zusätzliche Informationen bereitgehalten werden.
 Während eines Mark-Sweep-Zyklus muss jedoch die Menge \Var{toDo} der noch zu untersuchenden Objekte verwaltet werden.
 Da wir bereits festgestellt haben, dass keine Objekte mehrfach zu \Var{toDo} hinzugefügt werden, ist ihre Mächtigkeit durch die Anzahl $|\Reach|$ der erreichbare Objekte beschränkt.
-Davon ausgehend, dass in \Var{toDo} ausschließlich Referenzen konstanter Größe gespeichert werden, ergibt sich insgesamt ein Platzbedarf von $\Theta(|\Reach|)$.
+Davon ausgehend, dass in \Var{toDo} ausschließlich Referenzen konstanter Größe gespeichert werden müssen, ergibt sich insgesamt ein Platzbedarf von $\oh(|\Reach|)$.
 
-Während der Speicherbedarf der Markierungsphase also linear mit der Anzahl der Objekte wächst, spielt für die Laufzeit auch die Anzahl der Referenzen eine Rolle.
+Während der Speicherbedarf der Markierungsphase also linear mit der Anzahl der erreichbaren Objekte wächst, spielt für die Laufzeit auch die Anzahl der Referenzen eine Rolle.
 Für jedes erreichbare Objekt müssen alle enthaltenen Referenzen verfolgt werden, um auszuschließen, dass ein erreichbares Objekt nicht unmarkiert bleibt.
 Die Komplexität dieser Operation ist analog zur vollständigen Traversierung eines beliebigen Graphen $(V,E)$, die durch $\oh(|V|+|E|)$ gegeben ist \cite[Kap. 22]{cormen-leiserson}.
 
 \begin{mybox}
 \begin{satz}[Speicherbedarf und Komplexität des Mark-Sweep-Algorithmus]
-	Für den naiven Mark-and-Sweep-Algorithmus gelten folgende Eigenschaften:
+	Für den naiven Mark-Sweep-Algorithmus gelten folgende Eigenschaften:
 	\begin{enumerate}[(1)]
-		\item Der Speicherbedarf des gesamten Algorithmus ist $\Theta(|\Reach|)$.
+		\item Der Speicherbedarf des gesamten Algorithmus ist $\oh(|\Reach|)$.
 		\item Die Laufzeit der Markierungsphase ist $\oh\enb{|\Reach|+\sum\limits_{\Var{a} \in \Reach}^{} \abs{\Pointers(\Var{a})}}$.
-		\item Die Laufzeit der Bereinigungsphase ist $\Theta(|\HeapSize|)$, wobei $|\HeapSize|$ die Größe des Heaps bezeichnet.
+		\item Die Laufzeit der Bereinigungsphase ist $\oh(|\HeapSize|)$, wobei $|\HeapSize|$ die Größe des Heaps bezeichnet.
 	\end{enumerate}
 \end{satz}
 \end{mybox}
@@ -433,4 +427,4 @@ Die Komplexität dieser Operation ist analog zur vollständigen Traversierung ei
 Für die Drei-Farben-Abstraktion ergeben sich identische asymptotische Laufzeiten; in der Praxis ermöglicht die Nebenläufigkeit von Kollektor und Mutator jedoch geringere Verzögerungen im Programmablauf.
 Die Kosten der Bereinigungsphase des Lazy Sweeping nach Hughes sind nur schwer abschätzbar, da sie unter anderem von der Strukturierung des Heaps in Regionen abhängen, welche wiederum je nach Anwendungsfall einen starken Einfluss auf die Ausführungshäufigkeit der Garbage Collection haben kann.
 Grundsätzlich ist es für Mark-Sweep-Ansätze empfehlenswert, einen größeren Puffer für die Arbeit des Kollektors zu reservieren, um eine hohe Zahl an Speicheranforderungen seitens des Allokators bewältigen zu können.
-Andernfalls besteht die Gefahr, dass die Garbage Collection zu häufig aufgerufen wird und den Mutator nach und nach verdrängt (vgl. \cite[S. 70]{jones-lins}).
+Andernfalls besteht die Gefahr, dass die Garbage Collection zu häufig ausgelöst wird und den Mutator nach und nach verdrängt (vgl. \cite[S. 70]{jones-lins}).

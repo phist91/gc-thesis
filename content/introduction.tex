@@ -42,7 +42,7 @@ Der in dieser Arbeit verwendete Objektbegriff ist wesentlich allgemeiner gehalte
 Auch einzelne Werte eines Basisdatentyps oder Arrays werden als Objekt aufgefasst, selbst wenn diese nicht Bestandteil eines im Programm definierten Datentyps sind.
 
 Wir setzen ferner voraus, dass Objekte und ihre Felder \textit{typisiert} sind.
-Das bedeutet, dass stets nachvollziehbar ist, aus welchen Feldern ein Objekt besteht von welchem Datentypen diese sind.
+Das bedeutet, dass stets nachvollziehbar ist, aus welchen Feldern ein Objekt besteht und von welchem Datentyp diese sind.
 Insbesondere ist unterscheidbar, ob ein Feld eines Objekts eine Referenz enthält oder nicht.
 Weiter nehmen wir an, dass jedes Objekt einen so genannten \textit{Header} besitzt.
 Dies ist ein separates Feld, das Metainformationen aufnimmt, die für den Compiler und die Laufzeitumgebung, nicht aber aus Sicht des Entwicklers, zugänglich sind\todo{evtl genauer eingehen}.
@@ -96,14 +96,14 @@ Anschließend folgt eine Spezifikation von Eigenschaften, die wir von einem Garb
 \begin{defn}[Lebendigkeit]
 	\label{def:liveness}
 	Ein Objekt heißt zu einem bestimmten Zeitpunkt im Programmablauf \textbf{lebendig}, wenn der Mutator im weiteren Programmablauf lesend oder schreibend auf dieses zugreift.
-	Andernfalls bezeichnen wir das Objekt als \textit{nicht mehr benötigt}.
+	Andernfalls bezeichnen wir das Objekt als \textbf{nicht mehr benötigt}.
 \end{defn}
 \end{mybox}
 
 \begin{mybox}
 \begin{defn}[Garbage Collection]
 	\label{def:gc}
-	Eine Garbage Collection ist ein Algorithmus zur automatischen Wiederverwendung bereits genutzten Heapspeichers durch Identifikation und Freigabe von Objekten, die im weiteren Programmverlauf nicht mehr benötigt werden.
+	Eine \textbf{Garbage Collection} ist ein Algorithmus zur automatischen Wiederverwendung bereits genutzten Heapspeichers durch Identifikation und Freigabe von Objekten, die im weiteren Programmverlauf nicht mehr benötigt werden.
 \end{defn}
 \end{mybox}
 
@@ -128,7 +128,7 @@ Aus diesem Grund betrachten wir eine schwächere Eigenschaft von Objekten: die E
 Dafür gehen wir von einer Menge \Roots von \textbf{Basisobjekten} (engl. \textit{root objects}) aus.
 Diese sind dadurch gekennzeichnet, dass der Mutator unmittelbaren Zugriff auf sie hat, ohne dafür zunächst ihre Adresse aus den Feldern anderer Objekte beschaffen zu müssen.
 Hierzu zählen zum Beispiel statische Objekte, deren Position im Speicher bereits zur Compilezeit bekannt ist, oder Objekte, die sich in \textit{stack frames}\todo{definieren} befinden.
-Alle weiteren Objekte, die zur Laufzeit dynamisch erzeugt werden, gelten als erreichbar, wenn auf sie über eine Folge von Referenzen zugegriffen werden kann, wobei diese in den Feldern von Objekten gespeichert sind und die erste Referenz auf ein Basisobjekt verweist.
+Alle weiteren Objekte, die zur Laufzeit dynamisch erzeugt werden, gelten als erreichbar, wenn auf sie über eine Folge von Referenzen zugegriffen werden kann, wobei diese in den Feldern von Objekten gespeichert sind und die erste Referenz von einem Basisobjekt ausgeht.
 Einfacher ausgedrückt: Ein Objekt ist erreichbar, wenn der Mutator die Möglichkeit hat, mittelbar oder unmittelbar über Referenzen auf das Objekt zugreifen zu können.
 Formal definieren wir diese Eigenschaft wie folgt:
 
@@ -157,7 +157,7 @@ Objektgraphen werden uns im Rahmen dieser Arbeit bei der Veranschaulichng der vo
 \begin{mybox}
 \begin{defn}[Objektgraph]
 	Sei $O$ eine Menge von Objekten.
-	Ein gerichteter Graph $G = (V,E)$ mit Knotenmenge $V$ und Kantenmenge $E \subseteq V \times V$ heißt Objektgraph, wenn eine bijektive Abbildung $\varphi \colon O \rightarrow V$ existiert, sodass für je zwei Objekte $\mathtt{a,b} \in O$ gilt:
+	Ein gerichteter Graph $G = (V,E)$ mit Knotenmenge $V$ und Kantenmenge $E \subseteq V \times V$ heißt \textbf{Objektgraph} zu $O$, wenn eine bijektive Abbildung $\varphi \colon O \rightarrow V$ existiert, sodass für je zwei Objekte $\mathtt{a,b} \in O$ gilt:
 	\[
 		\mathtt{a} \rightarrow \mathtt{b} \quad \Leftrightarrow \quad (\varphi(\mathtt{a}),\varphi(\mathtt{b})) \in E.
 	\]
@@ -191,7 +191,7 @@ Dieses besteht aus der Anforderung, dass keine noch benötigten Daten zerstört 
 
 \begin{mybox}
 \begin{defn}[Korrektheit für Garbage-Collection-Algorithmen]
-	Ein Garbage-Collection-Algorithmus ist \textit{korrekt}, wenn er keine lebendigen Objekte freigibt.
+	Ein Garbage-Collection-Algorithmus ist \textbf{korrekt}, wenn er keine lebendigen Objekte freigibt.
 \end{defn}
 \end{mybox}
 
