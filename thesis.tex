@@ -2,7 +2,7 @@
 %!TEX TS-program = pdflatex
 % Author: Phil Steinhorst, p.st@wwu.de
 \input{config.tex}
-
+\listfiles
 \begin{document}
 
 \listoftodos
@@ -19,10 +19,9 @@
 \part{Algorithmen und Ansätze}
 \input{content/theorie/mark-sweep.tex}
 \input{content/theorie/reference-counting.tex}
-%\input{content/compacting.tex}
-%\input{content/copying.tex}
-%\input{content/generational.tex}
-%\input{content/fazit.tex}
+\chapter{Kompaktierung}		%\input{content/compacting.tex}		% Kompaktierung
+\chapter{Generationelle Garbage Collection}	%\input{content/generational.tex}	% generationell
+\chapter{Fazit und Vergleich}		%\input{content/fazit.tex}			% Fazit und Vergleich
 
 \part{Entwurf und Realisierung eines Garbage-Collection-Simulators}
 \input{content/praxis/modellierung.tex}

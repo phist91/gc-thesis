@@ -97,13 +97,14 @@ In der Folge würde das Ziel sofort freigegeben werden, obwohl es weiterhin erre
 	Aus Lemma~\ref{lemma:notwendig-rc} folgt, dass \Var{a} nicht erreichbar ist.
 \end{proof}
 
-Die Garbage Collection mithilfe naive Referenzzählung bietet im Vergleich zum Mark-Sweep-Algorithmus einige Vorteile:
+Die Garbage Collection mithilfe naive Referenzzählung bietet im Vergleich zum Mark-Sweep-Algorithmus einige Vorteile (vgl. \cite[S. 58--60]{handbook}):
 Der Mechanismus zur Freigabe von Objekten wird durch die Entstehung von verwaisten Objekten ausgelöst und nicht etwa, wenn unzureichend freier Speicher zu Verfügung steht.
 Dadurch wird die Allokation von Speicher für neu erzeugte Objekte nicht verzögert.
 Verwaiste Objekte werden beim Löschen ihrer letzten Referenz unmittelbar erkannt und freigegeben und nicht erst beim nächsten Mark-Sweep-Zyklus.
 Speichermangel kann de facto nur dadurch entstehen, dass der gesamte Speicher von erreichbaren Objekten belegt wird -- in diesem Fall bietet allerdings kein Garbage-Collection-Algorithmus Abhilfe.
-Referenzzählung benötigt zudem keine Kenntnis über die Struktur des Objektgraphen:
-Da kein Aufspüren aller erreichbaren Objekte durchgeführt wird, muss nicht bekannt sein, welche Objekte Basisobjekte sind.
+Referenzzählung benötigt zudem keinen Zugriff auf den vollständigen Objektgraphen:
+Da kein Aufspüren aller erreichbaren Objekte durchgeführt wird, kann auf eine Traversierung des Objektgraphen verzichtet werden.
+Dies ist besonders für verteilte Systeme von Vorteil, in denen die Markierungsphase sonst mehrere Knoten des Systems belasten und erhöhten Datenaustausch zwischen diesen verursachen würde.
 Weiter lässt sich erahnen, dass Referenzzählung weniger stark dazu neigt, Cache-Mechanismen zu beeinträchtigen.
 Im Gegensatz zu Mark and Sweep finden kaum unvorhersehbare Objektzugriffe statt.
 Wird der Referenzzähler eines Objektes erhöht, so wird gerade eine neue Referenz hierauf angelegt.
@@ -133,7 +134,7 @@ In Verbindung mit der Atomizität der Schreibbarriere können dadurch größere 
 
 Ein weiteres Problem entsteht, wenn zyklische Datenstrukturen wie etwa doppelt verkettete Listen verwendet werden.
 Die gesamte Struktur kann unerreichbar sein, obwohl die Referenzzähler der einzelnen Objekte nicht $0$ sind (siehe Abbildung~\ref{fig:rc-cycle}).
-Die einzelnen Objekte werden dann nicht als löschbar erkannt, was zu einem Speicherleck führt.
+Die einzelnen Objekte werden dann nicht als löschbar erkannt, was zu einem Speicherleck führt. \todo[inline]{Ausblick auf nächste Abschnitte}
 
 \begin{figure}[h]
 	\centering
