@@ -57,19 +57,19 @@ Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekt
 
 Die Markierungsphase (engl. \textit{mark}) funktioniert wie folgt:
 Ein Objekt zu markieren bedeutet, es als erreichbar zu kennzeichnen, indem in seinem Header ein entsprechender Wert -- etwa ein Bit -- gesetzt wird.
-Zunächst wird mittels der Methode \Method{markStart} eine Menge \Var{toDo} erzeugt, die diejenigen Objekte enthält, die bereits als erreichbar erkannt, aber selbst noch nicht verarbeitet wurden (Zeile 5 in Algorithmus~\ref{algo:naive-mark}).
+Zunächst wird mittels der Prozedur \Method{markStart} eine Menge \Var{toDo} erzeugt, die diejenigen Objekte enthält, die bereits als erreichbar erkannt, aber selbst noch nicht verarbeitet wurden (Zeile 5 in Algorithmus~\ref{algo:naive-mark}).
 In diese werden alle bislang unmarkierten Basisobjekte der Menge \Roots eingefügt und markiert, da sie in jedem Fall erreichbar sind (Zeile 6 bis 9).
 Ist ein Basisobjekt bereits markiert worden, so wurde es schon entdeckt -- etwa, weil es durch ein zuvor abgearbeitetes Objekt referenziert wird.
 Daraus folgt, dass es ebenfalls bereits abgearbeitet wurde oder sich noch in der Menge \Var{toDo} befindet.
 In beiden Fällen muss es folglich nicht erneut zu \Var{toDo} hinzugefügt werden.
 
-Bereits nach dem Hinzufügen des ersten Basisobjekts wird die Methode \Method{mark} aufgerufen, welche die \Var{toDo}-Menge abarbeitet.
+Bereits nach dem Hinzufügen des ersten Basisobjekts wird die Prozedur \Method{mark} aufgerufen, welche die \Var{toDo}-Menge abarbeitet.
 Für jedes Objekt in \Var{toDo} werden diejenigen Felder betrachtet, die eine Referenz auf ein Objekt enthalten (Zeile 13 und 14).
 Wenn dieses Objekt noch nicht markiert wurde, wird es in diesem Augenblick zum ersten Mal entdeckt.
 Da es somit erreichbar ist, kann es markiert und zu \Var{toDo} hinzugefügt werden, um zu einem späteren Zeitpunkt abgearbeitet zu werden (Zeile 15 und 16).
 Verweist die Referenz hingegen auf ein Objekt, das bereits markiert wurde, wurde dieses schon zuvor entdeckt.
 Auch hier ist ein erneutes Hinzufügen zu \Var{toDo} überflüssig.
-Sobald \Var{toDo} leer ist, erfolgt die Rückkehr zur Methode \Method{markStart}, sodass ggfs. das nächste Basisobjekt abgearbeitet wird.
+Sobald \Var{toDo} leer ist, erfolgt die Rückkehr zur Prozedur \Method{markStart}, sodass ggfs. das nächste Basisobjekt abgearbeitet wird.
 
 \todo[inline]{Kleines Beispiel hier, großes in den Anhang?}
 
@@ -93,9 +93,9 @@ Da zudem mit jeder Iteration der \WHILE-Schleife mindestens ein Objekt aus \Var{
 \label{algo:naive-sweep}
 \end{algorithm}
 
-Die Bereinigungsphase (engl. \textit{sweep}) beginnt unmittelbar nach der Markierungsphase durch Aufruf der Methode \Method{sweep}.
+Die Bereinigungsphase (engl. \textit{sweep}) beginnt unmittelbar nach der Markierungsphase durch Aufruf der Prozedur \Method{sweep}.
 Die Variable \Var{pos} wird mit der Speicheradresse initialisiert, an der sich das erste Objekt im Heap befindet.
-Wir gehen davon aus, dass eine Methode \Method{nextObject} des Allokators zu Verfügung steht, die anhand einer übergebenen Speicheradresse die Adresse des nachfolgenden Objektes oder \Null zurückgibt, wenn dieses nicht existiert.
+Wir gehen davon aus, dass eine Prozedur \Method{nextObject} des Allokators zu Verfügung steht, die anhand einer übergebenen Speicheradresse die Adresse des nachfolgenden Objektes oder \Null zurückgibt, wenn dieses nicht existiert.
 Dadurch wird der Heap linear traversiert; nicht markierte Objekte werden freigegeben, während die Markierung erreichbarer Objekte zurückgesetzt wird.
 
 Wir halten zunächst fest, dass der Mark-Sweep-Algorithmus in seiner Gänze terminiert und korrekt ist, sofern während der Garbage Collection das laufende Programm angehalten wird:
@@ -345,7 +345,7 @@ Dieser Ansatz geht mit einigen marginale Änderungen an unseren bisher verwendet
 Zum einen setzen wir voraus, dass beim Markieren eines Objekts auch die entsprechende Region markiert wird, in dem sich das Objekt befindet.
 Dies kann recht einfach realisiert werden, indem bei der Initialisierung einer Region durch den Allokator zusätzlich Platz für einen Header reserviert wird, welcher Metadaten wie die Größenordnung der enthaltenen Objekte aufnimmt.
 Weiter verlangen wir, dass der Allokator zusätzlich Informationen über Anzahl, Lage und Größenordnung der existierenden Region besitzt.
-Zuletzt wandeln wir die Methode \Method{sweep} aus den Algorithmen~\ref{algo:naive-sweep} und \ref{algo:tricolor} dahingehend ab, dass sie nur einen eingeschränkten Teil des Heaps traversiert -- etwa, indem zwei Parameter für Start- und Endadresse übergeben werden.
+Zuletzt wandeln wir die Prozedur \Method{sweep} aus den Algorithmen~\ref{algo:naive-sweep} und \ref{algo:tricolor} dahingehend ab, dass sie nur einen eingeschränkten Teil des Heaps traversiert -- etwa, indem zwei Parameter für Start- und Endadresse übergeben werden.
 Zudem soll \Method{sweep} den Wahrheitswert \Var{true} zurückgeben, wenn zumindest ein Objekt entfernt wurde, und andernfalls \Var{false}.
 
 Nach Abschluss der Markierungsphase kann anhand der zusätzlichen Markierung der Regionen festgestellt werden, welche nur verwaiste Objekte enthalten.
@@ -393,7 +393,7 @@ Das Auffinden erreichbarer Objekte verursacht daher schwer vorhersehbare Speiche
 Caching- und Prefetch-Mechanismen, die durch vorweggenommenes Bereitstellen von Speicherinhalten Zugriffe beschleunigen, profitieren hingegen von \textit{zeitlicher} und \textit{räumlicher Lokalität} von Daten, die in einer Beziehung zueinander stehen.
 In der Markierungsphase können sie daher Speicherzugriffe nicht so effektiv beschleunigen wie in der Bereinigungsphase \cite[S. 21f]{handbook}.
 Um diesen Makel zu beheben, kann die Zugriffsreihenfolge auf Objekte variiert werden.
-Anstatt etwa im naiven Algorithmus~\ref{algo:naive-mark} die Abarbeitung der \Var{toDo}-Menge zu beginnen, sobald das erste Basisobjekt erfasst wurde, können statt dessen auch zunächst alle Basisobjekte zu \Var{toDo} hinzugefügt und die Methode \Method{mark} im Anschluss aufgerufen werden.
+Anstatt etwa im naiven Algorithmus~\ref{algo:naive-mark} die Abarbeitung der \Var{toDo}-Menge zu beginnen, sobald das erste Basisobjekt erfasst wurde, können statt dessen auch zunächst alle Basisobjekte zu \Var{toDo} hinzugefügt und die Prozedur \Method{mark} im Anschluss aufgerufen werden.
 Je nachdem, wie \Var{toDo} in der Praxis realisiert wird -- zum Beispiel in Form eines Stacks -- kann die Traversierung der Objekte -- und damit die Performanz des Kollektors in der Markierungsphase -- signifikant beeinflusst werden (vgl. \cite[S. 19]{handbook}).
 
 Statt Markierungsinformationen im Header zu speichern, können diese auch in Bitmaps oder tabellenähnlichen Strukturen außerhalb eines Objekts verwaltet werden.

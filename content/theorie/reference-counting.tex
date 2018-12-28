@@ -97,7 +97,7 @@ In der Folge würde das Ziel sofort freigegeben werden, obwohl es weiterhin erre
 	Aus Lemma~\ref{lemma:notwendig-rc} folgt, dass \Var{a} nicht erreichbar ist.
 \end{proof}
 
-Die Garbage Collection mithilfe naive Referenzzählung bietet im Vergleich zum Mark-Sweep-Algorithmus einige Vorteile (vgl. \cite[S. 58--60]{handbook}):
+Die Garbage Collection mithilfe naive Referenzzählung bietet im Vergleich zum Mark-Sweep-Algorithmus einige Vorteile, aber auch gewisse Nachteile (vgl. \cite[S. 346]{linhou2006}):
 Der Mechanismus zur Freigabe von Objekten wird durch die Entstehung von verwaisten Objekten ausgelöst und nicht etwa, wenn unzureichend freier Speicher zu Verfügung steht.
 Dadurch wird die Allokation von Speicher für neu erzeugte Objekte nicht verzögert.
 Verwaiste Objekte werden beim Löschen ihrer letzten Referenz unmittelbar erkannt und freigegeben und nicht erst beim nächsten Mark-Sweep-Zyklus.
@@ -134,7 +134,9 @@ In Verbindung mit der Atomizität der Schreibbarriere können dadurch größere 
 
 Ein weiteres Problem entsteht, wenn zyklische Datenstrukturen wie etwa doppelt verkettete Listen verwendet werden.
 Die gesamte Struktur kann unerreichbar sein, obwohl die Referenzzähler der einzelnen Objekte nicht $0$ sind (siehe Abbildung~\ref{fig:rc-cycle}).
-Die einzelnen Objekte werden dann nicht als löschbar erkannt, was zu einem Speicherleck führt. \todo[inline]{Ausblick auf nächste Abschnitte}
+Die einzelnen Objekte werden dann nicht als löschbar erkannt, was zu einem Speicherleck führt.
+Eine mögliche Lösung dieser Problematik wird im nächsten Abschnitt betrachtet.
+Im Anschluss daran werden weitere Ansätze vorgestellt, die eine Effizienzsteigerung der naiven Referenzzählung anstreben. \todo[inline]{Ausblick auf nächste Abschnitte}
 
 \begin{figure}[h]
 	\centering
@@ -142,3 +144,102 @@ Die einzelnen Objekte werden dann nicht als löschbar erkannt, was zu einem Spei
 	\caption[Referenzzählung in zyklischen Datenstrukturen]{Referenzzählung in zyklischen Datenstrukturen. Wird Objekt \Var{L} entfernt, sind \Var{a} und \Var{b} nicht mehr erreichbar. Jedoch fallen ihre Referenzzähler nicht auf $0$, sodass sie als Speicherlecks im Speicher verbleiben.}
 	\label{fig:rc-cycle}
 \end{figure}
+
+\section{Zyklische Referenzen}
+\label{sec:cyclic-rc}
+Die fehlende Möglichkeit zur Erkennung und Freigabe zyklischer Strukturen kann -- bei entsprechend häufiger Verwendung -- große Teile des Heaps brachliegen lassen.
+Ein gelegentlich zusätzlich ausgeführter Mark-Sweep-Zyklus mag diese Problematik zwar beheben, macht allerdings die oben genannten Vorteile der Referenzzählung zunichte.
+Nachfolgend stellen wir einen Algorithmus von Martínez et al. vor, der die naive Referenzählung um ein Verfahren ergänzt, mit welchem zyklische Strukturen zuverlässig erkannt werden können \cite{martinez1990}.
+Dieses basiert darauf, dass ein Zyklus von Objekten als starke Zusammenhangskomponente im Objektgraphen aufgefasst werden kann (vgl. \cite[S. 348]{linhou2006}).
+Das bedeutet, dass von jedem Objekt aus jedes andere Objekt innerhalb des Zyklus erreicht werden kann.
+Passt man die Referenzzähler jedes Objekts so an, dass \textbf{interne Referenzen} -- das sind Referenzen zwischen zwei Objekten, die sich innerhalb des Zyklus befinden -- unberücksichtigt bleiben, geben diese anschließend Auskunft darüber, wie viele \textbf{externe Referenzen} von Objekten außerhalb der Struktur auf Objekte innerhalb des Zyklus existieren.
+Besitzen alle so modifierten Zähler der Struktur den Wert $0$, so ist der Zyklus nicht mehr erreichbar und kann entfernt werden.
+Anders formuliert: Besitzt die Struktur ein Objekt, das über eine externe Referenz erreichbar ist, so ist die gesamte Struktur von außen erreichbar.
+
+\begin{algorithm}[h]
+\begin{algorithmic}[1]
+	\State \MethodHead{decRefCount}(\Var{obj}):
+	\State \quad $\Var{rc}(\Var{obj}) \gets \Var{rc}(\Var{obj}) - 1$
+	\State \quad \IF $\Var{rc}(\Var{obj}) = 0$
+	\State \quad \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
+	\State \quad \quad \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Var{*ref} $\neq$ \Var{obj})
+	\State \quad \quad \quad \quad \Method{decRefCount}(\Var{*ref})
+	\State \quad \quad \Method{free}(\Var{\&obj})
+	\State \quad \ELSE
+	\State \quad \quad \Method{markGray}(\Var{obj})		\Comment{Entferne Zählung interner Referenzen}
+	\State \quad \quad \Method{scan}(\Var{obj})		\Comment{Prüfe Erreichbarkeit}
+	\State \quad \quad \Method{collect}(\Var{obj})	\Comment{Entferne unerreichbare Strukturen}
+\end{algorithmic}
+\caption[Zyklische Referenzzählung]{Zyklische Referenzzählung nach Martínez et al. (vgl. \cite[S. 32]{martinez1990})}
+\label{algo:cyclic-rc}
+\end{algorithm}
+
+Zusätzlich zum Referenzzähler wird pro Objekt eine Markierungsinformation gespeichert, die die Werte \Var{WHITE}, \Var{GRAY} und \Var{BLACK} annehmen kann (vgl. Abschnitt~\ref{sec:tricolor}).
+Nach Untersuchung der hypothetisch zyklischen Struktur sollen erreichbare Objekte weiß und nicht erreichbare schwarz markiert sein.
+Zu Beginn sind alle Objekte weiß markiert.
+Algorithmus~\ref{algo:cyclic-rc} ergänzt die Prozedur \Method{decRefCount} der naiven Referenzzählung um einen \ELSE-Fall, der ausgelöst wird, wenn der Referenzzähler \Var{rc}(\Var{obj}) nach Dekrementierung nicht $0$ beträgt (vgl. Zeile~8 bis 11).
+In diesem Fall muss überprüft werden, ob \Var{obj} das letzte Objekt einer Struktur war, durch welches diese erreichbar war.
+Dazu wird nach einem dreischrittigen Verfahren vorgegangen, das im Folgenden beschrieben wird.
+
+\begin{algorithm}[h]
+\begin{algorithmic}[1]
+	\State \MethodHead{markGray}(\Var{obj}):
+	\State \quad \IF \Method{isWhite}(\Var{obj})
+	\State \quad \quad \Method{setColor}(\Var{obj}, \Var{GRAY})
+	\State \quad \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
+	\State \quad \quad \quad \IF ($\Var{ref} \neq \Null \wedge \Var{*ref} \neq \Var{obj}$)	\Comment{Entferne interne Referenz,}
+	\State \quad \quad \quad \quad $\Var{rc}(\Var{*ref}) \gets \Var{rc}(\Var{*ref})-1$ \Comment{die von \Var{obj} ausgeht}
+	\State \quad \quad \quad \quad \Method{markGray}(\Var{*ref})	\Comment{Reduziere rekursiv weitere \Var{rc}}
+	\Statex
+	\State \MethodHead{scan}(\Var{obj}):
+	\State \quad \IF \Method{isGray}(\Var{obj})
+	\State \quad \quad \IF $\Var{rc}(\Var{obj}) = 0$	\Comment{Objekt besitzt keine externen Referenzen}
+	\State \quad \quad \quad \Method{setColor}(\Var{obj}, \Var{BLACK})
+	\State \quad \quad \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
+	\State \quad \quad \quad \quad \IF ($\Var{ref} \neq \Null \wedge \Var{*ref} \neq \Var{obj}$)
+	\State \quad \quad \quad \quad \quad \Method{scan}(\Var{*ref})	\Comment{Prüfe rekursiv referenzierte Objekte}
+	\State \quad \quad \ELSE \Method{unmark}(\Var{obj})	\Comment{Objekt besitzt mind. eine externe Referenz}
+\end{algorithmic}
+\caption[Zyklische Referenzzählung -- Markierungsphase]{Zyklische Referenzzählung -- Markierungsphase (vgl. \cite[S. 32f]{martinez1990})}
+\label{algo:cyclic-markscan}
+\end{algorithm}
+
+Wir beginnen mit der Prozedur \Method{markGray}, die zunächst für \Var{obj} aufgerufen wird.
+Davon ausgehend, dass \Var{obj} Bestandteil einer zyklischen Struktur sein kann, werden zunächst Zählungen von internen Referenzen entfernt, indem alle unmarkierten und von \Var{obj} referenzierten Objekte betrachtet, grau markiert und ihre Referenzzähler angepasst werden (Zeile~3 bis 6 in Algorithmus~\ref{algo:cyclic-markscan}).
+Durch einen rekursiven Aufruf in Zeile~7 werden somit alle von \Var{obj} aus erreichbaren Objekte behandelt und grau markiert; ihre Referenzzähler enthalten anschließend die Anzahl aller externen Referenzen.
+
+Im zweiten Schritt wird die Prozedur \Method{scan} für \Var{obj} aufgerufen, um die modifizierten Referenzzähler der grau markierten Objekte auszuwerten.
+Besitzt \Var{rc}(\Var{obj}) den Wert $0$, so wird \Var{obj} zunächst schwarz markiert (Zeile~10f).
+Das bedeutet, dass \Var{obj} nur von Objekten aus erreichbar ist, die sich innerhalb der starken Zusammenhangskomponente befinden.
+Infolgedessen ist die Erreichbarkeit von \Var{obj} von den anderen Objekten der Struktur abhängig: Besitzen diese ebenfalls nur interne Referenzen, ist die gesamte Struktur -- und damit auch \Var{obj} -- unerreichbar.
+Um dies zu überprüfen, wird \Method{scan} rekursiv für alle Objekte der Struktur aufgerufen (Zeile~12 bis 14).
+
+Besitzt hingegen ein grau markiertes Objekt \Var{a} einen Referenzzähler mit einem Wert ungleich $0$, so existiert eine externe Referenz auf dieses Objekt -- \Var{a} ist von einem Objekt aus erreichbar, das nicht zur starken Zusammenhangskomponente von \Var{a} gehört.
+In diesem Fall wird die Prozedur \Method{unmark} aufgerufen, die \Var{a} weiß markiert (Zeile~2 in Algorithmus~\ref{algo:cyclic-clean}).
+Ebenso müssen jedoch auch alle Objekte weiß markiert werden, die von \Var{a} aus erreichbar sind, 
+weswegen \Method{unmark} rekursiv für diese Objekte aufgerufen wird (Zeile 7).
+Dabei werden gleichzeitig die zugehörigen Referenzzähler angepasst, sodass nach Beendigung diese wieder mit der Anzahl aller Referenzen auf ein Objekt übereinstimmen (Zeile 5).
+
+\begin{algorithm}[h]
+\begin{algorithmic}[1]
+	\State \MethodHead{unmark}(\Var{obj}):
+	\State \quad \Method{setColor}(\Var{obj}, \Var{WHITE})		\Comment{Objekt ist erreichbar}
+	\State \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
+	\State \quad \quad \IF ($\Var{ref} \neq \Null \wedge \Var{*ref} \neq \Var{obj}$)
+	\State \quad \quad \quad $\Var{rc}(\Var{*ref}) \gets \Var{rc}(\Var{*ref})+1$ \Comment{Interne Referenz wiederherstellen}
+	\State \quad \quad \quad \IF \Method{isNotWhite}(\Var{*ref})
+	\State \quad \quad \quad \quad \Method{unmark}(\Var{*ref})
+	\Statex
+	\State \MethodHead{collect}(\Var{obj}):
+	\State \quad \IF \Method{isBlack}(\Var{obj})	\Comment{Objekt ist nicht erreichbar}
+	\State \quad \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
+	\State \quad \quad \quad \IF ($\Var{ref} \neq \Null \wedge \Var{*ref} \neq \Var{obj}$)
+	\State \quad \quad \quad \quad \Method{collect}(\Var{*ref})
+	\State \quad \quad \Method{free}(\Var{obj})
+\end{algorithmic}
+\caption[Zyklische Referenzzählung -- Aufräumphase]{Zyklische Referenzzählung -- Aufräumphase (vgl. \cite[S. 33]{martinez1990})}
+\label{algo:cyclic-clean}
+\end{algorithm}
+
+Nach Abarbeitung von \Method{scan}(\Var{obj}) sind alle zuvor grau markierten Objekte, die von \Var{obj} aus erreichbar sind, schwarz markiert, wenn sie nicht über externe Referenzen erreichbar sind, oder andernfalls weiß markiert und ihre Referenzzähler wiederhergestellt.
+Im letzten Schritt können daher alle schwarz markierten Objekte freigegeben werden, was erneut rekursiv durch die Prozedur \Method{collect} geschieht.
