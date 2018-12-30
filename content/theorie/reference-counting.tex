@@ -149,8 +149,8 @@ Im Anschluss daran werden weitere Ansätze vorgestellt, die eine Effizienzsteige
 \label{sec:cyclic-rc}
 Die fehlende Möglichkeit zur Erkennung und Freigabe zyklischer Strukturen kann -- bei entsprechend häufiger Verwendung -- große Teile des Heaps brachliegen lassen.
 Ein gelegentlich zusätzlich ausgeführter Mark-Sweep-Zyklus mag diese Problematik zwar beheben, macht allerdings die oben genannten Vorteile der Referenzzählung zunichte.
-Nachfolgend stellen wir einen Algorithmus von Martínez et al. vor, der die naive Referenzählung um ein Verfahren ergänzt, mit welchem zyklische Strukturen zuverlässig erkannt werden können \cite{martinez1990}.
-Dieses basiert darauf, dass ein Zyklus von Objekten als \textit{starke Zusammenhangskomponente} im Objektgraphen aufgefasst werden kann\todo{evtl definieren} (vgl. \cite[S. 348]{linhou2006}).
+Nachfolgend stellen wir einen Algorithmus von Martínez, Wachenchauzer und Lins vor, der die naive Referenzählung um ein Verfahren ergänzt, mit welchem zyklische Strukturen zuverlässig erkannt werden können \cite{martinez1990}.
+Dieses basiert darauf, dass ein Zyklus von Objekten als \textit{starke Zusammenhangskomponente} im Objektgraphen aufgefasst werden kann (vgl. \cite[S. 348]{linhou2006}).
 Das bedeutet, dass von jedem Objekt aus jedes andere Objekt innerhalb des Zyklus erreicht werden kann.
 
 \begin{mybox}
@@ -292,3 +292,14 @@ Wir zeigen nun, dass die zyklische Referenzzählung nach Martínez et al. korrek
 	Das ist jedoch ein Widerspruch, da weiß markierte Objekte nach Terminierung von \Method{markGray} nicht mehr schwarz markiert werden.
 	Somit kann \Var{a} nicht erreichbar sein.
 \end{proof}
+
+Der vorgestellte Algorithmus löst zwar das Problem brachliegender zyklischer Strukturen, allerdings zu einem hohen Preis.
+Jede Referenzlöschung, die einen Referenzzähler nicht auf $0$ fallen lässt, löst eine Überprüfung auf zyklische Referenzen aus, die potenziell viele Manipulationen von Referenzzählern mit sich bringt.
+Im schlimmsten Fall wird dabei der gesamte Objektgraph drei Mal traversiert, ohne dass am Ende Speicher freigegeben wurde.
+Der Algorithmus eignet sich daher eher für Fälle, in denen mehrere Referenzen auf ein Objekt selten sind, aber weniger für objektorientierte Konzepte (vgl. \cite[S. 215]{lins1992}).
+Zyklische Referenzzählung kann somit unter Umständen wesentlich aufwendiger sein als naives Mark and Sweep.
+Als Verbesserung hat Lins eine Variante vorgestellt, bei welcher die für eine zyklische Struktur infrage kommenden Objekte zunächst in eine Warteschlange eingefügt werden.
+Die Überprüfung auf zyklische Referenzen wird damit erst bei Bedarf ausgelöst, etwa bei akutem Speichermangel oder voller Warteschlange.
+Falls zuvor bereits die letzte Referenz auf ein Objekt entfernt wird, kann das Verfahren überspringen werden \cite{lins1992}.
+Von Lin und Hou stammt darüber hinaus eine Variante, die mehrere zyklische Strukturen zu Teilgraphen eines Objektgraphen zusammenfasst.
+Mittels einer einzigen Traversierung kann dann die Zahl der externen Referenzen dieses Teilgraphen bestimmt werden; existieren keine, so kann der gesamte Teilgraph -- und damit alle enthaltenen starken Zusammenhangskomponenten -- entsorgt werden \cite{linhou2006}.
