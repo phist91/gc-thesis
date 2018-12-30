@@ -150,11 +150,31 @@ Im Anschluss daran werden weitere Ansätze vorgestellt, die eine Effizienzsteige
 Die fehlende Möglichkeit zur Erkennung und Freigabe zyklischer Strukturen kann -- bei entsprechend häufiger Verwendung -- große Teile des Heaps brachliegen lassen.
 Ein gelegentlich zusätzlich ausgeführter Mark-Sweep-Zyklus mag diese Problematik zwar beheben, macht allerdings die oben genannten Vorteile der Referenzzählung zunichte.
 Nachfolgend stellen wir einen Algorithmus von Martínez et al. vor, der die naive Referenzählung um ein Verfahren ergänzt, mit welchem zyklische Strukturen zuverlässig erkannt werden können \cite{martinez1990}.
-Dieses basiert darauf, dass ein Zyklus von Objekten als starke Zusammenhangskomponente im Objektgraphen aufgefasst werden kann (vgl. \cite[S. 348]{linhou2006}).
+Dieses basiert darauf, dass ein Zyklus von Objekten als \textit{starke Zusammenhangskomponente} im Objektgraphen aufgefasst werden kann\todo{evtl definieren} (vgl. \cite[S. 348]{linhou2006}).
 Das bedeutet, dass von jedem Objekt aus jedes andere Objekt innerhalb des Zyklus erreicht werden kann.
-Passt man die Referenzzähler jedes Objekts so an, dass \textbf{interne Referenzen} -- das sind Referenzen zwischen zwei Objekten, die sich innerhalb des Zyklus befinden -- unberücksichtigt bleiben, geben diese anschließend Auskunft darüber, wie viele \textbf{externe Referenzen} von Objekten außerhalb der Struktur auf Objekte innerhalb des Zyklus existieren.
-Besitzen alle so modifierten Zähler der Struktur den Wert $0$, so ist der Zyklus nicht mehr erreichbar und kann entfernt werden.
-Anders formuliert: Besitzt die Struktur ein Objekt, das über eine externe Referenz erreichbar ist, so ist die gesamte Struktur von außen erreichbar.
+
+\begin{mybox}
+\begin{defn}[Starke Zusammenhangskomponente]
+\label{def:zusammenhang}
+	Sei $O$ eine Menge von Objekten und $\Var{a} \in O$.
+	$\sk{\Var{a}}$ heißt \textbf{starke Zusammenhangskomponente} von \Var{a}, wenn gilt:\footnotemark
+	\begin{enumerate}[(1)]
+		\item $\Var{a} \in \sk{\Var{a}}$
+		\item Für alle $\Var{b}, \Var{c} \in \sk{\Var{a}}$ gilt $\Var{b} \transreach \Var{c}$ und $\Var{c} \transreach \Var{b}$.
+		\item $\sk{\Var{a}}$ ist maximal, das heißt für jede Teilmenge $M \subseteq O$, die \textbf{(1)} und \textbf{(2)} erfüllt, gilt $M \subseteq \sk{\Var{a}}$.
+	\end{enumerate}
+	Eine Referenz $\Var{x} \rightarrow \Var{a}$ von $\Var{a}$ heißt \textbf{intern}, wenn $\Var{x} \in \sk{\Var{a}}$.
+	Andernfalls heißt sie \textbf{extern}.	
+\end{defn}
+\end{mybox}
+
+\footnotetext{Betrachtet man die Relation $\sim$ auf $O$ definiert durch $\Var{a} \sim \Var{b} :\Leftrightarrow \Var{a} \transreach \Var{b} \wedge \Var{b} \transreach \Var{a}$, so ist leicht zu sehen, dass diese eine Äquivalenzrelation auf $O$ ist. Die Menge $\sk{\Var{a}}$ ist dann nichts anderes als die Äquivalenzklasse $[\Var{a}]_{\sim}$ von $\Var{a} \in O$ bezüglich $\sim$. Entsprechend lässt sich die Menge $O$ in ihre starken Zusammenhangskomponenten partitionieren.}
+
+\todo[inline]{Kleine Grafik}
+
+Passt man die Referenzzähler jedes Objekts so an, dass interne Referenzen unberücksichtigt bleiben, geben diese anschließend Auskunft darüber, wie viele externe Referenzen von Objekten außerhalb der Komponente auf Objekte innerhalb der Komponente existieren.
+Besitzen alle so modifierten Zähler den Wert $0$, so ist die Komponente nicht mehr erreichbar und kann entfernt werden.
+Anders formuliert: Besitzt die Komponente ein Objekt, das über eine externe Referenz erreichbar ist, so ist die gesamte Komponente von außen erreichbar.
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
@@ -205,16 +225,16 @@ Dazu wird nach einem dreischrittigen Verfahren vorgegangen, das im Folgenden bes
 \end{algorithm}
 
 Wir beginnen mit der Prozedur \Method{markGray}, die zunächst für \Var{obj} aufgerufen wird.
-Davon ausgehend, dass \Var{obj} Bestandteil einer zyklischen Struktur sein kann, werden zunächst Zählungen von internen Referenzen entfernt, indem alle unmarkierten und von \Var{obj} referenzierten Objekte betrachtet, grau markiert und ihre Referenzzähler angepasst werden (Zeile~3 bis 6 in Algorithmus~\ref{algo:cyclic-markscan}).
-Durch einen rekursiven Aufruf in Zeile~7 werden somit alle von \Var{obj} aus erreichbaren Objekte behandelt und grau markiert; ihre Referenzzähler enthalten anschließend die Anzahl aller externen Referenzen.
+Davon ausgehend, dass \Var{obj} Bestandteil einer zyklischen Struktur sein kann, werden zunächst Zählungen von internen Referenzen entfernt, indem per Tiefensuche alle unmarkierten und von \Var{obj} referenzierten Objekte betrachtet, grau markiert und ihre Referenzzähler angepasst werden (Zeile~3 bis 6 in Algorithmus~\ref{algo:cyclic-markscan}).
+Durch einen rekursiven Aufruf in Zeile~7 werden somit die starke Zusammenhangskomponente $\sk{\Var{obj}}$ behandelt und grau markiert; ihre Referenzzähler enthalten anschließend die Anzahl aller externen Referenzen.
 
 Im zweiten Schritt wird die Prozedur \Method{scan} für \Var{obj} aufgerufen, um die modifizierten Referenzzähler der grau markierten Objekte auszuwerten.
 Besitzt \Var{rc}(\Var{obj}) den Wert $0$, so wird \Var{obj} zunächst schwarz markiert (Zeile~10f).
 Das bedeutet, dass \Var{obj} nur von Objekten aus erreichbar ist, die sich innerhalb der starken Zusammenhangskomponente befinden.
-Infolgedessen ist die Erreichbarkeit von \Var{obj} von den anderen Objekten der Struktur abhängig: Besitzen diese ebenfalls nur interne Referenzen, ist die gesamte Struktur -- und damit auch \Var{obj} -- unerreichbar.
-Um dies zu überprüfen, wird \Method{scan} rekursiv für alle Objekte der Struktur aufgerufen (Zeile~12 bis 14).
+Infolgedessen ist die Erreichbarkeit von \Var{obj} von den anderen Objekten der Komponente abhängig: Besitzen diese ebenfalls nur interne Referenzen, ist die gesamte Komponente -- und damit auch \Var{obj} -- unerreichbar.
+Um dies zu überprüfen, wird \Method{scan} rekursiv für alle Objekte von $\sk{\Var{obj}}$ aufgerufen (Zeile~12 bis 14).
 
-Besitzt hingegen ein grau markiertes Objekt \Var{a} einen Referenzzähler mit einem Wert ungleich $0$, so existiert eine externe Referenz auf dieses Objekt -- \Var{a} ist von einem Objekt aus erreichbar, das nicht zur starken Zusammenhangskomponente von \Var{a} gehört.
+Besitzt hingegen ein grau markiertes Objekt \Var{a} einen Referenzzähler mit einem Wert ungleich $0$, so existiert eine externe Referenz auf dieses Objekt -- \Var{a} ist von einem Objekt aus erreichbar, das nicht zu $\sk{\Var{a}}$ gehört.
 In diesem Fall wird die Prozedur \Method{unmark} aufgerufen, die \Var{a} weiß markiert (Zeile~2 in Algorithmus~\ref{algo:cyclic-clean}).
 Ebenso müssen jedoch auch alle Objekte weiß markiert werden, die von \Var{a} aus erreichbar sind, 
 weswegen \Method{unmark} rekursiv für diese Objekte aufgerufen wird (Zeile 7).
@@ -243,3 +263,32 @@ Dabei werden gleichzeitig die zugehörigen Referenzzähler angepasst, sodass nac
 
 Nach Abarbeitung von \Method{scan}(\Var{obj}) sind alle zuvor grau markierten Objekte, die von \Var{obj} aus erreichbar sind, schwarz markiert, wenn sie nicht über externe Referenzen erreichbar sind, oder andernfalls weiß markiert und ihre Referenzzähler wiederhergestellt.
 Im letzten Schritt können daher alle schwarz markierten Objekte freigegeben werden, was erneut rekursiv durch die Prozedur \Method{collect} geschieht.
+
+\todo[inline]{Beispiel (siehe Ordner)}
+
+Wir zeigen nun, dass die zyklische Referenzzählung nach Martínez et al. korrekt ist, wobei wir weiterhin voraussetzen, dass der Algorithmus atomar ausgeführt wird.
+
+\begin{mybox}
+\begin{satz}[Korrektheit der zyklischen Referenzzählung]
+\label{satz:cyclic-rc-correctness}
+	Die zyklische Referenzzählung nach Martínez et al. ist korrekt und terminiert.
+\end{satz}
+\end{mybox}
+
+\begin{proof}
+	Wir zeigen zunächst, dass die Aufrufe der Prozeduren \Method{markGray}, \Method{scan} und \Method{collect} (Zeile 9 bis 11 in Algorithmus~\ref{algo:cyclic-rc}) terminieren:
+	Für \Method{markGray} ist dies leicht zu sehen, da \Method{markGray} lediglich weiß markierte Objekte manipuliert und diese sofort grau färbt (Zeile 2f in Algorithmus~\ref{algo:cyclic-markscan}).
+	Analoges gilt für \Method{collect} und schwarz gefärbte Objekte.
+	\Method{scan} wiederum verändert nur grau markierte Objekte.
+	Ist der Referenzzähler eines Objektes $0$, für welches \Method{scan} aufgerufen wird, so wird dieses schwarz gefärbt.
+	Andernfalls wird das Objekt durch \Method{unmark} weiß markiert.
+	In beiden Fällen ist damit sichergestellt, dass ein Objekt nicht mehrfach durch \Method{scan} bzw. \Method{unmark} bearbeitet wird und keine weiteren rekursiven Aufrufe stattfinden.
+	Somit terminieren alle drei Aufrufe.
+	
+	Wird nun ein Objekt \Var{a} durch \Method{collect} freigegeben, so wurde \Var{a} zuvor schwarz markiert (Zeile 9 und 13 in Algorithmus~\ref{algo:cyclic-clean}).
+	Dies passiert ausschließlich in der Prozedur \Method{scan}, wenn \Var{a} keine externen Referenzen besitzt.
+	Wäre \Var{a} erreichbar, so müsste folglich ein Objekt $\Var{b} \in \sk{\Var{a}}$ existieren, das ebenfalls erreichbar ist, also eine externe Referenz besitzt.
+	In diesem Fall wird \Var{b} jedoch durch \Method{unmark} weiß markiert und rekursiv auch \Var{a}, da $\Var{b} \transreach \Var{a}$.
+	Das ist jedoch ein Widerspruch, da weiß markierte Objekte nach Terminierung von \Method{markGray} nicht mehr schwarz markiert werden.
+	Somit kann \Var{a} nicht erreichbar sein.
+\end{proof}
