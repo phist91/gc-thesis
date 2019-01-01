@@ -67,7 +67,13 @@ In diesem Fall wird das entsprechende Objekt \Var{obj} freigegeben.
 Die Freigabe führt allerdings dazu, dass auch die Zähler derjenigen Objekte verringert werden müssen, die von \Var{obj} referenziert werden.
 Ensprechend wird für jede Referenz in den Feldern von \Var{obj}, die nicht \Null oder eine Selbstreferenz ist, \Method{decRefCount} rekursiv aufgerufen (Zeile 10 bis 12).
 
-\todo[inline]{Beispiel}
+\begin{figure}[h]
+	\centering
+	\includestandalone{img/tikz/ch3-refcount}~\hspace{1cm}~
+	\includestandalone{img/tikz/ch3-refcount2}
+	\caption[Beispiel für REferenzzählung]{Wird die Referenz $\Var{a} \rightarrow \Var{b}$ entfernt, so wird \Var{b} freigegeben, da der Referenzzähler von \Var{b} auf $0$ fällt. In der Folge müssen auch die Referenzzähler von \Var{c} und \Var{d} angepasst werden.}
+	\label{fig:rc-example}
+\end{figure}
 
 Die Atomizität der Schreibbarriere verhindert die Entstehung von \textit{race conditions} bei gleichzeitigen Zugriffen auf Referenzzähler und ist daher unabdingbar.
 Ebenso ist es wesentlich, dass der Referenzzähler des neuen Ziels zunächst inkrementiert wird, bevor der des alten Ziels dekrementiert wird.
@@ -157,7 +163,7 @@ Das bedeutet, dass von jedem Objekt aus jedes andere Objekt innerhalb des Zyklus
 \begin{defn}[Starke Zusammenhangskomponente]
 \label{def:zusammenhang}
 	Sei $O$ eine Menge von Objekten und $\Var{a} \in O$.
-	$\sk{\Var{a}}$ heißt \textbf{starke Zusammenhangskomponente} von \Var{a}, wenn gilt:\footnotemark
+	$\sk{\Var{a}} \subseteq O$ heißt \textbf{starke Zusammenhangskomponente} von \Var{a}, wenn gilt:
 	\begin{enumerate}[(1)]
 		\item $\Var{a} \in \sk{\Var{a}}$
 		\item Für alle $\Var{b}, \Var{c} \in \sk{\Var{a}}$ gilt $\Var{b} \transreach \Var{c}$ und $\Var{c} \transreach \Var{b}$.
@@ -168,9 +174,14 @@ Das bedeutet, dass von jedem Objekt aus jedes andere Objekt innerhalb des Zyklus
 \end{defn}
 \end{mybox}
 
-\footnotetext{Betrachtet man die Relation $\sim$ auf $O$ definiert durch $\Var{a} \sim \Var{b} :\Leftrightarrow \Var{a} \transreach \Var{b} \wedge \Var{b} \transreach \Var{a}$, so ist leicht zu sehen, dass diese eine Äquivalenzrelation auf $O$ ist. Die Menge $\sk{\Var{a}}$ ist dann nichts anderes als die Äquivalenzklasse $[\Var{a}]_{\sim}$ von $\Var{a} \in O$ bezüglich $\sim$. Entsprechend lässt sich die Menge $O$ in ihre starken Zusammenhangskomponenten partitionieren.}
+Man kann leicht sehen, dass die starke Zusammenhangskomponente eines Objekts eindeutig bestimmt ist und zwei starke Zusammenhangskomponenten entweder identisch oder disjunkt sind.\footnote{Betrachtet man die Relation $\sim$ auf $O$ definiert durch $\Var{a} \sim \Var{b} :\Leftrightarrow \Var{a} = \Var{b} \vee \Var{a} \transreach \Var{b} \wedge \Var{b} \transreach \Var{a}$, so ist leicht zu sehen, dass diese eine Äquivalenzrelation auf $O$ ist. Die Menge $\sk{\Var{a}}$ ist dann nichts anderes als die Äquivalenzklasse $[\Var{a}]_{\sim}$ von $\Var{a} \in O$ bezüglich $\sim$. Entsprechend lässt sich die Menge $O$ in ihre starken Zusammenhangskomponenten partitionieren.}
 
-\todo[inline]{Kleine Grafik}
+\begin{figure}[h]
+	\centering
+	\includestandalone{img/tikz/ch3-scc}
+	\caption[Beispiel für starke Zusammenhangskomponenten]{Der abgebildete Graph besitzt drei starke Zusammenhangskomponenten: $\sk{\Var{a}} = \{\Var{a}\}$, $\sk{\Var{b}} = \{\Var{b}, \Var{c}, \Var{d}\}$ und $\sk{\Var{e}} = \{\Var{e}\}$.}
+	\label{fig:rc-scc}
+\end{figure}
 
 Passt man die Referenzzähler jedes Objekts so an, dass interne Referenzen unberücksichtigt bleiben, geben diese anschließend Auskunft darüber, wie viele externe Referenzen von Objekten außerhalb der Komponente auf Objekte innerhalb der Komponente existieren.
 Besitzen alle so modifierten Zähler den Wert $0$, so ist die Komponente nicht mehr erreichbar und kann entfernt werden.
@@ -264,7 +275,88 @@ Dabei werden gleichzeitig die zugehörigen Referenzzähler angepasst, sodass nac
 Nach Abarbeitung von \Method{scan}(\Var{obj}) sind alle zuvor grau markierten Objekte, die von \Var{obj} aus erreichbar sind, schwarz markiert, wenn sie nicht über externe Referenzen erreichbar sind, oder andernfalls weiß markiert und ihre Referenzzähler wiederhergestellt.
 Im letzten Schritt können daher alle schwarz markierten Objekte freigegeben werden, was erneut rekursiv durch die Prozedur \Method{collect} geschieht.
 
-\todo[inline]{Beispiel (siehe Ordner)}
+Um die Arbeit des Algorithmus zu veranschaulichen, betrachten wir den Objektgraphen aus Abbildung~\ref{fig:rc-scc} und nehmen an, dass die Referenz $\Var{a} \rightarrow \Var{b}$ entfernt wird, wodurch die Objekte \Var{b}, \Var{c}, \Var{d} und \Var{e} unerreichbar werden.
+Wir erwarten daher, dass der Aufruf von \Method{markGray}(\Var{b}), \Method{scan}(\Var{b}) und \Method{collect}(\Var{b}) alle vier Objekte freigibt.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}{0.4\textwidth}
+		\centering
+		\includestandalone{img/tikz/ch3-cyclic-ex1}
+	\end{subfigure}~\hspace{0.5cm}~
+	\begin{subfigure}{0.473\textwidth}
+		\centering
+		\includestandalone{img/tikz/ch3-cyclic-ex2}
+	\end{subfigure}\\[1cm]
+	\begin{subfigure}{0.4\textwidth}
+		\centering
+		\includestandalone{img/tikz/ch3-cyclic-ex3}
+	\end{subfigure}~\hspace{0.5cm}~
+	\begin{subfigure}{0.4\textwidth}
+		\centering
+		\includestandalone{img/tikz/ch3-cyclic-ex4}
+	\end{subfigure}\\[1cm]
+	\begin{subfigure}{0.4\textwidth}
+		\centering
+		\includestandalone{img/tikz/ch3-cyclic-ex5}
+	\end{subfigure}~\hspace{0.5cm}~
+	\begin{subfigure}{0.4\textwidth}
+		\centering
+		\includestandalone{img/tikz/ch3-cyclic-ex6}
+	\end{subfigure}
+	\caption[Ausführung von \Method{markGray}(\Var{b})]{Beispielhafte Ausführung von \Method{markGray}(\Var{b}). Dick umrandet ist das jeweilige Objekt, für welches gerade der rekursive Aufruf von \Method{markGray} stattfindet.}
+	\label{fig:rc-markgray-example}
+\end{figure}
+
+Zunächst wird durch \Method{markGray} Objekt \Var{b} grau markiert (siehe Abbildung~\ref{fig:rc-markgray-example}).
+Im Anschluss erfolgt für jedes von \Var{b} referenzierte Objekt -- hier \Var{e} und \Var{c} -- eine Verringerung des zugehörigen Referenzzählers sowie ein rekursiver Aufruf von \Method{markGray}.
+Der Aufruf \Method{markGray}(\Var{c}) erniedrigt den Referenzzähler von \Var{d}; \Method{markGray}(\Var{d}) sorgt für eine erneute Modifikation von \Var{rc}(\Var{b}) und \Var{rc}(\Var{c}).
+An dieser Stelle geschehen jedoch keine rekursiven Aufrufe mehr, da alle von \Var{d} referenzierten Objekte bereits grau markiert sind.
+Somit terminieren hier die Aufrufe von \Method{markGray}(\Var{d}), \Method{markGray}(\Var{c}) und \Method{markGray}(\Var{b}).
+
+An dieser Stelle können wir bereits erkennen, dass alle Referenzzähler von $\sk{\Var{b}}$ $0$ sind, weswegen der Zyklus keine externen Referenzen besitzt und nicht mehr erreichbar ist.
+Dies wird nun von \Method{scan} mittels einer weiteren Tiefensuche beginnend bei \Var{b} überprüft.
+Da alle von \Var{b} aus erreichbaren Objekte grau markiert sind und ihre Referenzzähler verschwinden, werden sie schwarz markiert; ein Aufruf von \Method{unmark} findet nicht statt.
+Somit werden anschließend alle vier Knoten durch \Method{collect} mittels einer dritten Tiefensuche freigegeben.
+
+Was passiert jedoch, wenn der Zyklus erreichbar bleibt?
+Wir ergänzen das Beispiel um eine externe Referenz auf das Objekt \Var{d} (siehe Abbildung~\ref{fig:rc-unmark-example}).
+Nach Terminierung von \Method{markGray}(\Var{b}) weist \Var{rc}(\Var{d}) dann den Wert $1$ auf.
+Durch den Aufruf \Method{scan}(\Var{b}) werden zunächst wie zuvor \Var{b}, \Var{e} und \Var{c} schwarz markiert.
+Da allerdings $\Var{rc}(\Var{d}) \neq 0$ gilt, folgt nun ein Aufruf von \Method{unmark}(\Var{d}), wodurch \Var{d} weiß markiert wird.
+Hierdurch wird eine weitere Tiefensuche angestoßen, die die von \Var{d} aus erreichbaren Objekte traversiert, weiß markiert und ihre Referenzzähler zurücksetzt.
+Der anschließend noch abzuarbeitende Aufruf von \Method{scan}(\Var{b}) markiert lediglich graue Objekte schwarz.
+Somit sind letztlich keine schwarz markierten Objekte vorhanden und kein Objekt des Zyklus wird entfernt.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}{0.4\textwidth}
+		\centering
+		\includestandalone{img/tikz/ch3-cyclic-ex11}
+	\end{subfigure}~\hspace{0.5cm}~
+	\begin{subfigure}{0.4\textwidth}
+		\centering
+		\includestandalone{img/tikz/ch3-cyclic-ex12}
+	\end{subfigure}\\[1cm]
+	\begin{subfigure}{0.4\textwidth}
+		\centering
+		\includestandalone{img/tikz/ch3-cyclic-ex13}
+	\end{subfigure}~\hspace{0.5cm}~
+	\begin{subfigure}{0.4\textwidth}
+		\centering
+		\includestandalone{img/tikz/ch3-cyclic-ex14}
+	\end{subfigure}\\[1cm]
+	\begin{subfigure}{0.4\textwidth}
+		\centering
+		\includestandalone{img/tikz/ch3-cyclic-ex15}
+	\end{subfigure}~\hspace{0.5cm}~
+	\begin{subfigure}{0.4\textwidth}
+		\centering
+		\includestandalone{img/tikz/ch3-cyclic-ex16}
+	\end{subfigure}
+	\caption[Ausführung von \Method{unmark}(\Var{d})]{Beispielhafte Ausführung von \Method{unmark}(\Var{d}) nach \Method{mark}(\Var{b}).}
+	\label{fig:rc-unmark-example}
+\end{figure}
 
 Wir zeigen nun, dass die zyklische Referenzzählung nach Martínez et al. korrekt ist, wobei wir weiterhin voraussetzen, dass der Algorithmus atomar ausgeführt wird.
 

@@ -1,0 +1,25 @@
+\input{standalone.tex}
+\begin{document}
+	\begin{tikzpicture}[->, auto, node distance= 1.5cm and 3cm, on grid, semithick,%
+		state/.style={circle, draw, font=\ttfamily, minimum width= 0.7cm}]
+		%\draw (0,0) grid (10,-5);
+		\node[state,gray] (A) at (0.5,0) {a};
+		\node[state] (B) at (2,1) {b};
+		\node[state] (C) at (2,-0.5) {c};
+		\node[state] (D) at (4,-0.5) {d};
+		\node[state] (E) at (4,1) {e};
+		%\node[state,draw=none] (dummy) at (7,0) {};
+		
+		\draw[->,gray] (A) to[bend angle=10, bend left] (B);
+		\draw[->] (B) -- (E);
+		\draw[->] (B) -- (C);
+		\draw[->] (C) to[bend angle=20,bend right] (D);
+		\draw[->] (D) to[bend angle=20,bend right] (C);
+		\draw[->] (D) -- (B);
+		
+		\draw (B) node[left=0.35cm,ctcolormain,font=\bfseries]{1};
+		\draw (C) node[left=0.35cm,ctcolormain,font=\bfseries]{2};
+		\draw (D) node[right=0.35cm,ctcolormain,font=\bfseries]{1};
+		\draw (E) node[right=0.35cm,ctcolormain,font=\bfseries]{1};
+	\end{tikzpicture}
+\end{document}

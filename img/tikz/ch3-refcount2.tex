@@ -1,0 +1,28 @@
+\input{standalone.tex}
+\begin{document}
+	\begin{tikzpicture}[->, auto, node distance= 1.5cm and 3cm, on grid, semithick,%
+		state/.style={circle, draw, font=\ttfamily, minimum width= 0.7cm}]
+		%\draw (0,0) grid (10,-5);
+		\node[state] (A) at (0,0) {a};
+		\node[state,gray] (B) at (1.5,1) {b};
+		\node[state] (C) at (3,1) {c};
+		\node[state] (D) at (2.5,-0.5) {d};
+		\node[state] (E) at (4,-0.5) {e};
+		
+		\draw[->] (-0.5,1) node[above]{\dots} -- (A);
+		\draw[->,gray] (B) -- (C);
+		\draw[->,gray] (B) -- (D);
+		\draw[->] (C) to[bend angle=20,bend right] (E);
+		\draw[->] (E) to[bend angle=20,bend right] (C);
+		\draw[->] (D) -- (C);
+		\draw[->] (E) -- (4.5,0.5) node[above]{\dots};
+		\draw[->] (A) to[bend angle=20,bend right] (D);
+		
+		\draw (A) node[below=0.35cm,ctcolormain,font=\bfseries]{2};
+		\draw (B) node[below=0.35cm,ctcolormain,font=\bfseries]{0};
+		\draw (C) node[right=0.35cm,ctcolormain,font=\bfseries]{2};
+		\draw (D) node[below=0.35cm,ctcolormain,font=\bfseries]{1};
+		\draw (E) node[below=0.35cm,ctcolormain,font=\bfseries]{1};
+		\path (E) edge [loop right] (E);
+	\end{tikzpicture}
+\end{document}

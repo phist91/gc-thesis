@@ -1,0 +1,22 @@
+\input{standalone.tex}
+\begin{document}
+	\begin{tikzpicture}[->, auto, node distance= 1.5cm and 3cm, on grid, semithick,%
+		state/.style={circle, draw, font=\ttfamily, minimum width= 0.7cm}]
+		\node[state] (B) at (2,1) {b};
+		\node[state,very thick] (C) at (2,-0.5) {c};
+		\node[state] (D) at (4,-0.5) {d};
+		\node[state] (E) at (4,1) {e};
+		
+		\draw[->] (B) -- (E);
+		\draw[->] (B) -- (C);
+		\draw[->] (C) to[bend angle=20,bend right] (D);
+		\draw[->] (D) to[bend angle=20,bend right] (C);
+		\draw[->] (D) -- (B);
+		\draw[->] (5,0.5) node[anchor=south west]{\dots} -- (D);
+		
+		\draw (B) node[left=0.35cm,ctcolormain,font=\bfseries]{1};
+		\draw (C) node[left=0.35cm,ctcolormain,font=\bfseries]{1};
+		\draw (D) node[right=0.35cm,ctcolormain,font=\bfseries]{2};
+		\draw (E) node[right=0.35cm,ctcolormain,font=\bfseries]{1};
+	\end{tikzpicture}
+\end{document}
