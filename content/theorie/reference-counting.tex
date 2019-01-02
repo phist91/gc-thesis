@@ -71,7 +71,7 @@ Ensprechend wird für jede Referenz in den Feldern von \Var{obj}, die nicht \Nul
 	\centering
 	\includestandalone{img/tikz/ch3-refcount}~\hspace{1cm}~
 	\includestandalone{img/tikz/ch3-refcount2}
-	\caption[Beispiel für REferenzzählung]{Wird die Referenz $\Var{a} \rightarrow \Var{b}$ entfernt, so wird \Var{b} freigegeben, da der Referenzzähler von \Var{b} auf $0$ fällt. In der Folge müssen auch die Referenzzähler von \Var{c} und \Var{d} angepasst werden.}
+	\caption[Beispiel für Referenzzählung]{Wird die Referenz $\Var{a} \rightarrow \Var{b}$ entfernt, so wird \Var{b} freigegeben, da der Referenzzähler von \Var{b} auf $0$ fällt. In der Folge müssen auch die Referenzzähler von \Var{c} und \Var{d} angepasst werden.}
 	\label{fig:rc-example}
 \end{figure}
 
@@ -107,7 +107,7 @@ Die Garbage Collection mithilfe naive Referenzzählung bietet im Vergleich zum M
 Der Mechanismus zur Freigabe von Objekten wird durch die Entstehung von verwaisten Objekten ausgelöst und nicht etwa, wenn unzureichend freier Speicher zu Verfügung steht.
 Dadurch wird die Allokation von Speicher für neu erzeugte Objekte nicht verzögert.
 Verwaiste Objekte werden beim Löschen ihrer letzten Referenz unmittelbar erkannt und freigegeben und nicht erst beim nächsten Mark-Sweep-Zyklus.
-Speichermangel kann de facto nur dadurch entstehen, dass der gesamte Speicher von erreichbaren Objekten belegt wird -- in diesem Fall bietet allerdings kein Garbage-Collection-Algorithmus Abhilfe.
+Speichermangel kann so de facto nur dadurch entstehen, dass der gesamte Speicher von erreichbaren Objekten belegt wird -- in diesem Fall bietet allerdings kein Garbage-Collection-Algorithmus Abhilfe.
 Referenzzählung benötigt zudem keinen Zugriff auf den vollständigen Objektgraphen:
 Da kein Aufspüren aller erreichbaren Objekte durchgeführt wird, kann auf eine Traversierung des Objektgraphen verzichtet werden.
 Dies ist besonders für verteilte Systeme von Vorteil, in denen die Markierungsphase sonst mehrere Knoten des Systems belasten und erhöhten Datenaustausch zwischen diesen verursachen würde.
@@ -125,6 +125,8 @@ Dadurch werden zwei Schreibzugriffe notwendig, die die Zähler des zuletzt betra
 Die Anzahl an Speicheroperationen wird also signifikant vergrößert.
 Durch den rekursiven Aufruf von \Method{decRefCount} kann es zudem zu einer Kaskade an Freigaben und Zählermanipulationen kommen, sobald ein Objekt freigegeben wird.
 In Verbindung mit der Atomizität der Schreibbarriere können dadurch größere und unerwartete Verzögerungen im Programmablauf entstehen, die bei zeitkritischen Anwendungen um jeden Preis zu vermeiden sind.
+
+\todo[inline]{Overhead durch viele kleine Objekte (Deutsch/Bobrow)}
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
@@ -179,7 +181,7 @@ Man kann leicht sehen, dass die starke Zusammenhangskomponente eines Objekts ein
 \begin{figure}[h]
 	\centering
 	\includestandalone{img/tikz/ch3-scc}
-	\caption[Beispiel für starke Zusammenhangskomponenten]{Der abgebildete Graph besitzt drei starke Zusammenhangskomponenten: $\sk{\Var{a}} = \{\Var{a}\}$, $\sk{\Var{b}} = \{\Var{b}, \Var{c}, \Var{d}\}$ und $\sk{\Var{e}} = \{\Var{e}\}$.}
+	\caption[Beispiel für starke Zusammenhangskomponenten]{Der abgebildete Objektgraph besitzt drei starke Zusammenhangskomponenten: $\sk{\Var{a}} = \{\Var{a}\}$, $\sk{\Var{b}} = \{\Var{b}, \Var{c}, \Var{d}\}$ und $\sk{\Var{e}} = \{\Var{e}\}$.}
 	\label{fig:rc-scc}
 \end{figure}
 
@@ -354,7 +356,7 @@ Somit sind letztlich keine schwarz markierten Objekte vorhanden und kein Objekt 
 		\centering
 		\includestandalone{img/tikz/ch3-cyclic-ex16}
 	\end{subfigure}
-	\caption[Ausführung von \Method{unmark}(\Var{d})]{Beispielhafte Ausführung von \Method{unmark}(\Var{d}) nach \Method{mark}(\Var{b}).}
+	\caption[Ausführung von \Method{unmark}(\Var{d})]{Beispielhafte Ausführung von \Method{unmark}(\Var{d}) nach \Method{markGray}(\Var{b}).}
 	\label{fig:rc-unmark-example}
 \end{figure}
 
