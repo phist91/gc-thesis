@@ -306,7 +306,7 @@ Wir erwarten daher, dass der Aufruf von \Method{markGray}(\Var{b}), \Method{scan
 		\centering
 		\includestandalone{img/tikz/ch3-cyclic-ex6}
 	\end{subfigure}
-	\caption[Ausführung von \Method{markGray}(\Var{b})]{Beispielhafte Ausführung von \Method{markGray}(\Var{b}). Dick umrandet ist das jeweilige Objekt, für welches gerade der rekursive Aufruf von \Method{markGray} stattfindet.}
+	\caption[Ausführung von \Method{markGray}(\Var{b})]{Beispielhafte Ausführung von \Method{markGray}(\Var{b}) nach Entfernen der Referenz $\Var{a} \rightarrow \Var{b}$. Dick umrandet ist das jeweilige Objekt, für welches gerade der rekursive Aufruf von \Method{markGray} stattfindet.}
 	\label{fig:rc-markgray-example}
 \end{figure}
 
@@ -397,3 +397,63 @@ Die Überprüfung auf zyklische Referenzen wird damit erst bei Bedarf ausgelöst
 Falls zuvor bereits die letzte Referenz auf ein Objekt entfernt wird, kann das Verfahren überspringen werden \cite{lins1992}.
 Von Lin und Hou stammt darüber hinaus eine Variante, die mehrere zyklische Strukturen zu Teilgraphen eines Objektgraphen zusammenfasst.
 Mittels einer einzigen Traversierung kann dann die Zahl der externen Referenzen dieses Teilgraphen bestimmt werden; existieren keine, so kann der gesamte Teilgraph -- und damit alle enthaltenen starken Zusammenhangskomponenten -- entsorgt werden \cite{linhou2006}.
+
+\section{Optimierungsmöglichkeiten}
+\label{sec:rc-optimizing}
+
+\begin{algorithm}[h]
+\begin{algorithmic}[1]
+	\State \Atomic \MethodHead{writeRef}(\Var{obj}, \Var{i}, \Var{ref}):
+	\State \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Var{*ref} $\neq$ \Var{obj})
+	\State \quad \quad \Method{incRefCount}(\Var{*ref})
+	\State \quad \IF (\Var{obj[i]} $\neq$ \Null $\wedge$ \Var{*obj[i]} $\neq$ \Var{obj})
+	\State \quad \quad \Method{decRefCount}(\Var{*obj[i]})
+	\State \quad \Var{obj[i]} $\gets$ \Var{ref}
+	\Statex
+	\State \MethodHead{incRefCount}(\Var{obj}):
+	\State \quad \IF $\Var{obj} \in \Var{ZCT}$
+	\State \quad \quad \Method{remove}(\Var{ZCT}, \Var{obj})
+	\State \quad \ELSE \IF $\Var{obj} \in \Var{MRT}$
+	\State \quad \quad $\Var{MRT}(\Var{obj}) \gets \Var{MRT}(\Var{obj}) + 1$
+	\State \quad \ELSE \Method{add}(\Var{MRT}, \Var{obj})
+	\Statex
+	\State \MethodHead{decRefCount}(\Var{obj}):
+	\State \quad \IF $\Var{obj} \in \Var{MRT}$
+	\State \quad \quad \IF $\Var{MRT}(\Var{obj}) > 2$
+	\State \quad \quad \quad $\Var{MRT}(\Var{obj}) \gets \Var{MRT}(\Var{obj}) - 1$
+	\State \quad \quad \ELSE \Method{remove}(\Var{MRT}, \Var{obj})
+	\State \quad \ELSE \Method{add}(\Var{ZCT}, \Var{obj})
+	\Statex
+	\State \Atomic \MethodHead{collect}():
+	\State \quad \FOREACH $\Var{obj} \in \Var{ZCT}$
+	\State \quad \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
+	\State \quad \quad \quad \IF ($\Var{ref} \neq \Null \wedge \Var{*ref} \neq \Var{obj}$)
+	\State \quad \quad \quad \quad \Method{decRefCount}(\Var{*ref})
+	\State \quad \quad \Method{free}(\Var{obj})
+\end{algorithmic}
+\caption[Verzögerte Referenzzählung nach Deutsch und Bobrow]{Verzögerte Referenzzählung nach Deutsch und Bobrow (vgl. \cite[S. 523f]{deutsch1976}).}
+\label{algo:deferred-rc}
+\end{algorithm}
+
+\begin{algorithm}[h]
+\begin{algorithmic}[1]
+	\State \Atomic \MethodHead{writeRef}(\Var{obj}, \Var{i}, \Var{ref}):
+	\State \quad \IF \NOT \Method{isModified}(\Var{\&obj[i]})
+	\State \quad \quad \Method{addLog}(\Var{\&obj[i]}, \Var{obj[i]})
+	\State \quad \quad \Method{setModified}(\Var{\&obj[i]})
+	\State \quad $\Var{obj[i]} \gets ref$
+	\Statex
+	\State \Atomic \MethodHead{processLog}():
+	\State \quad \FOREACH $\Var{field} \in \Var{log}$
+	\State \quad \quad \IF $\Var{*field} \neq \Var{log}(\Var{field})$
+	\State \quad \quad \quad \IF ($\Var{*field} \neq \Null \wedge \Var{**field} \neq \Method{parent}(\Var{field})$)
+	\State \quad \quad \quad \quad \Method{incRefCount}(\Var{**field})
+	\State \quad \quad \quad \IF ($\Var{log}(\Var{field}) \neq \Null \wedge \Var{*log}(\Var{field}) \neq \Method{parent}(\Var{field})$)
+	\State \quad \quad \quad \quad \Method{decRefCount}(\Var{*log}(\Var{field}))
+	\State \quad \quad \Method{unsetModified}(\Var{field})
+	\State \quad \quad \Method{removeLog}(\Var{field})
+	\State \quad \Method{collect}()
+\end{algorithmic}
+\caption[Aggregierte Referenzzählung nach Levanoni und Petrank]{Aggregierte Referenzzählung nach Levanoni und Petrank (vgl. \cite[S. 14ff]{levanoni2006}).}
+\label{algo:coalesced-rc}
+\end{algorithm}
