@@ -400,58 +400,105 @@ Mittels einer einzigen Traversierung kann dann die Zahl der externen Referenzen 
 
 \section{Optimierungsmöglichkeiten}
 \label{sec:rc-optimizing}
+Abschließend gehen wir auf zwei Ansätze ein, die eine Effizienzsteigerung der Referenzzählung bezwecken sollen.
+Wir haben bereits festgestellt, dass Löschkaskaden, die durch freigegebene Objekte entstehen, zu unerwarteten Programmunterbrechungen führen können und die Buchhaltung jeder einzelnen Referenzmanipulation enormen Overhead erzeugt.
+Von Deutsch und Bobrow stammt der Ansatz der \textit{verzögerten Referenzzählung} (engl. \textit{deferred reference counting}), der die Freigabe verwaister Objekte verzögert und auf eine Verfolgung von Referenzmanipulationen verzichtet, die in Feldern von Basisobjekten stattfinden \cite{deutsch1976}.
+Der Referenzzähler eines Objekts wird dazu nicht im Header gespeichert.
+Stattdessen werden zwei Tabellen -- die \textit{zero count table} \Var{ZCT} und die \textit{multi reference table} \Var{MRT} -- angelegt.
+Erstere enthält alle Objekte, deren Referenzzähler $0$ ist.
+Folglich werden diese nicht von anderen Objekten des Heaps referenziert, aber möglicherweise von Basisobjekten wie lokalen Variablen.
+Die eingangs des Kapitels formulierte notwendige Bedingung in Lemma~\ref{lemma:notwendig-rc} ist damit außer Kraft gesetzt.
+Die \Var{MRT} enthält wiederum alle Objekte, die mehrfach von Heapobjekten referenziert werden, und weist diesen ihre Referenzzähler zu, was etwa mit einer Hashtabelle realisiert werden kann.
+Entsprechend wird ein Objekt genau einmal von einem Heapobjekt referenziert, wenn es sich weder in \Var{ZCT} noch \Var{MRT} befindet.
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
-	\State \Atomic \MethodHead{writeRef}(\Var{obj}, \Var{i}, \Var{ref}):
-	\State \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Var{*ref} $\neq$ \Var{obj})
-	\State \quad \quad \Method{incRefCount}(\Var{*ref})
-	\State \quad \IF (\Var{obj[i]} $\neq$ \Null $\wedge$ \Var{*obj[i]} $\neq$ \Var{obj})
-	\State \quad \quad \Method{decRefCount}(\Var{*obj[i]})
+	\State \MethodHead{writeRef}(\Var{obj}, \Var{i}, \Var{ref}):
+	\State \quad \IF $\Var{obj} \notin \Roots$		\Comment{Schreibbarriere für Basisobjekte aussetzen}
+	\State \quad \quad \Atomic
+	\State \quad \quad \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Var{*ref} $\neq$ \Var{obj})
+	\State \quad \quad \quad \quad \Method{incRefCount}(\Var{*ref})
+	\State \quad \quad \quad \IF (\Var{obj[i]} $\neq$ \Null $\wedge$ \Var{*obj[i]} $\neq$ \Var{obj})
+	\State \quad \quad \quad \quad \Method{decRefCount}(\Var{*obj[i]})
 	\State \quad \Var{obj[i]} $\gets$ \Var{ref}
 	\Statex
 	\State \MethodHead{incRefCount}(\Var{obj}):
 	\State \quad \IF $\Var{obj} \in \Var{ZCT}$
-	\State \quad \quad \Method{remove}(\Var{ZCT}, \Var{obj})
+	\State \quad \quad \Method{remove}(\Var{ZCT}, \Var{obj})	\Comment{Anzahl Referenzen ist $1$}
 	\State \quad \ELSE \IF $\Var{obj} \in \Var{MRT}$
-	\State \quad \quad $\Var{MRT}(\Var{obj}) \gets \Var{MRT}(\Var{obj}) + 1$
-	\State \quad \ELSE \Method{add}(\Var{MRT}, \Var{obj})
+	\State \quad \quad $\Var{MRT}(\Var{obj}) \gets \Var{MRT}(\Var{obj}) + 1$	\Comment{Referenzzähler erhöhen}
+	\State \quad \ELSE \Method{add}(\Var{MRT}, \Var{obj})		\Comment{Anzahl Referenzen ist $2$}
 	\Statex
 	\State \MethodHead{decRefCount}(\Var{obj}):
 	\State \quad \IF $\Var{obj} \in \Var{MRT}$
 	\State \quad \quad \IF $\Var{MRT}(\Var{obj}) > 2$
-	\State \quad \quad \quad $\Var{MRT}(\Var{obj}) \gets \Var{MRT}(\Var{obj}) - 1$
-	\State \quad \quad \ELSE \Method{remove}(\Var{MRT}, \Var{obj})
-	\State \quad \ELSE \Method{add}(\Var{ZCT}, \Var{obj})
+	\State \quad \quad \quad $\Var{MRT}(\Var{obj}) \gets \Var{MRT}(\Var{obj}) - 1$	\Comment{Referenzzähler erniedrigen}
+	\State \quad \quad \ELSE \Method{remove}(\Var{MRT}, \Var{obj})	\Comment{Anzahl Referenzen ist $1$}
+	\State \quad \ELSE \Method{add}(\Var{ZCT}, \Var{obj})			\Comment{Anzahl Referenzen ist $0$}
 	\Statex
 	\State \Atomic \MethodHead{collect}():
+	\State \quad \FOREACH $\Var{ref} \in \Pointers(\Roots)$		\Comment{nicht gezählte Referenzen hinzufügen}
+	\State \quad \quad \IF $\Var{ref} \neq \Null$
+	\State \quad \quad \quad \Method{incRefCount}(\Var{*ref})
 	\State \quad \FOREACH $\Var{obj} \in \Var{ZCT}$
 	\State \quad \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
 	\State \quad \quad \quad \IF ($\Var{ref} \neq \Null \wedge \Var{*ref} \neq \Var{obj}$)
 	\State \quad \quad \quad \quad \Method{decRefCount}(\Var{*ref})
 	\State \quad \quad \Method{free}(\Var{obj})
+	\State \quad \FOREACH $\Var{ref} \in \Pointers(\Roots)$		\Comment{vorige Anpassung korrigieren}
+	\State \quad \quad \IF $\Var{ref} \neq \Null$
+	\State \quad \quad \quad \Method{decRefCount}(\Var{*ref})
 \end{algorithmic}
 \caption[Verzögerte Referenzzählung nach Deutsch und Bobrow]{Verzögerte Referenzzählung nach Deutsch und Bobrow (vgl. \cite[S. 523f]{deutsch1976}).}
 \label{algo:deferred-rc}
 \end{algorithm}
 
+Wird nun eine Referenz \Var{ref} in ein Feld \Var{obj[i]} geschrieben, kann der Schreibzugriff unsynchronisiert ausgeführt werden, wenn \Var{obj} ein Basisobjekt ist, da keine Referenzzähler angepasst werden (Zeile~2 in Algorithmus~\ref{algo:deferred-rc}).
+Andernfalls sind mehrere Fälle zu unterscheiden:
+Wird ein Referenzzähler eines Objekts \Var{obj} erhöht, das sich in \Var{ZCT} befindet (etwa, da es bislang nur von lokalen Variablen referenziert wird), so muss es aus \Var{ZCT} entfernt werden, da der Referenzzähler nun $1$ beträgt (Zeile~10f).
+Ist es in der \Var{MRT}, so ist der zugehörige Referenzzähler $\Var{MRT}(\Var{obj})$ zu erhöhen (Zeile~12f).
+Ist beides nicht der Fall, so muss \Var{obj} zur \Var{MRT} hinzugefügt werden; der Referenzzähler wird entsprechend mit $2$ initialisiert (Zeile~14).
+Analoge Fallunterscheidungen sind nötig, wenn ein Referenzzähler reduziert wird (Zeile~16 bis 20).
+
+Die Freigabe von Objekten kann nun zu geeigneten, unkritischen Zeitpunkten mittels der Prozedur \Method{collect} ausgelöst werden, sofern diese vorhersehbar sind, oder alternativ bei akutem Speichermangel.
+Da die Objekte in der \Var{ZCT} gegebenenfalls noch von lokalen Variablen referenziert werden und nicht entfernt werden dürfen, müssen zunächst ihre Referenzzähler angepasst werden, indem über alle Referenzen von Basisobjekten iteriert wird (Zeile~22 bis 24).
+Objekte, die im Anschluss in \Var{ZCT} verbleiben, sind tatsächlich verwaist und können bedenkenlos entfernt werden, ohne die Korrektheit des Algorithmus zu gefährden (Zeile~25 bis 29).
+
+\begin{figure}[h]
+	\centering
+	\includestandalone{img/tikz/ch3-deferred}
+	\caption[Veranschaulichung der verzögerten Referenzzählung]{Schema zur Veranschaulichung der verzögerten Referenzzählung.}
+	\label{fig:rc-deferred}
+\end{figure}
+
+Abbildung~\ref{fig:rc-deferred} veranschaulicht die Arbeitsweise des Algorithmus und die Verschiebung eines Objekts \Var{obj} in bzw. aus \Var{ZCT} und \Var{MRT}.
+Der maßgebliche Performancegewinn entsteht dadurch, dass Referenzmanipulationen in lokalen Variablen nicht unmmittelbar, sondern erst während einer Bereinigungsphase vermerkt werden.
+Somit wirken sich die durch die Garbage Collection bedingten Schreibbarrieren nicht auf Berechnungen aus, die vorwiegend auf lokale Variablen zugreifen.
+Dies kommt etwa Iterationen durch Datenstrukturen zu Gute.
+Ein weiterer Vorteil ergibt sich für Anwendungen, in denen die meisten Objekte höchstens einmal referenziert werden und sich zu keinem Zeitpunkt in der \Var{MRT} befinden.
+Für diese entfällt die Notwendigkeit, Referenzzähler zu hinterlegen und für die \Var{MRT} muss weniger Speicher reserviert werden, was den Speicherbedarf des gesamten Verfahrens reduziert.
+Für Anwendungen, in denen diese Bedingung nicht zutrifft, ergibt sich jedoch die Problematik, die \Var{MRT} angemessen zu realisieren.
+Im Falle einer Hashtabelle muss etwa eine geeignete Hashfunktion gewählt werden, um Schlüsselkollisionen und damit verbundene Performanceeinbußen zu vermeiden.\footnote{Kommt es zu vielen Schlüsselkollisionen, kann die Komplexität eines Zugriffs auf einen einzelnen Tabellenelement in $\oh(n)$ liegen, wobei $n$ die Anzahl der Einträge ist. Eine Vergrößerung der Schlüsselmenge zur Vermeidung von Kollisionen kann wiederum zu einem hohen Speicherbedarf führen, was den für den Heap zu Verfügung stehenden Speicher einschränkt (vgl. \cite[S. 253]{cormen-leiserson})}
+
+
+
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
 	\State \Atomic \MethodHead{writeRef}(\Var{obj}, \Var{i}, \Var{ref}):
 	\State \quad \IF \NOT \Method{isModified}(\Var{\&obj[i]})
-	\State \quad \quad \Method{addLog}(\Var{\&obj[i]}, \Var{obj[i]})
-	\State \quad \quad \Method{setModified}(\Var{\&obj[i]})
-	\State \quad $\Var{obj[i]} \gets ref$
+	\State \quad \quad \Method{addLog}(\Var{\&obj[i]}, \Var{obj[i]})	\Comment{Speichere alten Feldinhalt in Tabelle}
+	\State \quad \quad \Method{setModified}(\Var{\&obj[i]})		\Comment{Markiere Feld als verändert}
+	\State \quad $\Var{obj[i]} \gets \Var{ref}$
 	\Statex
 	\State \Atomic \MethodHead{processLog}():
 	\State \quad \FOREACH $\Var{field} \in \Var{log}$
-	\State \quad \quad \IF $\Var{*field} \neq \Var{log}(\Var{field})$
+	\State \quad \quad \IF $\Var{*field} \neq \Var{log}(\Var{field})$	\Comment{Prüfe, ob Feldinhalt verändert wurde}
 	\State \quad \quad \quad \IF ($\Var{*field} \neq \Null \wedge \Var{**field} \neq \Method{parent}(\Var{field})$)
 	\State \quad \quad \quad \quad \Method{incRefCount}(\Var{**field})
 	\State \quad \quad \quad \IF ($\Var{log}(\Var{field}) \neq \Null \wedge \Var{*log}(\Var{field}) \neq \Method{parent}(\Var{field})$)
 	\State \quad \quad \quad \quad \Method{decRefCount}(\Var{*log}(\Var{field}))
 	\State \quad \quad \Method{unsetModified}(\Var{field})
-	\State \quad \quad \Method{removeLog}(\Var{field})
+	\State \quad \quad \Method{removeLog}(\Var{field})		\Comment{Entferne Eintrag aus Tabelle}
 	\State \quad \Method{collect}()
 \end{algorithmic}
 \caption[Aggregierte Referenzzählung nach Levanoni und Petrank]{Aggregierte Referenzzählung nach Levanoni und Petrank (vgl. \cite[S. 14ff]{levanoni2006}).}

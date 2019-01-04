@@ -1,0 +1,28 @@
+\input{standalone.tex}
+\begin{document}
+	\begin{tikzpicture}[->, auto, thick,
+		state/.style={circle, draw, minimum width= 1.1cm}]
+		%\draw (0,0) grid (10,-5);
+		\node[state] (M) at (0,0) {\Var{MRT}};
+		\node[state] (E) at (4,0) {$\emptyset$};
+		\node[state] (Z) at (8,0) {\Var{ZCT}};
+		\node[state] (F) at (12,0) {\Method{free}};
+
+		\path (M) edge [thick,ctcolormain, loop left] (M);	
+		\draw[->,thick,ctcolormain] (E) to[bend angle=15,bend right] (M);
+		\draw[->,thick,ctcolormain] (Z) to[bend angle=15,bend right] (E);
+		
+		\path (M) edge [thick,ctcoloraccessory, loop below] node[midway,below,font=\footnotesize]{$\Var{MRT}(\Var{obj}) > 2$} (M);
+		\draw[->,thick,ctcoloraccessory] (M) to[bend angle=15,bend right] node[midway,below,font=\footnotesize]{$\Var{MRT}(\Var{obj}) = 2$} (E);
+		\draw[->,thick,ctcoloraccessory] (E) to[bend angle=15,bend right] (Z);
+		
+		\path (M) edge [thick,red, loop above] (M); 
+		\path (E) edge [thick,red, loop above] (E);
+		\path (Z) edge [thick,red, loop above] node[midway,above,font=\footnotesize]{$\Roots \rightarrow \Var{obj}$} (Z);
+		\draw[->,thick,red](Z) to node[midway,above,font=\footnotesize]{$\Roots \nrightarrow \Var{obj}$} (F);
+
+		\draw[->,ctcolormain,thick] (9,-1.5) -- (10,-1.5) node[right,font=\footnotesize\itshape]{incRefCount};
+		\draw[->,ctcoloraccessory,thick] (9,-2) -- (10,-2) node[right,font=\footnotesize\itshape]{decRefCount};
+		\draw[->,red,thick] (9,-2.5) -- (10,-2.5) node[right,font=\footnotesize\itshape]{collect};
+	\end{tikzpicture}
+\end{document}

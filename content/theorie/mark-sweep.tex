@@ -393,7 +393,7 @@ Das Auffinden erreichbarer Objekte verursacht daher schwer vorhersehbare Speiche
 Caching- und Prefetch-Mechanismen, die durch vorweggenommenes Bereitstellen von Speicherinhalten Zugriffe beschleunigen, profitieren hingegen von \textit{zeitlicher} und \textit{räumlicher Lokalität} von Daten, die in einer Beziehung zueinander stehen.
 In der Markierungsphase können sie daher Speicherzugriffe nicht so effektiv beschleunigen wie in der Bereinigungsphase \cite[S. 21f]{handbook}.
 Um diesen Makel zu beheben, kann die Zugriffsreihenfolge auf Objekte variiert werden.
-Anstatt etwa im naiven Algorithmus~\ref{algo:naive-mark} die Abarbeitung der \Var{toDo}-Menge zu beginnen, sobald das erste Basisobjekt erfasst wurde, können statt dessen auch zunächst alle Basisobjekte zu \Var{toDo} hinzugefügt und die Prozedur \Method{mark} im Anschluss aufgerufen werden.
+Anstatt etwa im naiven Algorithmus~\ref{algo:naive-mark} die Abarbeitung der \Var{toDo}-Menge zu beginnen, sobald das erste Basisobjekt erfasst wurde, können stattdessen auch zunächst alle Basisobjekte zu \Var{toDo} hinzugefügt und die Prozedur \Method{mark} im Anschluss aufgerufen werden.
 Je nachdem, wie \Var{toDo} in der Praxis realisiert wird -- zum Beispiel in Form eines Stacks -- kann die Traversierung der Objekte -- und damit die Performanz des Kollektors in der Markierungsphase -- signifikant beeinflusst werden (vgl. \cite[S. 19]{handbook}).
 
 Statt Markierungsinformationen im Header zu speichern, können diese auch in Bitmaps oder tabellenähnlichen Strukturen außerhalb eines Objekts verwaltet werden.
