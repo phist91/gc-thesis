@@ -125,8 +125,7 @@ Dadurch werden zwei Schreibzugriffe notwendig, die die Zähler des zuletzt betra
 Die Anzahl an Speicheroperationen wird also signifikant vergrößert.
 Durch den rekursiven Aufruf von \Method{decRefCount} kann es zudem zu einer Kaskade an Freigaben und Zählermanipulationen kommen, sobald ein Objekt freigegeben wird.
 In Verbindung mit der Atomizität der Schreibbarriere können dadurch größere und unerwartete Verzögerungen im Programmablauf entstehen, die bei zeitkritischen Anwendungen um jeden Preis zu vermeiden sind.
-
-\todo[inline]{Overhead durch viele kleine Objekte (Deutsch/Bobrow)}
+Die Speicherung eines Zählers für jedes Objekt, dessen Wert potenziell nur durch die Anzahl aller Referenzfelder begrenzt ist, kann in Anwendungen mit vielen kleineren Objekten zudem einen relevanten zusätzlichen Speicherbedarf hervorrufen.
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
@@ -144,7 +143,7 @@ Ein weiteres Problem entsteht, wenn zyklische Datenstrukturen wie etwa doppelt v
 Die gesamte Struktur kann unerreichbar sein, obwohl die Referenzzähler der einzelnen Objekte nicht $0$ sind (siehe Abbildung~\ref{fig:rc-cycle}).
 Die einzelnen Objekte werden dann nicht als löschbar erkannt, was zu einem Speicherleck führt.
 Eine mögliche Lösung dieser Problematik wird im nächsten Abschnitt betrachtet.
-Im Anschluss daran werden weitere Ansätze vorgestellt, die eine Effizienzsteigerung der naiven Referenzzählung anstreben. \todo[inline]{Ausblick auf nächste Abschnitte}
+Im Anschluss daran werden weitere Ansätze vorgestellt, die eine Effizienzsteigerung der naiven Referenzzählung anstreben.
 
 \begin{figure}[h]
 	\centering
@@ -478,9 +477,43 @@ Dies kommt etwa Iterationen durch Datenstrukturen zu Gute.
 Ein weiterer Vorteil ergibt sich für Anwendungen, in denen die meisten Objekte höchstens einmal referenziert werden und sich zu keinem Zeitpunkt in der \Var{MRT} befinden.
 Für diese entfällt die Notwendigkeit, Referenzzähler zu hinterlegen und für die \Var{MRT} muss weniger Speicher reserviert werden, was den Speicherbedarf des gesamten Verfahrens reduziert.
 Für Anwendungen, in denen diese Bedingung nicht zutrifft, ergibt sich jedoch die Problematik, die \Var{MRT} angemessen zu realisieren.
-Im Falle einer Hashtabelle muss etwa eine geeignete Hashfunktion gewählt werden, um Schlüsselkollisionen und damit verbundene Performanceeinbußen zu vermeiden.\footnote{Kommt es zu vielen Schlüsselkollisionen, kann die Komplexität eines Zugriffs auf einen einzelnen Tabellenelement in $\oh(n)$ liegen, wobei $n$ die Anzahl der Einträge ist. Eine Vergrößerung der Schlüsselmenge zur Vermeidung von Kollisionen kann wiederum zu einem hohen Speicherbedarf führen, was den für den Heap zu Verfügung stehenden Speicher einschränkt (vgl. \cite[S. 253]{cormen-leiserson})}
+Im Falle einer Hashtabelle muss etwa eine geeignete Hashfunktion gewählt werden, um Schlüsselkollisionen und damit verbundene Performanceeinbußen zu vermeiden.\footnote{Kommt es zu vielen Schlüsselkollisionen, kann die Komplexität eines Zugriffs auf ein einzelnes Tabellenelement in $\oh(n)$ liegen, wobei $n$ die Anzahl der Einträge ist. Eine Vergrößerung der Schlüsselmenge zur Vermeidung von Kollisionen kann wiederum zu einem hohen Speicherbedarf führen, was den für den Heap zu Verfügung stehenden Speicher einschränkt (vgl. \cite[S. 253]{cormen-leiserson})}
 
+Eine weitere Optimierungsmöglichkeit zielt darauf ab, die Auswirkung einer mehrfachen Änderung eines Referenzfeldes eines Objekts zusammenzufassen, anstatt jede einzelne Änderung nachzuverfolgen.
+Levanoni und Petrank beobachten, dass viele einzelne Referenzmanipulationen innerhalb des selben Feldes unnötige Anpassungen von Referenzzählern verursachen, die sich gewissermaßen \textit{kürzen} lassen \cite[S. 4ff]{levanoni2006}.
+Betrachten wir etwa einen Mutator, der folgenden Code ausführt, und die dadurch ausgelösten Anpassungen von Referenzzählern:
 
+\begin{center}
+\begin{minipage}{0.3\textwidth}
+	\centering
+	\begin{algorithmic}[1]
+		\Statex $\Var{obj.ref} \gets \Var{\&a}_0$
+		\Statex $\Var{obj.ref} \gets \Var{\&a}_1$
+		\Statex $\Var{obj.ref} \gets \Var{\&a}_2$
+		\Statex $\Var{obj.ref} \gets \Var{\&a}_3$
+		\Statex \dots
+		\Statex $\Var{obj.ref} \gets \Var{\&a}_n$
+	\end{algorithmic}
+\end{minipage}~
+\begin{minipage}{0.6\textwidth}
+	\centering
+	\begin{algorithmic}[1]
+		\Statex \textbf{Referenzzähleranpassungen:}
+		\Statex \Method{incRefCount}($\Var{a}_1$) \quad \Method{decRefCount}($\Var{a}_0$)
+		\Statex \Method{incRefCount}($\Var{a}_2$) \quad \Method{decRefCount}($\Var{a}_1$)
+		\Statex \Method{incRefCount}($\Var{a}_3$) \quad \Method{decRefCount}($\Var{a}_2$)
+		\Statex \dots
+		\Statex \Method{incRefCount}($\Var{a}_n$) \quad \Method{decRefCount}($\Var{a}_{n-1}$)
+	\end{algorithmic}
+\end{minipage}
+\end{center}
+
+Offensichtlich wird die Erhöhung der Referenzzähler von $\Var{a}_1$ bis $\Var{a}_{n-1}$ in der jeweils nächsten Anweisung annuliert, sodass es sinnvoll ist, diese Manipulationen zu aggregieren und lediglich die Zähler von $\Var{a}_0$ und $\Var{a}_n$ angepasst werden.
+Die \textit{aggregierte Referenzzählung} (engl. \textit{coalesced reference counting}) realisiert dies, indem in regelmäßigen Abständen überprüft wird, welche Referenzfelder von Objekten seit der letzten Überprüfung verändert wurden.
+Dazu wird im Rahmen einer Schreibbarriere ein Objektfeld als modifiziert gekennzeichnet -- etwa durch Setzen eines Bits im Header des Objekts -- und die Adresse des Objektfeldes zusammen mit dem alten Inhalt vor der ersten Modifikation in einer Tabelle \Var{log} hinterlegt (Zeile 3f in Algorithmus~\ref{algo:coalesced-rc}).
+Wird nun über die in \Var{log} eingetragenen Felder iteriert, so wird geprüft, ob sich die neue im Feld gespeicherte Referenz \Var{*field} von der zwischengespeicherten Referenz \Var{log}(\Var{field}) unterscheidet (Zeile~8).
+Nur dann sind Anpassungen der jeweiligen Referenzzähler nötig.
+Anschließend wird die Markierung des Feldes zurückgesetzt und der Eintrag aus der Tabelle entfernt.
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
@@ -493,14 +526,18 @@ Im Falle einer Hashtabelle muss etwa eine geeignete Hashfunktion gewählt werden
 	\State \Atomic \MethodHead{processLog}():
 	\State \quad \FOREACH $\Var{field} \in \Var{log}$
 	\State \quad \quad \IF $\Var{*field} \neq \Var{log}(\Var{field})$	\Comment{Prüfe, ob Feldinhalt verändert wurde}
-	\State \quad \quad \quad \IF ($\Var{*field} \neq \Null \wedge \Var{**field} \neq \Method{parent}(\Var{field})$)
-	\State \quad \quad \quad \quad \Method{incRefCount}(\Var{**field})
-	\State \quad \quad \quad \IF ($\Var{log}(\Var{field}) \neq \Null \wedge \Var{*log}(\Var{field}) \neq \Method{parent}(\Var{field})$)
-	\State \quad \quad \quad \quad \Method{decRefCount}(\Var{*log}(\Var{field}))
-	\State \quad \quad \Method{unsetModified}(\Var{field})
+	\State \quad \quad \quad \IF $\Var{*field} \neq \Null$
+	\State \quad \quad \quad \quad \Method{incRefCount}(\Var{**field})	\Comment{vgl. Algorithmus~\ref{algo:deferred-rc}}
+	\State \quad \quad \quad \IF $\Var{log}(\Var{field}) \neq \Null$
+	\State \quad \quad \quad \quad \Method{decRefCount}(\Var{*log}(\Var{field}))	\Comment{vgl. Algorithmus~\ref{algo:deferred-rc}}
+	\State \quad \quad \Method{unsetModified}(\Var{field})	\Comment{Markierung entfernen}
 	\State \quad \quad \Method{removeLog}(\Var{field})		\Comment{Entferne Eintrag aus Tabelle}
-	\State \quad \Method{collect}()
+	\State \quad \Method{collect}()		\Comment{vgl. Algorithmus~\ref{algo:deferred-rc}}
 \end{algorithmic}
 \caption[Aggregierte Referenzzählung nach Levanoni und Petrank]{Aggregierte Referenzzählung nach Levanoni und Petrank (vgl. \cite[S. 14ff]{levanoni2006}).}
 \label{algo:coalesced-rc}
 \end{algorithm}
+
+Mittels Methoden für verteilte Systeme, auf die wir hier nicht näher eingehen, lässt sich dieser Ansatz durch feingranularere Synchronisationen optimieren, etwa indem Logtabellen threadweise angelegt werden.
+Dadurch kann vermieden werden, dass das gesamte Programm angehalten wird.
+Für mehr Details verweisen wir auf die Publikation von Levanoni und Petrank \cite[S. 19]{levanoni2006}.
