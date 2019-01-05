@@ -2,9 +2,9 @@
 \begin{document}
 	\begin{tikzpicture}[->, auto, node distance=0.3cm and 1cm, semithick,% on grid,
 		state/.style={circle, draw, font=\ttfamily, minimum width=0.5cm}]
-		\node[state,white,draw=black,fill=ctcolormain] (A) {A};
-		\node[state,white,draw=black,fill=ctcolormain] (B) [below=of A] {B};
-		\node[state] (C) [above right=of B] {C};
+		\node[state,white,draw=black,fill=ctcolormain] (A) {a};
+		\node[state,white,draw=black,fill=ctcolormain] (B) [below=of A] {b};
+		\node[state] (C) [above right=of B] {c};
 
 		\path (A) edge (C);
 	\end{tikzpicture}

@@ -29,6 +29,12 @@ Dabei soll auch ein Augenmerk auf Performance und Ressourcenbedarf gelegt sowie 
 Im zweiten Teil der Arbeit wird der Entwurf und die Implementation einer Anwendung beschrieben, die die diskutierten Garbage-Collection-Algorithmen grafisch visualisiert und in einem vereinfachten Speichermodell simuliert.
 Anhand dieser Anwendung soll die Arbeitsweise der Algorithmen veranschaulicht werden.
 
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+
 \section{Terminologie}
 \label{sec:intro:terminologie}
 Bevor wir genauer darauf eingehen, was unter einer Garbage Collection konkret verstanden wird, sollen zunächst die nötige Terminologie sowie ein Speichermodell eingeführt werden, das im Fortgang dieser Arbeit benutzt wird.
@@ -81,11 +87,17 @@ Die Funktionsweise von \Method{new} kann dabei vom verwendeten Garbage-Collectio
 \label{algo:new}
 \end{algorithm}
 
-Nach Dijkstra et al. besteht ein Programm zudem aus zwei funktional unterscheidbaren Bestandteilen \cite[S. 967]{dijkstra1978}:
+Nach \textsc{Dijkstra} et al. besteht ein Programm zudem aus zwei funktional unterscheidbaren Bestandteilen \cite[S. 967]{dijkstra1978}:
 Der \textbf{Mutator} ist derjenige Thread (bzw. eine Menge von Threads), die den eigentlichen Programmcode ausführen.
 Für uns sind dabei vor allem Programmanweisungen von Bedeutung, die in Feldern von Objekten vorhandene Referenzen manipulieren und somit ursächlich für die Entstehung von nicht mehr benötigten Objekten sind.
 Im Gegensatz dazu ist es die Aufgabe des \textbf{Kollektors}, die nicht mehr benötigten Objekte zu identifizieren und ihre Freigabe zu veranlassen.
 Der Kollektor ist demnach derjenige Thread (bzw. eine Menge von Threads), die einen Garbage-Collection-Algorithmus ausführen.
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
 
 \section{Problemstellung}
 \label{sec:intro:problem}
@@ -149,7 +161,7 @@ Diese Definition garantiert zwar nicht, dass jedes erreichbare Objekt auch leben
 Davon ausgehend, dass unerreichbare Objekte auch nicht \textit{wiedergefunden} werden können, können wir jedoch mit Sicherheit sagen, dass unerreichbare Objekte nicht mehr verwendet werden und gefahrlos durch den Kollektor freigegeben werden dürfen.
 
 Die Erreichbarkeit von Objekten lässt sich mithilfe eines sogenannten \textbf{Objektgraphen} visualisieren.
-Jedes existierende Objekt korrespondiert dabei zu einem Knoten des Graphen.
+Jedes existierende Objekt korrespondiert dabei zu einem Knoten des Graphen, sodass wir das Objekt mit seinem Knoten identifizieren können (und umgekehrt).
 Besitzt ein Objekt \code{a} in mindestens einem seiner Felder eine Referenz auf ein weiteres Objekt \code{b}, so wird dies durch eine gerichtete Kante zwischen den ensprechenden Knoten dargestellt.
 Ein Objekt ist somit nicht erreichbar, wenn es im Objektgraphen keinen Pfad zu ihm gibt, der in einem Basisobjekt startet.
 Objektgraphen werden uns im Rahmen dieser Arbeit bei der Veranschaulichng der vorgestellten Algorithmen dienlich sein.
@@ -165,26 +177,10 @@ Objektgraphen werden uns im Rahmen dieser Arbeit bei der Veranschaulichng der vo
 \end{defn}
 \end{mybox}
 
-%\begin{mybox}
-%\begin{defn}[Objektgraph]
-%	Ein Objektgraph $G = (V,E)$ besteht aus einer Menge von Knoten $V$ und einer Menge von gerichteten Kanten $E \subseteq V \times V$, die wie folgt definiert sind:
-%	\begin{enumerate}[(1)]
-%		\item Ist \code{a} ein Objekt, so gilt $\code{a} \in V$.
-%		\item Sind $\code{a}, \code{b} \in V$ und existiert ein $i \in \NN$ mit $\code{*a[i]} = \code{b}$, so ist $(\code{a},\code{b}) \in E$.
-%	\end{enumerate}
-%\end{defn}
-%\end{mybox}
-
-%\begin{figure}[h]
-%	\centering
-%	\includegraphics[keepaspectratio]{img/tikz/ch1-objgraph.pdf}
-%	\caption[Beispiel für einen Objektgraphen]{Beispiel für einen Objektgraphen. Die Objekte \code{A}, \code{B} und \code{C} sind Basisobjekte. Die Objekte \code{H}, \code{I}, \code{L} und \code{M} sind in dieser Kostellation nicht erreichbar.}
-%\end{figure}
-
 \begin{figure}[h]
 	\centering
 	\includestandalone{img/tikz/ch1-objgraph}
-	\caption[Beispiel für einen Objektgraphen]{Beispiel für einen Objektgraphen. Die Objekte \code{A}, \code{B} und \code{C} sind Basisobjekte. Die Objekte \code{H}, \code{I}, \code{L} und \code{M} sind in dieser Kostellation nicht erreichbar.}
+	\caption[Beispiel für einen Objektgraphen]{Beispiel für einen Objektgraphen. Die Objekte \code{a}, \code{b} und \code{c} sind Basisobjekte. Die Objekte \code{h}, \code{i}, \code{l} und \code{m} sind in dieser Kostellation nicht erreichbar.}
 \end{figure}
 
 An dieser Stelle formulieren wir ein Korrektheitskriterium für Garbage-Collection-Algorithmen.

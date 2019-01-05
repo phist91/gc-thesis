@@ -1,20 +1,20 @@
 \input{standalone.tex}
 \begin{document}
-	\begin{tikzpicture}[->, auto, node distance= 1.5cm and 3cm, on grid, semithick,%
-		state/.style={circle, draw, font=\ttfamily, minimum width= 1cm}]
+	\begin{tikzpicture}[->, auto, node distance= 1.5cm and 2cm, on grid, semithick,%
+		state/.style={circle, draw, font=\ttfamily, minimum width= 0.7cm}]
 		%\draw (0,0) grid (10,-5);
-		\node[state] (A) {A};
-		\node[state] (B) [below=of A] {B};
-		\node[state] (C) [below=of B] {C};
-		\node[state] (D) [right=of A] {D};
-		\node[state] (G) [below right=of D] {G};
-		\node[state] (I) [above right=of G] {I};
-		\node[state] (E) [right=of B] {E};
-		\node[state] (C) [below=of B] {C};
-		\node[state] (F) [below=of E] {F};
-		\node[state] (L) [right=of F] {L};
-		\node[state] (M) [right=of L] {M};
-		\node[state] (H) [above=of M] {H};
+		\node[state] (A) {a};
+		\node[state] (B) [below=of A] {b};
+		\node[state] (C) [below=of B] {c};
+		\node[state] (D) [right=of A] {d};
+		\node[state] (G) [below right=of D] {g};
+		\node[state] (I) [above right=of G] {i};
+		\node[state] (E) [right=of B] {e};
+		\node[state] (C) [below=of B] {c};
+		\node[state] (F) [below=of E] {f};
+		\node[state] (L) [right=of F] {l};
+		\node[state] (M) [right=of L] {m};
+		\node[state] (H) [above=of M] {h};
 		
 		\path (A) edge (D);
 		\path (D) edge [loop above] (D);
@@ -30,7 +30,7 @@
 		\path (M) edge [bend left=20] (L);
 		\path (H) edge [loop left] (H);
 		
-		\draw [very thick,dashed] (-1,0.8) rectangle (1,-3.8);
-		\draw [draw=none] (0,0.8) node[above]{\Roots};
+		\draw [very thick,dashed] (-0.7,0.5) rectangle (0.7,-3.5);
+		\draw [draw=none] (0,0.5) node[above]{\Roots};
 	\end{tikzpicture}
 \end{document}

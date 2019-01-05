@@ -1,14 +1,14 @@
 %!TEX root = ../../thesis.tex
 \chapter{Mark and Sweep}
 \label{cha:mark-sweep}
-Wir beginnen mit einer Vorstellung des ersten Garbage-Collection-Algorithmus, der auf John McCarthy zurückgeht \cite[191--193]{mccarthy1960}.
-Im Rahmen eines im Jahr 1960 veröffentlichten Artikels über die Berechnung rekursiver Funktionen auf dem \textit{IBM 704} mithilfe des \textit{LISP Programming Systems} erläutert McCarthy die Speicherung von Daten in einer Listenstruktur.
+Wir beginnen mit einer Vorstellung des ersten Garbage-Collection-Algorithmus, der auf \textsc{McCarthy} zurückgeht \cite[191--193]{mccarthy1960}.
+Im Rahmen eines im Jahr 1960 veröffentlichten Artikels über die Berechnung rekursiver Funktionen auf dem \textit{IBM 704} mithilfe des \textit{LISP Programming Systems} erläutert \textsc{McCarthy} die Speicherung von Daten in einer Listenstruktur.
 Diese besteht aus Paaren, deren erster Eintrag \texttt{car} die zu speichernde Information enthält\footnote{Genauer: Die Adresse des Registers, in der die zu speichernde Information gelagert wird.}, während im zweiten Eintrag \texttt{cdr} die Registeradresse des nachfolgenden Paares zu finden ist.
 Diese Struktur hat den Vorteil, dass ein Datum, das in mehreren Listen vorkommt, nur ein einziges Register belegt.
 Register, die aktuell nicht zur Speicherung von Daten genutzt werden, befinden sich in einer \textit{free storage list}.
 Bei der Anforderung von Speicher für ein zu speicherndes Datum werden Register aus dieser Liste entfernt.
 Durch die Manipulation der Registeradressen können Paare verwaisen, was zu Speicherlecks führt.
-Zur Auflösung dieser Problematik bietet LISP als erste Programmiersprache ihrer Zeit eine automatische Speicherverwaltung, die von McCarthy wie folgt grob umschrieben wird:
+Zur Auflösung dieser Problematik bietet LISP als erste Programmiersprache ihrer Zeit eine automatische Speicherverwaltung, die von \textsc{McCarthy} wie folgt grob umschrieben wird:
 Im Falle von Speicherknappheit wird -- ausgehend von einer Menge von Basisregistern -- ermittelt, welche Register über eine Folge von \texttt{cdr}-Einträgen erreichbar sind.
 Nicht erreichbare Register enthalten überschreibbare Inhalte, sodass diese zurück in die \textit{free storage list} eingefügt werden können und wieder als freie Speicherplätze zu Verfügung stehen.
 Diese zweischrittige Vorgehensweise -- das Erkennen nicht mehr benötigter Speicherbereiche und die anschließende Freigabe eben jener -- bildet die Grundlage des \textit{Mark-Sweep-Algorithmus}.
@@ -19,6 +19,12 @@ Diese zweischrittige Vorgehensweise -- das Erkennen nicht mehr benötigter Speic
 	\caption[Visualisierung einer LISP-Liste]{Visualisierung der LISP-Liste \texttt{a = (13,42,7,42)} als \textit{Box-and-Pointer}-Diagramm (vgl. \cite[Kapitel 3.3]{sicp}).}
 	\label{fig:lisp-list}
 \end{figure}
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
 
 \section{Naives Mark and Sweep}
 \label{sec:naive-mark-sweep}
@@ -124,17 +130,17 @@ Wir halten zunächst fest, dass der Mark-Sweep-Algorithmus in seiner Gänze term
 \end{proof}
 
 Die Bedingung, dass der Mutator während des Markierens pausiert wird, ist tatsächlich notwendig, um zu vermeiden, dass fälschlicherweise erreichbaren Objekte entfernt werden, wie folgendes Beispiel zeigt (vgl. \cite[969]{dijkstra1978}):
-Betrachten wir etwa die Situation, dass zwei Basisobjekte $\Var{A}$ und $\Var{B}$ alternierend auf ein Objekt $\Var{C}$ verweisen, das ausschließlich über $\Var{A}$ oder $\Var{B}$ erreichbar ist.
+Betrachten wir etwa die Situation, dass zwei Basisobjekte $\Var{a}$ und $\Var{b}$ alternierend auf ein Objekt $\Var{c}$ verweisen, das ausschließlich über $\Var{a}$ oder $\Var{b}$ erreichbar ist.
 Während der Kollektor aktiv ist, führe der Mutator folgenden Code aus:
 
 \begin{center}
 \begin{minipage}{0.3\textwidth}
 	\centering
 	\begin{algorithmic}[1]
-		\State \Var{B.ref} $\gets$ \Var{\&C}
-		\State \Var{A.ref} $\gets$ \Null
-		\State \Var{A.ref} $\gets$ \Var{\&C}
-		\State \Var{B.ref} $\gets$ \Null
+		\State \Var{b.ref} $\gets$ \Var{\&c}
+		\State \Var{a.ref} $\gets$ \Null
+		\State \Var{a.ref} $\gets$ \Var{\&c}
+		\State \Var{b.ref} $\gets$ \Null
 	\end{algorithmic}
 \end{minipage}~
 \begin{minipage}{0.3\textwidth}
@@ -147,11 +153,11 @@ Während der Kollektor aktiv ist, führe der Mutator folgenden Code aus:
 \end{minipage}
 \end{center}
 
-Es könnte passieren, dass der Kollektor gerade Objekt $\Var{A}$ abarbeitet, unmittelbar nachdem Zeile~2 ausgeführt wurde.
-Es wird dann keine Referenz auf Objekt $\Var{C}$ vorgefunden.
-Wenn der Kollektor nun Objekt $\Var{B}$ betrachtet, nachdem bereits Zeile~4 abgearbeitet wurde, wird Objekt $\Var{C}$ weiterhin nicht entdeckt.
-Insgesamt wird Objekt $\Var{C}$ somit nicht markiert, obwohl es erreichbar ist.
-In der Folge würde $\Var{C}$ irrtümlich freigegeben werden, sodass im schlimmsten Fall ein hängender Zeiger entsteht oder sogar Datenverlust verursacht wird -- der Algorithmus arbeitet also nicht korrekt.
+Es könnte passieren, dass der Kollektor gerade Objekt $\Var{a}$ abarbeitet, unmittelbar nachdem Zeile~2 ausgeführt wurde.
+Es wird dann keine Referenz auf Objekt $\Var{c}$ vorgefunden.
+Wenn der Kollektor nun Objekt $\Var{b}$ betrachtet, nachdem bereits Zeile~4 abgearbeitet wurde, wird Objekt $\Var{c}$ weiterhin nicht entdeckt.
+Insgesamt wird Objekt $\Var{c}$ somit nicht markiert, obwohl es erreichbar ist.
+In der Folge würde $\Var{c}$ irrtümlich freigegeben werden, sodass im schlimmsten Fall ein hängender Zeiger entsteht oder sogar Datenverlust verursacht wird -- der Algorithmus arbeitet also nicht korrekt.
 
 Situationen, in denen die nebenläufige Ausführung von Programmsegmenten zu unvorhersehbarem Verhalten führt, werden als \textit{race conditions} bezeichnet.
 Algorithmen, die zur Vermeidung von \textit{race conditions} zwischen Kollektor und Mutator die Arbeit des letzteren unterbrechen, werden auch als \textit{Stop-the-World-Algorithmen} (vgl. \cite[S. 17]{handbook}) bezeichnet.
@@ -170,7 +176,7 @@ Wir haben gesehen, dass die Manipulation von Referenzen während der Markierungs
 Um dies zu vermeiden, könnte man als ersten Ansatz auf die Idee kommen, beim Schreiben einer neuen Referenz in ein Feld eines Objekts das Ziel dieser Referenz sofort zu markieren.
 Dies ist jedoch nur scheinbar eine Lösung:
 Da das Ziel ebenfalls Referenzen auf unmarkierte Objekte bereithalten könnte, entstehen dadurch möglicherweise neue Referenzen von markierten auf unmarkierte Objekte.
-Von Dijkstra et al. stammt ein Ansatz, der diese Idee aufgreift und um ein \textit{Zwischenstadium} erweitert \cite[S. 969f]{dijkstra1978}.
+Von \textsc{Dijkstra} et al. stammt ein Ansatz, der diese Idee aufgreift und um ein \textit{Zwischenstadium} erweitert \cite[S. 969f]{dijkstra1978}.
 Diese ermöglicht es, markierte Objekte, die bereits komplett abgearbeitet wurden, von solchen zu unterscheiden, die bislang lediglich entdeckt wurden.
 Dazu werden Objekte mit drei verschiedenen Farben markiert:
 
@@ -277,12 +283,14 @@ Die Atomizität der Schreibbarriere \Method{writeRef} in Algorithmus~\ref{algo:t
 Käme es unmittelbar nach der Markierung des Referenzziels, aber vor dem eigentlichen Setzen der Referenz in Zeile 5, zu einen kompletten Garbage-Collection-Zyklus, so würde die Markierung durch den Kollektor wieder aufgehoben.
 Damit bestünde im Anschluss die Möglichkeit, dass die Invariante (A) verletzt wird.
 Allerdings besteht die Möglichkeit, die Invariante (A) abzuschwächen und damit eine \textit{feingranularere} Lösung zu ermöglichen.
-Für Details hierzu verweisen wir auf die Publikation von Dijkstra et al \cite[S. 972ff]{dijkstra1978}.
-Pirinen liefert darüber hinaus einen Überblick über verschiedene Möglichkeiten von Lese- und Schreibbarrieren im Kontext der Drei-Farben-Abstraktion \cite{pirinen}.
+Für Details hierzu verweisen wir auf die Publikation von \textsc{Dijkstra} et al \cite[S. 972ff]{dijkstra1978}.
+\textsc{Pirinen} liefert darüber hinaus einen Überblick über verschiedene Möglichkeiten von Lese- und Schreibbarrieren im Kontext der Drei-Farben-Abstraktion \cite{pirinen}.
+
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
  % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
 
 \section{Verzögerte Bereinigung}
 \label{sec:lazy-sweep}
@@ -292,7 +300,7 @@ Meist können Mutator und Kollektor während der Bereinigung gleichzeitig tätig
 Nicht mehr erreichbare Objekte sind ohne Nebenwirkungen zerstörbar und Markierungsinformationen werden so hinterlegt, dass sie für den Mutator grundsätzlich nicht zugänglich sind.
 \textit{Race conditions} sind dadurch prinzipiell ausgeschlossen.
 Ferner ergibt sich hierdurch die Möglichkeit, die Bereinigungsphase nicht unmittelbar nach der Markierungsphase ausführen zu müssen.
-Für Systeme ohne hardware- oder softwareseitige Unterstützung für Multithreading, in denen die Aufgaben des Mutators und Kollektors nicht gleichzeitig bearbeitet werden können, bietet sich hingegen die \textbf{verzögerte Bereinigung} (engl. \textit{lazy sweeping}) nach Hughes \cite{hughes} an.
+Für Systeme ohne hardware- oder softwareseitige Unterstützung für Multithreading, in denen die Aufgaben des Mutators und Kollektors nicht gleichzeitig bearbeitet werden können, bietet sich hingegen die \textbf{verzögerte Bereinigung} (engl. \textit{lazy sweeping}) nach \textsc{Hughes} \cite{hughes} an.
 
 \begin{figure}[h]
 	\centering
@@ -378,13 +386,14 @@ Zuletzt kann auch die Aufteilung des Heaps nach Objektgrößen nicht zielführen
 Je nach Anwendungsfall und verwendeter Programmiersprache besteht die Möglichkeit, dass zwischen den meisten Objekten keine signifikanten Größenunterschiede bestehen und die Regionen einer bestimmten Größenordnung besonders stark beansprucht werden.
 Der Vorteil, nur einen beschränktes Gebiet des Heaps zu bereinigen, würde damit deutlich geschmälert werden.
 
+
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
  % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
+
 \section{Weitere Varianten und Komplexität}
 \label{sec:mark-sweep-variations}
-
 Der in diesem Kapitel betrachtete Mark-Sweep-Algorithmus gilt als der erste Algorithmus zur automatischen Speicherverwaltung, weswegen zahlreiche Varianten existieren, die für bestimmte Anwendungen und Systeme optimiert sind.
 Allen gemein ist das Auffinden erreichbarer Objekte durch Verfolgung von Referenzen in der Markierungsphase.
 Obwohl die erreichbaren Objekte weniger Speicher belegen als während der Bereinigungsphase traversiert werden muss, ist die Markierungsphase in der Praxis die aufwendigere.

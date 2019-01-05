@@ -1,12 +1,18 @@
 %!TEX root = ../../thesis.tex
 \chapter{Referenzzählung}
 \label{cha:reference-counting}
-Der zweite Garbage-Collection-Algorithmus, der in dieser Arbeit vorgestellt wird, stammt von George Collins und aus dem selben Jahr wie der Mark-Sweep-Algorithmus.
-Collins betrachtet wie McCarthy das \textit{LISP Programming System} auf IBM-Großrechnern und das Problem, wann Listenelemente, die prinzipiell in mehreren Listen vorkommen können, wieder freigegeben werden dürfen.
-McCarthys Ansatz bezeichnet er jedoch als \enquote{elegant but inefficient} \cite[S. 655]{collins1960}, da dieser sowohl zeitaufwändig sei als auch den Speicherplatz für Nutzdaten einschränke.
-Stattdessen schlägt Collins vor, zusätzlich zu einem Datum die Anzahl der Referenzen auf dieses zu speichern.
+Der zweite Garbage-Collection-Algorithmus, der in dieser Arbeit vorgestellt wird, stammt von \textsc{Collins} und aus dem selben Jahr wie der Mark-Sweep-Algorithmus.
+\textsc{Collins} betrachtet wie \textsc{McCarthy} das \textit{LISP Programming System} auf IBM-Großrechnern und das Problem, wann Listenelemente, die prinzipiell in mehreren Listen vorkommen können, wieder freigegeben werden dürfen.
+\textsc{McCarthys} Ansatz bezeichnet er jedoch als \enquote{elegant but inefficient} \cite[S. 655]{collins1960}, da dieser sowohl zeitaufwändig sei als auch den Speicherplatz für Nutzdaten einschränke.
+Stattdessen schlägt \textsc{Collins} vor, zusätzlich zu einem Datum die Anzahl der Referenzen auf dieses zu speichern.
 Anhand dieses Zählers, der bei der Manipulation von Referenzen aktualisiert wird, kann unmittelbar festgestellt werden, ob ein Datum verwaist ist und der entsprechende Speicherplatz freigegeben werden kann \cite[S. 656f]{collins1960}.
 Diesen Ansatz -- die \textit{Referenzzählung} (engl. \textit{reference counting}) -- werden wir in diesem Kapitel ausführlich betrachten.
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
 
 \section{Naive Referenzzählung}
 \label{sec:naive-rc}
@@ -14,6 +20,7 @@ Zur Realisierung des Algorithmus von Collins in unserem Speichermodell nutzen wi
 Dieser gibt an, wie viele Referenzen von anderen Objekten auf \Var{a} existieren, und wird bei der Erzeugung von \Var{a} mit dem Wert $0$ initialisiert.
 Auf diese Art erhalten wir unmittelbar eine notwendige Bedingung für die Erreichbarkeit eines Objekts:
 Ist $\Var{a} \in \Reach$, so existiert mindestens ein Objekt $\Var{b} \neq \Var{a}$ mit $\Var{b} \rightarrow \Var{a}$ und somit gilt $\Var{rc}(\Var{a}) \geq 1$.
+\todo[inline]{\Roots als Objekt?}
 
 \begin{mybox}
 \begin{lemma}[Notwendige Bedingung für Erreichbarkeit]
@@ -152,11 +159,17 @@ Im Anschluss daran werden weitere Ansätze vorgestellt, die eine Effizienzsteige
 	\label{fig:rc-cycle}
 \end{figure}
 
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+
 \section{Zyklische Referenzen}
 \label{sec:cyclic-rc}
 Die fehlende Möglichkeit zur Erkennung und Freigabe zyklischer Strukturen kann -- bei entsprechend häufiger Verwendung -- große Teile des Heaps brachliegen lassen.
 Ein gelegentlich zusätzlich ausgeführter Mark-Sweep-Zyklus mag diese Problematik zwar beheben, macht allerdings die oben genannten Vorteile der Referenzzählung zunichte.
-Nachfolgend stellen wir einen Algorithmus von Martínez, Wachenchauzer und Lins vor, der die naive Referenzählung um ein Verfahren ergänzt, mit welchem zyklische Strukturen zuverlässig erkannt werden können \cite{martinez1990}.
+Nachfolgend stellen wir einen Algorithmus von \textsc{Martínez}, \textsc{Wachenchauzer} und \textsc{Lins} vor, der die naive Referenzählung um ein Verfahren ergänzt, mit welchem zyklische Strukturen zuverlässig erkannt werden können \cite{martinez1990}.
 Dieses basiert darauf, dass ein Zyklus von Objekten als \textit{starke Zusammenhangskomponente} im Objektgraphen aufgefasst werden kann (vgl. \cite[S. 348]{linhou2006}).
 Das bedeutet, dass von jedem Objekt aus jedes andere Objekt innerhalb des Zyklus erreicht werden kann.
 
@@ -202,7 +215,7 @@ Anders formuliert: Besitzt die Komponente ein Objekt, das über eine externe Ref
 	\State \quad \quad \Method{scan}(\Var{obj})		\Comment{Prüfe Erreichbarkeit}
 	\State \quad \quad \Method{collect}(\Var{obj})	\Comment{Entferne unerreichbare Strukturen}
 \end{algorithmic}
-\caption[Zyklische Referenzzählung]{Zyklische Referenzzählung nach Martínez et al. (vgl. \cite[S. 32]{martinez1990})}
+\caption[Zyklische Referenzzählung]{Zyklische Referenzzählung nach \textsc{Martínez} et al. (vgl. \cite[S. 32]{martinez1990})}
 \label{algo:cyclic-rc}
 \end{algorithm}
 
@@ -359,7 +372,7 @@ Somit sind letztlich keine schwarz markierten Objekte vorhanden und kein Objekt 
 	\label{fig:rc-unmark-example}
 \end{figure}
 
-Wir zeigen nun, dass die zyklische Referenzzählung nach Martínez et al. korrekt ist, wobei wir weiterhin voraussetzen, dass der Algorithmus atomar ausgeführt wird.
+Wir zeigen nun, dass die zyklische Referenzzählung nach \textsc{Martínez} et al. korrekt ist, wobei wir weiterhin voraussetzen, dass der Algorithmus atomar ausgeführt wird.
 
 \begin{mybox}
 \begin{satz}[Korrektheit der zyklischen Referenzzählung]
@@ -394,14 +407,20 @@ Zyklische Referenzzählung kann somit unter Umständen wesentlich aufwendiger se
 Als Verbesserung hat Lins eine Variante vorgestellt, bei welcher die für eine zyklische Struktur infrage kommenden Objekte zunächst in eine Warteschlange eingefügt werden.
 Die Überprüfung auf zyklische Referenzen wird damit erst bei Bedarf ausgelöst, etwa bei akutem Speichermangel oder voller Warteschlange.
 Falls zuvor bereits die letzte Referenz auf ein Objekt entfernt wird, kann das Verfahren überspringen werden \cite{lins1992}.
-Von Lin und Hou stammt darüber hinaus eine Variante, die mehrere zyklische Strukturen zu Teilgraphen eines Objektgraphen zusammenfasst.
+Von \textsc{Lin} und \textsc{Hou} stammt darüber hinaus eine Variante, die mehrere zyklische Strukturen zu Teilgraphen eines Objektgraphen zusammenfasst.
 Mittels einer einzigen Traversierung kann dann die Zahl der externen Referenzen dieses Teilgraphen bestimmt werden; existieren keine, so kann der gesamte Teilgraph -- und damit alle enthaltenen starken Zusammenhangskomponenten -- entsorgt werden \cite{linhou2006}.
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
 
 \section{Optimierungsmöglichkeiten}
 \label{sec:rc-optimizing}
 Abschließend gehen wir auf zwei Ansätze ein, die eine Effizienzsteigerung der Referenzzählung bezwecken sollen.
 Wir haben bereits festgestellt, dass Löschkaskaden, die durch freigegebene Objekte entstehen, zu unerwarteten Programmunterbrechungen führen können und die Buchhaltung jeder einzelnen Referenzmanipulation enormen Overhead erzeugt.
-Von Deutsch und Bobrow stammt der Ansatz der \textit{verzögerten Referenzzählung} (engl. \textit{deferred reference counting}), der die Freigabe verwaister Objekte verzögert und auf eine Verfolgung von Referenzmanipulationen verzichtet, die in Feldern von Basisobjekten stattfinden \cite{deutsch1976}.
+Von \textsc{Deutsch} und \textsc{Bobrow} stammt der Ansatz der \textit{verzögerten Referenzzählung} (engl. \textit{deferred reference counting}), der die Freigabe verwaister Objekte verzögert und auf eine Verfolgung von Referenzmanipulationen verzichtet, die in Feldern von Basisobjekten stattfinden \cite{deutsch1976}.
 Der Referenzzähler eines Objekts wird dazu nicht im Header gespeichert.
 Stattdessen werden zwei Tabellen -- die \textit{zero count table} \Var{ZCT} und die \textit{multi reference table} \Var{MRT} -- angelegt.
 Erstere enthält alle Objekte, deren Referenzzähler $0$ ist.
@@ -448,7 +467,7 @@ Entsprechend wird ein Objekt genau einmal von einem Heapobjekt referenziert, wen
 	\State \quad \quad \IF $\Var{ref} \neq \Null$
 	\State \quad \quad \quad \Method{decRefCount}(\Var{*ref})
 \end{algorithmic}
-\caption[Verzögerte Referenzzählung nach Deutsch und Bobrow]{Verzögerte Referenzzählung nach Deutsch und Bobrow (vgl. \cite[S. 523f]{deutsch1976}).}
+\caption[Verzögerte Referenzzählung nach \textsc{Deutsch} und \textsc{Bobrow}]{Verzögerte Referenzzählung nach \textsc{Deutsch} und \textsc{Bobrow} (vgl. \cite[S. 523f]{deutsch1976}).}
 \label{algo:deferred-rc}
 \end{algorithm}
 
@@ -480,7 +499,7 @@ Für Anwendungen, in denen diese Bedingung nicht zutrifft, ergibt sich jedoch di
 Im Falle einer Hashtabelle muss etwa eine geeignete Hashfunktion gewählt werden, um Schlüsselkollisionen und damit verbundene Performanceeinbußen zu vermeiden.\footnote{Kommt es zu vielen Schlüsselkollisionen, kann die Komplexität eines Zugriffs auf ein einzelnes Tabellenelement in $\oh(n)$ liegen, wobei $n$ die Anzahl der Einträge ist. Eine Vergrößerung der Schlüsselmenge zur Vermeidung von Kollisionen kann wiederum zu einem hohen Speicherbedarf führen, was den für den Heap zu Verfügung stehenden Speicher einschränkt (vgl. \cite[S. 253]{cormen-leiserson})}
 
 Eine weitere Optimierungsmöglichkeit zielt darauf ab, die Auswirkung einer mehrfachen Änderung eines Referenzfeldes eines Objekts zusammenzufassen, anstatt jede einzelne Änderung nachzuverfolgen.
-Levanoni und Petrank beobachten, dass viele einzelne Referenzmanipulationen innerhalb des selben Feldes unnötige Anpassungen von Referenzzählern verursachen, die sich gewissermaßen \textit{kürzen} lassen \cite[S. 4ff]{levanoni2006}.
+\textsc{Levanoni} und \textsc{Petrank} beobachten, dass viele einzelne Referenzmanipulationen innerhalb des selben Feldes unnötige Anpassungen von Referenzzählern verursachen, die sich gewissermaßen \textit{kürzen} lassen \cite[S. 4ff]{levanoni2006}.
 Betrachten wir etwa einen Mutator, der folgenden Code ausführt, und die dadurch ausgelösten Anpassungen von Referenzzählern:
 
 \begin{center}
@@ -534,10 +553,10 @@ Anschließend wird die Markierung des Feldes zurückgesetzt und der Eintrag aus 
 	\State \quad \quad \Method{removeLog}(\Var{field})		\Comment{Entferne Eintrag aus Tabelle}
 	\State \quad \Method{collect}()		\Comment{vgl. Algorithmus~\ref{algo:deferred-rc}}
 \end{algorithmic}
-\caption[Aggregierte Referenzzählung nach Levanoni und Petrank]{Aggregierte Referenzzählung nach Levanoni und Petrank (vgl. \cite[S. 14ff]{levanoni2006}).}
+\caption[Aggregierte Referenzzählung nach \textsc{Levanoni} und \textsc{Petrank}]{Aggregierte Referenzzählung nach \textsc{Levanoni} und \textsc{Petrank} (vgl. \cite[S. 14ff]{levanoni2006}).}
 \label{algo:coalesced-rc}
 \end{algorithm}
 
 Mittels Methoden für verteilte Systeme, auf die wir hier nicht näher eingehen, lässt sich dieser Ansatz durch feingranularere Synchronisationen optimieren, etwa indem Logtabellen threadweise angelegt werden.
 Dadurch kann vermieden werden, dass das gesamte Programm angehalten wird.
-Für mehr Details verweisen wir auf die Publikation von Levanoni und Petrank \cite[S. 19]{levanoni2006}.
+Für mehr Details verweisen wir auf die Publikation von \textsc{Levanoni} und \textsc{Petrank} \cite[S. 19]{levanoni2006}.
