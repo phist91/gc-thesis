@@ -52,10 +52,10 @@ Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekt
 	\State \MethodHead{mark}():
 	\State \quad \WHILE \Var{toDo} $\neq \emptyset$
 	\State \quad \quad \Var{obj} $\gets$ \Method{remove}(\Var{toDo})			\Comment{Hole nächstes Objekt}
-	\State \quad \quad \FOREACH \Var{adr} $\in \Pointers(\Var{obj})$	\Comment{Hole nächste Referenz auf Objekt}
-	\State \quad \quad \quad \IF (\Var{adr} $\neq$ \Null $\wedge$ \Method{isNotMarked}(\Var{*adr}))	
-	\State \quad \quad \quad \quad \Method{setMarked}(\Var{*adr})	
-	\State \quad \quad \quad \quad \Method{add}(\Var{toDo}, \Var{*adr})
+	\State \quad \quad \FOREACH \Var{ref} $\in \Pointers(\Var{obj})$	\Comment{Hole nächste Referenz auf Objekt}
+	\State \quad \quad \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Method{isNotMarked}(\Var{*ref}))	
+	\State \quad \quad \quad \quad \Method{setMarked}(\Var{*ref})	
+	\State \quad \quad \quad \quad \Method{add}(\Var{toDo}, \Var{*ref})
 \end{algorithmic}
 \caption[Naives Mark and Sweep -- Markierung]{Naives Mark and Sweep -- Markierung (vgl. \cite[Kap. 2.2]{jones-lins})}
 \label{algo:naive-mark}
@@ -125,7 +125,7 @@ Wir halten zunächst fest, dass der Mark-Sweep-Algorithmus in seiner Gänze term
 	Da $\Var{a}$ markiert ist, wurde $\Var{a}$ auch der Menge $\Var{toDo}$ hinzugefügt (Zeile 8f bzw. 16f in Algorithmus~\ref{algo:naive-mark}).
 	Entsprechend gab es eine Iteration der \WHILE-Schleife mit $\Var{obj} = \Var{a}$.
 	Gilt nun \Var{a} $\rightarrow$ \Var{b}, so ist $\Var{\&b} \in \Pointers(\Var{a})$.
-	Folglich wird in einer Iteration der \FOREACH-Schleife mit \Var{adr} $=$ \Var{\&b} auch \Var{*(\&b)} $=$ \Var{b} markiert, falls \Var{b} nicht schon zuvor markiert wurde.
+	Folglich wird in einer Iteration der \FOREACH-Schleife mit \Var{ref} $=$ \Var{\&b} auch \Var{*(\&b)} $=$ \Var{b} markiert, falls \Var{b} nicht schon zuvor markiert wurde.
 	Es existiert somit keine Referenz von einem erreichbaren auf ein unmarkiertes Objekt, weswegen keine erreichbaren Objekte freigegeben werden.
 \end{proof}
 
@@ -209,10 +209,10 @@ Andernfalls wird ihre Markierung zurück auf weiß gesetzt.
 	\State \quad \WHILE \Var{graySet} $\neq \emptyset$
 	\State \quad \quad \Var{obj} $\gets$ \Method{remove}(\Var{graySet})
 	\State \quad \quad \Method{setColor}(\Var{obj}, \Var{BLACK})		\Comment{Objekt wird nun abgearbeitet}
-	\State \quad \quad \FOREACH \Var{adr} $\in \Pointers(\Var{obj})$
-	\State \quad \quad \quad \IF (\Var{adr} $\neq$ \Null $\wedge$ \Method{isWhite}(\Var{*adr}))	
-	\State \quad \quad \quad \quad \Method{setColor}(\Var{*adr}, \Var{GRAY})	\Comment{Referenzierte Objekte grau markieren}
-	\State \quad \quad \quad \quad \Method{add}(\Var{graySet}, \Var{*adr})
+	\State \quad \quad \FOREACH \Var{ref} $\in \Pointers(\Var{obj})$
+	\State \quad \quad \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Method{isWhite}(\Var{*ref}))	
+	\State \quad \quad \quad \quad \Method{setColor}(\Var{*ref}, \Var{GRAY})	\Comment{Referenzierte Objekte grau markieren}
+	\State \quad \quad \quad \quad \Method{add}(\Var{graySet}, \Var{*ref})
 	\Statex
 	\State \MethodHead{sweep}():
 	\State \quad \Var{pos} $\gets$ \Method{nextObject}(\Var{HEAP\_START})
