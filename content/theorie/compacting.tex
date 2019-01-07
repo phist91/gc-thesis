@@ -30,5 +30,76 @@ Nichtsdestoweniger betrachten wir in diesem Kapitel ausschließlich Algorithmen,
 
 \section{LISP-2-Kompaktierung}
 \label{sec:lisp2-compact}
+Zunächst betrachten wir einen Algorithmus, der auf dem Mark-Sweep-Ansatz aufbaut und in seiner ursprünglichen Form für \textit{LISP 2}\footnote{LISP 2 war als Nachfolger von LISP gedacht und sollte einige Einschränkungen beheben, die bereits von \textsc{McCarthy} aufgeführt wurden. Aus Kostengründen wurde die Entwicklung von LISP 2 letztlich eingestellt (vgl. \cite{lisp-history}).} konzipiert wurde, weswegen er in der Literatur häufig als \textit{LISP-2-Algorithmus} bezeichnet wird (vgl. \cite[Kap. 3.2]{handbook} und \cite{lisp2gc}).
+Die grundlegende Idee ist, die Bereinigungsphase nach der Markierung erreichbarer Objekte durch eine Kompaktierungsphase zu ersetzen, die alle markierten Objekte an den Beginn des Heaps verschiebt.
+Dabei werden verwaiste Objekte entweder überschrieben oder befinden sich anschließend außerhalb des kompaktierten Bereichs und können durch zukünftige Allokationen überschrieben werden.
 
-Ein McCarthy \cite{lisp-history}
+Wie schon in Kapitel~\ref{cha:mark-sweep} setzen wir voraus, dass eine Prozedur zu Verfügung steht, die die Adrese des nachfolgenden Objekts liefert, sofern existent.
+Entsprechend kann leicht eine Prozedur \Method{nextMarkedObject} realisiert werden, die nur markierte Objekte liefert.
+Weiter soll eine Prozedur \Method{moveObject}(\Var{old}, \Var{new}) existieren, die das Objekt an der Speicheradresse \Var{old} an die Speicheradresse \Var{new} verschiebt.
+
+\todo[inline]{Veranschaulichung Algorithmus}
+
+Der Algorithmus verfährt nun recht intuitiv:
+Beginnend am Anfang des Heaps werden der Reihe nach alle markierten Objekte besucht und an die vorderste Stelle bewegt, an der noch kein markiertes Objekt steht.
+Dabei wird für jedes verschobene Objekt alte und neue Speicheradresse in einer Tabelle \Var{log} hinterlegt (Zeile~6 in Algorithmus~\ref{algo:lisp2gc}).
+Nach jeder Verschiebung wird der Zeiger \Var{pos} auf das neue Ende des kompaktierten Bereichs und \Var{next} auf das nächste markierte Objekt gesetzt (Zeile~8f).
+Die erreichbaren Objekte befinden sich nun lückenlos am Anfang des Heaps.
+
+Im Anschluss müssen alle Referenzen auf verschobene Objekte in den Feldern aller Objekte aktualisiert werden.
+Die Prozedur \Method{updateRefs} iteriert dabei zunächst über alle Felder von Basisobjekten (Zeile~12 bis 14).
+Falls der Inhalt \Var{*field} eines Felds als Schlüssel in der Tabelle auftaucht, so handelt es sich um die alte Adresse eines verschobenen Objekts.
+Entsprechend muss der Feldinhalt auf die neue Adresse \Var{log}(\Var{*field}) gesetzt werden.
+Um auch die Objekte des Heaps anzupassen, wird dieser ein weiteres Mal linear traversiert und analog die Felder aller markierten Objekte angepasst (Zeile~15 bis 20).
+Zuletzt wird die Tabelle mit den zwischengespeicherten Adressen geleert.
+Dadurch, dass der Heap in aufsteigender Reihenfolge durchlaufen wird, die Objekte jedoch in entgegengesetzte Richtung verschoben werden, werden keine lebendigen Daten überschrieben.
+
+\begin{algorithm}[h]
+\begin{algorithmic}[1]
+	\State \Atomic \MethodHead{compact}():
+	\State \quad $\Var{pos} \gets \Var{HEAP\_START}$	\Comment{Zeiger auf Ende des kompaktierten Bereichs}
+	\State \quad $\Var{next} \gets \Method{nextMarkedObject}(\Var{HEAP\_START})$ \Comment{Zeiger auf nächstes Objekt}
+	\State \quad \WHILE $\Var{next} \neq \Null$			
+	\State \quad \quad \IF $\Var{pos} \neq \Var{next}$	\Comment{Tue nichts, wenn noch im defragmentierten Bereich}
+	\State \quad \quad \quad \Method{addLog}(\Var{next}, \Var{pos})		\Comment{Notiere alte und neue Adresse}
+	\State \quad \quad \quad \Method{moveObject}(\Var{next}, \Var{pos})	\Comment{Verschiebe Objekt im Speicher}
+	\State \quad \quad $\Var{pos} \gets \Var{pos} + \Method{sizeOf}(\Var{*pos})$
+	\State \quad \quad $\Var{next} \gets \Method{nextMarkedObject}(\Var{next})$
+	\State \quad \Method{updateRefs}()
+	\Statex
+	\State \MethodHead{updateRefs}():
+	\State \quad \FOREACH $\Var{field} \in \Fields(\Roots)$	\Comment{Felder von Basisobjekten anpassen}
+	\State \quad \quad \IF $\Var{*field} \in \Var{log}$
+	\State \quad \quad \quad $\Var{*field} \gets \Var{log}(\Var{*field})$
+	\State \quad $\Var{pos} \gets \Method{nextMarkedObject}(\Var{HEAP\_START})$		\Comment{Felder von Heapobjekten anpassen}
+	\State \quad \WHILE $\Var{pos} \neq \Null$
+	\State \quad \quad \FOREACH $\Var{field} \in \Fields(\Var{*pos})$
+	\State \quad \quad \quad \IF $\Var{*field} \in \Var{log}$
+	\State \quad \quad \quad \quad $\Var{*field} \gets \Var{log}(\Var{*field})$
+	\State \quad \quad $\Var{pos} \gets \Method{nextMarkedObject}(\Var{pos})$
+	\State \quad \Method{clear}(\Var{log})		\Comment{Tabelle aufräumen}
+\end{algorithmic}
+\caption[LISP-2-Kompaktierung]{LISP-2-Kompaktierung (vgl. \cite[S. 35]{handbook} und \cite[S. 7ff]{lisp2gc}).}
+\label{algo:lisp2gc}
+\end{algorithm}
+
+Die Laufzeit des gesamten Algorithmus lässt sich wie folgt einschätzen:
+Im schlimmsten Fall läuft der Zeiger \Var{pos} in der Prozedur \Method{compact} über den gesamten Heap.
+Davon ausgehend, dass das Hinzufügen eines Adresspaares zur Tabelle \Var{log} in $\oh(1)$ möglich ist  (siehe auch Abschnitt~\ref{sec:rc-optimizing}), ergibt sich dadurch eine Komplexität von $\oh(\abs{\mathbb{H}})$ für die Verschiebung der erreichbaren Objekte an den Anfang des Heaps.
+Für die Aktualisierung der Referenzen ergibt sich die Laufzeit aus der Anzahl der Felder der Basisobjekte sowie einer weiteren Traversierung über den Heap.
+Wir können somit folgende Abschätzungen festhalten:
+
+\begin{mybox}
+\begin{satz}[Komplexität des LISP-2-Algorithmus]
+	Für den LISP-2-Algorithmus gelten folgende Eigenschaften:
+	\begin{enumerate}[(1)]
+		\item Die Laufzeit der Verschiebungsphase ist $\oh(|\HeapSize|)$.
+		\item Die Laufzeit von \Method{updateRefs} ist $\oh\enb{\abs{\Roots} + \sum\limits_{\Var{a} \in \Roots}^{} \abs{\Fields(a)} + \abs{\HeapSize}}$.
+	\end{enumerate}
+\end{satz}
+\end{mybox}
+
+Der Speicherplatzbedarf, der durch die Kompaktierung zusätzlich anfällt, ist im Wesentlichen durch die Realisierung der Tabelle \Var{log} bestimmt.
+Alternativ -- und näher am ursprünglichen Algorithmus -- kann zur Speicherung der neuen Adresse eines Objekts auch ein zusätzliches Feld im Header jedes Objekts eingerichtet werden.
+In diesem Fall ist allerdings ein weiterer Durchlauf über den Heap notwendig, da die Referenzen in den Feldern aller Objekte anpasst werden müssen, bevor die Objekte an ihre neue Position verschoben werden können (vgl. \cite[Kap. 3.2]{handbook}).
+
