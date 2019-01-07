@@ -1,3 +1,34 @@
 %!TEX root = ../../thesis.tex
 \chapter{Kompaktierung}
 \label{cha:compacting}
+Mit dem Mark-Sweep-Algorithmus und der Referenzzählung haben wir zwei grundlegende Ansätze kennen gelernt, die eine Wiederverwendung bereits genutzten Speichers durch Freigabe nicht mehr benötigter Objekte realisieren.
+Außen vor gelassen wurde bislang jedoch ein Phänomen, das durch mit zunehmender Laufzeit eines Programms in Erscheinung tritt:
+die \textbf{Fragmentierung} des Heaps.
+Je häufiger eine Garbage Collection zum Einsatz kommt, umso wahrscheinlicher ist es, dass die erreichbaren Objekte keinen zusammenhängenden Speicherbereich mehr bilden.
+In der Folge ist auch der freie Speicher in mehrere unzusammenhängende Teile unterschiedlicher Größe aufgeteilt.
+Dies kann sich nachteilig auf die Performance einer Anwendung auswirken:
+Bildet der freie Speicher einen möglichst großen zusammenhängenden Bereich, so können viele aufeinanderfolgende Speicheranforderungen in hoher Geschwindigkeit erfüllt werden.
+Andernfalls benötigen Speicherallokationen mehr Zeit, da eine hinreichend große \textit{Lücke} gefunden werden muss, die die angeforderte Speichermenge aufnehmen kann.
+Im schlimmsten Fall schlägt die Allokation fehl, da keine geeignete Lücke gefunden werden kann, obwohl in der Summe genügend freier Speicher vorhanden wäre.
+Dies wiederum führt zu weiteren Auslösungen der Garbage Collection, was die Performance weiter beeinträchtigt.
+Zudem benötigt eine Anwendung mit stark fragmentiertem Heap einen größeren Teil des gesamten Arbeitsspeichers.
+
+\todo[inline]{Bild Fragmentierung}
+
+Die Vermeidung von Heapfragmentierung durch optimale Allokation ist nicht zielführend, da die Prognose zukünftige Allokationen in der Regel unmöglich, zumindest aber NP-schwer ist (vgl. \cite{robson1980}).
+Allerdings existieren akzeptable Lösungen, die die Fragmentierung des Heaps durch geschickte Allokation in Grenzen halten.\footnote{Für einen Überblick siehe etwa \cite[Kap. 7]{handbook}.}
+Nichtsdestoweniger betrachten wir in diesem Kapitel ausschließlich Algorithmen, die den Heap im Rahmen einer Garbage Collection defragmentieren, da die Durchführung eines Kollektionszyklus ursächlich für die Entstehung von Fragmentierung ist.
+
+\todo[inline]{evtl. noch Ausblick über beide Varianten}
+
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+
+\section{LISP-2-Kompaktierung}
+\label{sec:lisp2-compact}
+
+Ein McCarthy \cite{lisp-history}
