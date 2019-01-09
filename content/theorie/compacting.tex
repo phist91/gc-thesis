@@ -12,12 +12,18 @@ Andernfalls benötigen Speicherallokationen mehr Zeit, da eine hinreichend groß
 Im schlimmsten Fall schlägt die Allokation fehl, da keine geeignete Lücke gefunden werden kann, obwohl in der Summe genügend freier Speicher vorhanden wäre.
 Dies wiederum führt zu weiteren Auslösungen der Garbage Collection, was die Performance weiter beeinträchtigt.
 Zudem benötigt eine Anwendung mit stark fragmentiertem Heap einen größeren Teil des gesamten Arbeitsspeichers.
+Eine Kompaktierung lebendiger Objekte kann ferner die räumliche Lokalität verbessern.
+
 
 \todo[inline]{Bild Fragmentierung}
 
 Die Vermeidung von Heapfragmentierung durch optimale Allokation ist nicht zielführend, da die Prognose zukünftige Allokationen in der Regel unmöglich, zumindest aber NP-schwer ist (vgl. \cite{robson1980}).
 Allerdings existieren akzeptable Lösungen, die die Fragmentierung des Heaps durch geschickte Allokation in Grenzen halten.\footnote{Für einen Überblick siehe etwa \cite[Kap. 7]{handbook}.}
 Nichtsdestoweniger betrachten wir in diesem Kapitel ausschließlich Algorithmen, die den Heap im Rahmen einer Garbage Collection defragmentieren, da die Durchführung eines Kollektionszyklus ursächlich für die Entstehung von Fragmentierung ist.
+
+Algorithmen, die im Rahmen der Garbge Collection die Fragmentierung des Heaps beseitigen, lassen sich grob in zwei Kategorien einteilen:
+Die erste Kategorie der \textit{Mark-Compact-Algorithmen} bauen auf der Markierungsphase eines Mark-Sweep-Kollektors auf und können die Bereinigungsphase ersetzen, indem aus den Markierungsinformationen die zukünftigen Positionen der Objekte generiert werden.
+
 
 \todo[inline]{evtl. noch Ausblick über beide Varianten}
 
@@ -68,8 +74,8 @@ Dadurch, dass der Heap in aufsteigender Reihenfolge durchlaufen wird, die Objekt
 	\State \quad \Method{updateRefs}()
 	\Statex
 	\State \MethodHead{updateRefs}():
-	\State \quad \FOREACH $\Var{field} \in \Fields(\Roots)$	\Comment{Felder von Basisobjekten anpassen}
-	\State \quad \quad \IF $\Var{*field} \in \Var{log}$
+	\State \quad \FOREACH $\Var{field} \in \Fields(\Roots)$
+	\State \quad \quad \IF $\Var{*field} \in \Var{log}$ \Comment{Felder von Basisobjekten anpassen}
 	\State \quad \quad \quad $\Var{*field} \gets \Var{log}(\Var{*field})$
 	\State \quad $\Var{pos} \gets \Method{nextMarkedObject}(\Var{HEAP\_START})$		\Comment{Felder von Heapobjekten anpassen}
 	\State \quad \WHILE $\Var{pos} \neq \Null$
@@ -94,12 +100,99 @@ Wir können somit folgende Abschätzungen festhalten:
 	Für den LISP-2-Algorithmus gelten folgende Eigenschaften:
 	\begin{enumerate}[(1)]
 		\item Die Laufzeit der Verschiebungsphase ist $\oh(|\HeapSize|)$.
-		\item Die Laufzeit von \Method{updateRefs} ist $\oh\enb{\abs{\Roots} + \sum\limits_{\Var{a} \in \Roots}^{} \abs{\Fields(a)} + \abs{\HeapSize}}$.
+		\item Die Laufzeit von \Method{updateRefs} ist $\oh\enb{\sum\limits_{\Var{a} \in \Roots}^{} \abs{\Fields(a)} + \abs{\HeapSize}}$.
 	\end{enumerate}
 \end{satz}
 \end{mybox}
 
 Der Speicherplatzbedarf, der durch die Kompaktierung zusätzlich anfällt, ist im Wesentlichen durch die Realisierung der Tabelle \Var{log} bestimmt.
 Alternativ -- und näher am ursprünglichen Algorithmus -- kann zur Speicherung der neuen Adresse eines Objekts auch ein zusätzliches Feld im Header jedes Objekts eingerichtet werden.
-In diesem Fall ist allerdings ein weiterer Durchlauf über den Heap notwendig, da die Referenzen in den Feldern aller Objekte anpasst werden müssen, bevor die Objekte an ihre neue Position verschoben werden können (vgl. \cite[Kap. 3.2]{handbook}).
+In diesem Fall ist allerdings ein weiterer Durchlauf über den Heap notwendig, da die Referenzen in den Feldern aller Objekte anpasst werden müssen, bevor die Objekte an ihre neue Position verschoben werden können (vgl. \cite[S. 16]{morikawa2013}).
 
+Ein wesentlicher Nachteil des Algorithmus ist, dass er selbst bei geringer Fragmentierung des Heaps viele Speicheroperationen bedarf.
+So werden etwa auch dann fast alle Objekte verschoben, wenn nur ein kleiner Bereich zu Beginn des Heaps fragmentiert ist.
+Im Falle von großen Heaps mit vielen Objekten ist die Ausbeute der Kompaktierung gering, der Aufwand zur Aktualisierung von Speicheradressen allerdings sehr hoch.
+Insofern sollte abgewägt werden, ob die Ausführung bei jedem Garbage-Collection-Zyklus zielführend ist.
+\textsc{Printezis} präsentiert beispielsweise ein heuristisches Kriterium und seine Umsetzung für Java, um zur Laufzeit zu entscheiden, ob eine Kompaktierung des Heaps erfolgen sollte.
+Wenn der Heap vergrößert wird oder aufeinanderfolgende Speicherallokationen nicht mehr schnell genug erfüllt werden können, ist eine Kompaktierung sinnvoll, andernfalls genügt der Mark-Sweep-Algorithmus (vgl. \cite[Kap. 3.4]{printezis2001}).
+Andere Algorithmen vermeiden diese Problematik, indem sie den Heap von beiden Seiten traversieren und hinten stehende Objekte in freie Speicherbereiche im vorderen Teil des Heaps verschieben (vgl. \cite[S. 32f]{handbook}).
+Dieses Vorgehen hat jedoch den entscheidenden Nachteil, dass die Reihenfolge der Objekte im Heap zerstört wird.
+Damit wird die Arbeit von Allokatoren, die verwandte Objekte zur Optimierung der räumlichen Lokalität möglichst benachbart anlegen, zunichte gemacht.
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+
+\section{Compressor-Algorithmus}
+\label{sec:compressor}
+
+Der von \textsc{Kermany} und \textsc{Petrank} vorgestellte \textit{Compressor}-Algorithmus zielt darauf ab, die durch die Kompaktierung entstehenden Verzögerungen vor allem für größere Heaps zu minimieren, indem in einem einzigen Durchlauf Objekte an ihre neue Speicheradresse verschoben werden und sämtliche Referenzen angepasst werden \cite{kermany2006}.
+Dazu wird davon ausgegangen, dass der Heapspeicher in gleich große \textit{Blöcke} eingeteilt ist und Objekte an \textit{Wörtern} ausgerichtet angelegt werden.\footnote{\textsc{Kermany} und \textsc{Petrank} gehen exemplarisch von einer Wortbreite von 4 Bytes (32 Bit) und einer Blockgröße von 512 Bytes aus.}
+Während der Markierungsphase kann dann ein Bitvektor angelegt werden, der angibt, ob ein Wort durch ein erreichbares Objekt belegt ist (siehe Abbildung~\ref{fig:compressor}).
+Alle weiteren Berechnungen können dann mithilfe des Bitvektors realisiert werden, anstelle auf den Heap zuzugreifen.
+
+Zu Beginn der Kompaktierungsphase wird durch die Prozedur \Method{calculateOffsets} in Algorithmus~\ref{algo:compressor} ein Vektor \Var{offset} angelegt, der für jeden Block $\Var{blk}_k$ angibt, an welche Speicheradresse das erste Objekt des Blocks verschoben werden muss.
+Diese ergibt sich aus dem Offset des vorigen Blocks $\Var{blk}_{k-1}$ und dem Speicherplatz, den die Objekte belegen, deren Beginn im Block $\Var{blk}_{k-1}$ liegt.
+Diese Information kann durch Zählung der korrespondierenden Bits im Bitvektor erhalten werden.
+Die neue Speicheradresse eines Objekts kann nun wie folgt anhand der alten Speicheradresse \Var{adr} ermittelt werden (vgl. Prozedur \Method{newAddress}):
+Zunächst wird anhand des Blocks, in dem sich die Speicheradresse befindet, der Offset ermittelt.
+Die genaue Zieladresse ergbit sich nun durch den Speicherplatz der Objekte, die sich im gleichen Block, aber vor \Var{adr} befinden (Zeile 8f).
+Somit ist sichergestellt, dass die Reihenfolge der Objekte im Heap erhalten bleibt.
+
+
+\begin{algorithm}[h]
+\begin{algorithmic}[1]
+	\State \MethodHead{calculateOffsets}():
+	\State \quad $\Var{offset}(0) \gets 0$
+	\State \quad \FOR $\Var{k} \in \{1, \dots, \abs{\Blocks}\}$
+	\State \quad \quad $\Var{offset}(k) \gets \Var{offset}(k-1) + \Method{usedWords}(i-1)$
+	\Statex
+	\State \MethodHead{newAddress}(\Var{adr}):
+	\State \quad $\Var{result} \gets \Var{offset}(\Var{block}(\Var{adr}))$	\Comment{Ermittle Offset des zugehörigen Blocks}
+	\State \quad \FOREACH $\Var{obj} \in \Var{block}(\Var{adr})$
+	\State \quad \quad \IF $\Var{\&obj} < \Var{adr}$	\Comment{Addiere Anzahl Wörter, die vor \Var{adr} belegt sind}
+	\State \quad \quad \quad $\Var{result} \gets \Var{result} + \Method{sizeOf}(\Var{obj})$
+	\State \quad \Return \Var{result}
+	\Statex
+	\State \MethodHead{compactAndUpdate}():
+	\State \quad \FOREACH $\Var{field} \in \Fields(\Roots)$
+	\State \quad \quad $\Var{*field} \gets \Method{newAddress}(\Var{*field})$
+	\State \quad $\Var{pos} \gets \Method{nextMarkedObject}(\Var{HEAP\_START})$
+	\State \quad \WHILE $\Var{pos} \neq \Null$	\Comment{Passe Objektfelder an}
+	\State \quad \quad \FOREACH $\Var{field} \in \Fields(\Var{*pos})$
+	\State \quad \quad \quad $\Var{*field} \gets \Method{newAddress}(\Var{*field})$
+	\State \quad \quad \Method{moveObject}(\Var{pos}, \Method{newAddress}(\Var{pos}))
+	\State \quad \quad $\Var{pos} \gets \Method{nextMarkedObject}(\Var{pos})$
+\end{algorithmic}
+\caption[Compressor-Algorithmus]{Der Compressor-Algorithmus nach \textsc{Kermany} und \textsc{Petrank} (\cite{kermany2006}).}
+\label{algo:compressor}
+\end{algorithm}
+
+\todo[inline]{Beispiel}
+
+Der Performancegewinn durch den Verzicht auf eine zweite Heaptraversierung ist offenkundig, wird jedoch mit zusätzlichem Speicherbedarf erkauft.
+Der Bitvektor benötigt ein Bit pro Wort Speicherplatz, während der Offsetvektor pro Block ein Wort belegt.
+Für die oben genannte Wortbreite und Blockgröße ergibt sich daher Overhead von etwa 4\% des Heaps.
+Eine Erhöhung der Wortbreite $w$ kann diesen Anteil zwar reduzieren (siehe Tabelle~\ref{tab:compressor}), aber auch eine ineffizientere Speichernutzung verursachen, da jedes Objekt stets ein Vielfaches von $w$ an Speicher belegt.
+Größere Blöcke wiederum erhöhen den Aufwand zur Berechnung der neuen Speicheradressen, da eine höhere Anzahl an Objekten pro Block zu erwarten ist.
+
+\begin{table}
+	\centering \renewcommand{\arraystretch}{1.15} \setstretch{1.15}
+	\begin{tabular}{|r|cccc|}
+		\hline
+		$b \downarrow \diagdown w \rightarrow$ &  \textbf{16}   &  \textbf{32}   &  \textbf{64}   &  \textbf{128}  \\ \hline
+                             & \hspace{1.5cm}  &  \hspace{1.5cm}  &  \hspace{1.5cm}   &   \hspace{1.5cm}   \\[-0.6cm]
+		                                 \textbf{256} & 7.0\% & 4.7\% & 4.7\% & 7.0\% \\ \hline
+		                                 \textbf{512} & 6.6\% & 3.9\% & 3.1\% & 3.9\% \\ \hline
+		                                \textbf{1024} & 6.4\% & 3.5\% & 2.3\% & 2.3\% \\ \hline
+		                                \textbf{2048} & 6.3\% & 3.2\% & 2.0\% & 1.6\% \\ \hline
+		                                \textbf{4096} & 6.3\% & 3.2\% & 1.8\% & 1.2\% \\ \hline
+	\end{tabular} 
+
+	\vspace*{0.3cm}
+	
+	\caption[Speicherbedarf des Compressor-Algorithmus]{Verhältnis $M$ des Speicherbedarfs des Compressor-Algorithmus zum gesamten Heap in Abhängigkeit von Wortbreite $w$ in Bit und Blockgröße $b$ in Byte. Es gilt $M = \frac{1}{w} + \frac{w}{8 \cdot b}$.}
+	\label{tab:compressor}
+\end{table}
