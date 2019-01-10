@@ -1,0 +1,23 @@
+\input{standalone.tex}
+
+\newcommand{\xscale}{0.2}
+\newcommand{\yscale}{0.6}
+\newcommand{\object}[2]{
+	\draw [draw,fill=gray!50] (#1*\xscale,0) rectangle (#2*\xscale+\xscale,\yscale);
+}
+
+\begin{document}
+	\begin{tikzpicture}	
+		\object{1}{2}	%2
+		\object{5}{7}	%3
+		\object{8}{8}	%1
+		\object{11}{11}	%1
+		\object{15}{17}	%3
+		\object{22}{22}	%1
+		\object{25}{26}	%2
+		\object{30}{33}	%4
+		\object{36}{36}	%1
+		
+		\draw [thick] (0,0) rectangle (40*\xscale,1*\yscale);
+	\end{tikzpicture}
+\end{document}

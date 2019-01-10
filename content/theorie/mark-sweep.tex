@@ -3,7 +3,7 @@
 \label{cha:mark-sweep}
 Wir beginnen mit einer Vorstellung des ersten Garbage-Collection-Algorithmus, der auf \textsc{McCarthy} zurückgeht \cite[191--193]{mccarthy1960}.
 Im Rahmen eines im Jahr 1960 veröffentlichten Artikels über die Berechnung rekursiver Funktionen auf dem \textit{IBM 704} mithilfe des \textit{LISP Programming Systems} erläutert \textsc{McCarthy} die Speicherung von Daten in einer Listenstruktur.
-Diese besteht aus Paaren, deren erster Eintrag \texttt{car} die zu speichernde Information enthält\footnote{Genauer: Die Adresse des Registers, in der die zu speichernde Information gelagert wird.}, während im zweiten Eintrag \texttt{cdr} die Registeradresse des nachfolgenden Paares zu finden ist.
+Diese besteht aus Paaren, deren erster Eintrag \texttt{car} die zu speichernde Information enthält\footnote{Genauer: Die Adresse des Registers, in dem die zu speichernde Information gelagert wird.}, während im zweiten Eintrag \texttt{cdr} die Registeradresse des nachfolgenden Paares zu finden ist.
 Diese Struktur hat den Vorteil, dass ein Datum, das in mehreren Listen vorkommt, nur ein einziges Register belegt.
 Register, die aktuell nicht zur Speicherung von Daten genutzt werden, befinden sich in einer \textit{free storage list}.
 Bei der Anforderung von Speicher für ein zu speicherndes Datum werden Register aus dieser Liste entfernt.
@@ -379,7 +379,7 @@ Eine ungünstige Kombination von Speicheranforderungen und Sweep-Zyklen könnte 
 Wenn jede Region allerdings mindestens ein erreichbares Objekt enthält, können sie nicht in Gänze freigegeben werden.
 Eine hohe Zahl dieser ineffizient genutzter Regionen führt dazu, dass möglicherweise nicht mehr genügend freier Speicher zu Verfügung steht, um Regionen anderer Größenordnung zu initialisieren, obwohl ausreichend Speicher vorhanden wäre, der nicht durch Objekte belegt wird.
 Eine Lösung dieses Problems wäre eine zusätzliche Konsolidierungsphase, bei der Regionen gleicher Größenordnung zusammengelegt werden.
-Dies bedeutet jedoch zusätzlicher Aufwand für die Verschiebung von Objekten\todo{Ref zu Defrag}.
+Dies bedeutet jedoch zusätzlicher Aufwand für die Verschiebung von Objekten (siehe Kapitel~\ref{cha:compacting}).
 Der zweite Nachteil ist, dass nicht mehr erreichbare Objekte eventuell erst sehr spät freigegeben werden, wenn primär Objekte anderer Größenordnungen angefordert werden.
 In so einem Fall können auch Regionen, die keine erreichbare Objekte mehr enthalten, über lange Zeit im Speicher verweilen, sodass diese für einen gewissen Zeitraum ein Speicherleck darstellen.
 Zuletzt kann auch die Aufteilung des Heaps nach Objektgrößen nicht zielführend sein:

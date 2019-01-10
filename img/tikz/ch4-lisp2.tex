@@ -1,0 +1,78 @@
+\input{standalone.tex}
+
+\newcommand{\xscale}{0.3}
+\newcommand{\yscale}{0.6}
+\newcommand{\object}[3]{
+	\draw [draw,fill=gray!50] (#1*\xscale,#3*\yscale) rectangle (#2*\xscale+\xscale,#3*\yscale+\yscale);
+}
+\newcommand{\pos}[2]{
+	\draw [thick,ctcolormain] (#1*\xscale + 0.07*\xscale,#2*\yscale+0.01) -- 
+		(#1*\xscale + 0.07*\xscale,#2*\yscale + 1.5*\yscale) node[left]{\Var{pos}};
+}
+
+\newcommand{\nextCur}[2]{
+	\draw [thick,ctcoloraccessory] (#1*\xscale - 0.07*\xscale,#2*\yscale + 0.98*\yscale) --
+		(#1*\xscale - 0.07*\xscale,#2*\yscale - 0.5*\yscale) node[right]{\Var{next}};
+}
+
+\newcommand{\border}[1]{
+	\draw [thick] (0,#1*\yscale) rectangle (20*\xscale,#1*\yscale+\yscale);
+}
+
+\begin{document}
+	\begin{tikzpicture}	
+		\object{1}{2}{0}
+		\object{5}{7}{0}
+		\object{8}{8}{0}
+		\object{11}{11}{0}
+		\object{15}{17}{0}
+		\border{0}
+		\pos{0}{0}
+		\nextCur{1}{0}
+			
+		\object{0}{1}{-3}
+		\object{5}{7}{-3}
+		\object{8}{8}{-3}
+		\object{11}{11}{-3}
+		\object{15}{17}{-3}
+		\border{-3}
+		\pos{2}{-3}
+		\nextCur{5}{-3}
+		
+		\object{0}{1}{-6}
+		\object{2}{4}{-6}
+		\object{8}{8}{-6}
+		\object{11}{11}{-6}
+		\object{15}{17}{-6}
+		\border{-6}
+		\pos{5}{-6}
+		\nextCur{8}{-6}
+		
+		\object{0}{1}{-9}
+		\object{2}{4}{-9}
+		\object{5}{5}{-9}
+		\object{11}{11}{-9}
+		\object{15}{17}{-9}
+		\border{-9}
+		\pos{6}{-9}
+		\nextCur{11}{-9}
+		
+		\object{0}{1}{-12}
+		\object{2}{4}{-12}
+		\object{5}{5}{-12}
+		\object{6}{6}{-12}
+		\object{15}{17}{-12}
+		\border{-12}
+		\pos{7}{-12}
+		\nextCur{15}{-12}
+
+		\object{0}{1}{-15}
+		\object{2}{4}{-15}
+		\object{5}{5}{-15}
+		\object{6}{6}{-15}
+		\object{7}{9}{-15}
+		\border{-15}
+		\pos{10}{-15}
+		\nextCur{20}{-15}		
+	\end{tikzpicture}
+\end{document}

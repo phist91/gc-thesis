@@ -1,0 +1,88 @@
+\input{standalone.tex}
+
+\newcommand{\xscale}{0.2}
+\newcommand{\yscale}{0.6}
+\newcommand{\object}[3]{
+	\draw [fill=gray!50] (#1*\xscale,0) rectangle (#2*\xscale+\xscale,\yscale);
+	\draw (#1*0.5*\xscale + #2*0.5*\xscale + 0.5*\xscale,\yscale) node[above]{\Var{#3}};
+}
+
+\begin{document}
+	\begin{tikzpicture}	
+		
+		\object{1}{4}{a}
+		\object{6}{9}{b}
+		\object{17}{23}{c}
+		\object{25}{29}{d}
+		\object{33}{36}{e}
+		\object{39}{45}{f}
+		\object{48}{49}{g}
+		
+		\foreach \x in {1,2,...,49} {
+			\draw[gray!30,very thin] (\x*\xscale,0*\yscale) -- (\x*\xscale,1*\yscale);
+		}
+		\draw [thick] (0,0) rectangle (50*\xscale,1*\yscale);
+		
+		\foreach \x in {0,10,20,30,40,50} {
+			\draw [very thick] (\x*\xscale,1*\yscale) -- (\x*\xscale,0) node[below,font=\footnotesize]{\x};
+		}
+		
+		% Offset-Vektor
+		\draw [very thick] (0,2*\yscale) -- (50*\xscale,2*\yscale);
+		\draw [very thick] (0,3*\yscale) -- (50*\xscale,3*\yscale);
+		\foreach \x in {0,10,20,30,40,50} {
+			\draw [very thick] (\x*\xscale,2*\yscale) -- (\x*\xscale,3*\yscale);
+		}
+		
+		\draw (5*\xscale,2.5*\yscale) node{0};
+		\draw (15*\xscale,2.5*\yscale) node{8};
+		\draw (25*\xscale,2.5*\yscale) node{15};
+		\draw (35*\xscale,2.5*\yscale) node{20};
+		\draw (45*\xscale,2.5*\yscale) node{31};
+		
+		\draw (0,2.5*\yscale) node[left]{\Var{offset:}};
+		
+		
+		% Ergebnis
+		\draw [fill=gray!50] (0,-2*\yscale) rectangle (33*\xscale,-3*\yscale);
+		
+		\foreach \x in {1,2,...,49} {
+			\draw[gray!30,very thin] (\x*\xscale,-2*\yscale) -- (\x*\xscale,-3*\yscale);
+		}
+		\draw [thick] (0,-2*\yscale) rectangle (50*\xscale,-3*\yscale);
+		
+		\foreach \x in {0,10,20,30,40,50} {
+			\draw [very thick] (\x*\xscale,-2*\yscale) -- (\x*\xscale,-3*\yscale) node[below,font=\footnotesize]{\x};
+		}
+		
+		\draw (4*\xscale,-2*\yscale) -- (4*\xscale,-3*\yscale);
+		\draw (8*\xscale,-2*\yscale) -- (8*\xscale,-3*\yscale);
+		\draw (15*\xscale,-2*\yscale) -- (15*\xscale,-3*\yscale);
+		\draw (20*\xscale,-2*\yscale) -- (20*\xscale,-3*\yscale);
+		\draw (24*\xscale,-2*\yscale) -- (24*\xscale,-3*\yscale);
+		\draw (31*\xscale,-2*\yscale) -- (31*\xscale,-3*\yscale);
+		\draw (33*\xscale,-2*\yscale) -- (33*\xscale,-3*\yscale);
+		
+		% Pfeile
+		\draw[->] (1.5*\xscale,-0.1*\yscale) to node[pos=0.6,left,font=\tiny]{$0+0$} (0.5*\xscale,-1.9*\yscale);
+		\draw[->,gray!60] (1.5*\xscale,1.1*\yscale) -- (1.5*\xscale,1.9*\yscale);
+		
+		\draw[->] (6.5*\xscale,-0.1*\yscale) to node[pos=0.6,left,font=\tiny]{$0+4$} (4.5*\xscale,-1.9*\yscale);
+		\draw[->,gray!60] (6.5*\xscale,1.1*\yscale) -- (6.5*\xscale,1.9*\yscale);
+		
+		\draw[->] (17.5*\xscale,-0.1*\yscale) to node[pos=0.6,left,font=\tiny]{$8+0$} (8.5*\xscale,-1.9*\yscale);
+		\draw[->,gray!60] (17.5*\xscale,1.1*\yscale) -- (17.5*\xscale,1.9*\yscale);
+		
+		\draw[->] (25.5*\xscale,-0.1*\yscale) to node[pos=0.7,sloped,above=-0.13,font=\tiny]{$15+0$} (15.5*\xscale,-1.9*\yscale);
+		\draw[->,gray!60] (25.5*\xscale,1.1*\yscale) -- (25.5*\xscale,1.9*\yscale);
+		
+		\draw[->] (33.5*\xscale,-0.1*\yscale) to node[pos=0.6,sloped,above=-0.14,font=\tiny]{$20+0$} (20.5*\xscale,-1.9*\yscale);
+		\draw[->,gray!60] (33.5*\xscale,1.1*\yscale) -- (33.5*\xscale,1.9*\yscale);
+		
+		\draw[->] (39.5*\xscale,-0.1*\yscale) to node[pos=0.6,sloped,above=-0.14,font=\tiny]{$20+4$} (24.5*\xscale,-1.9*\yscale);
+		\draw[->,gray!60] (39.5*\xscale,1.1*\yscale) -- (39.5*\xscale,1.9*\yscale);
+		
+		\draw[->] (48.5*\xscale,-0.1*\yscale) to node[pos=0.7,sloped,above=-0.14,font=\tiny]{$31+0$} (31.5*\xscale,-1.9*\yscale);
+		\draw[->,gray!60] (48.5*\xscale,1.1*\yscale) -- (48.5*\xscale,1.9*\yscale);
+	\end{tikzpicture}
+\end{document}

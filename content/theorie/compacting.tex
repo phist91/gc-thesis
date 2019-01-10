@@ -14,15 +14,19 @@ Dies wiederum führt zu weiteren Auslösungen der Garbage Collection, was die Pe
 Zudem benötigt eine Anwendung mit stark fragmentiertem Heap einen größeren Teil des gesamten Arbeitsspeichers.
 Eine Kompaktierung lebendiger Objekte kann ferner die räumliche Lokalität verbessern.
 
-
-\todo[inline]{Bild Fragmentierung}
+\begin{figure}[h]
+	\centering
+	\includestandalone[scale=1.2]{img/tikz/ch4-fragmentation}
+	\caption[Fragmentierter Heap]{Ein stark fragmentierter Heap erschwert die erschwert die Allokation größerer Speichermengen, auch wenn ein Großteil des Heaps ungenutzt ist.}
+	\label{fig:fragmentation}
+\end{figure}
 
 Die Vermeidung von Heapfragmentierung durch optimale Allokation ist nicht zielführend, da die Prognose zukünftige Allokationen in der Regel unmöglich, zumindest aber NP-schwer ist (vgl. \cite{robson1980}).
 Allerdings existieren akzeptable Lösungen, die die Fragmentierung des Heaps durch geschickte Allokation in Grenzen halten.\footnote{Für einen Überblick siehe etwa \cite[Kap. 7]{handbook}.}
 Nichtsdestoweniger betrachten wir in diesem Kapitel ausschließlich Algorithmen, die den Heap im Rahmen einer Garbage Collection defragmentieren, da die Durchführung eines Kollektionszyklus ursächlich für die Entstehung von Fragmentierung ist.
 
 Algorithmen, die im Rahmen der Garbge Collection die Fragmentierung des Heaps beseitigen, lassen sich grob in zwei Kategorien einteilen:
-Die erste Kategorie der \textit{Mark-Compact-Algorithmen} bauen auf der Markierungsphase eines Mark-Sweep-Kollektors auf und können die Bereinigungsphase ersetzen, indem aus den Markierungsinformationen die zukünftigen Positionen der Objekte generiert werden.
+Die erste Kategorie der \textit{Mark-Compact-Algorithmen} baut auf der Markierungsphase eines Mark-Sweep-Kollektors auf und können die Bereinigungsphase ersetzen, indem aus den Markierungsinformationen die zukünftigen Positionen der Objekte generiert werden.
 
 
 \todo[inline]{evtl. noch Ausblick über beide Varianten}
@@ -44,9 +48,14 @@ Wie schon in Kapitel~\ref{cha:mark-sweep} setzen wir voraus, dass eine Prozedur 
 Entsprechend kann leicht eine Prozedur \Method{nextMarkedObject} realisiert werden, die nur markierte Objekte liefert.
 Weiter soll eine Prozedur \Method{moveObject}(\Var{old}, \Var{new}) existieren, die das Objekt an der Speicheradresse \Var{old} an die Speicheradresse \Var{new} verschiebt.
 
-\todo[inline]{Veranschaulichung Algorithmus}
+\begin{figure}[h]
+	\centering
+	\includestandalone[scale=1]{img/tikz/ch4-lisp2}
+	\caption[LISP-2-Algorithmus]{Veranschaulichung des LISP-2-Algorithmus.}
+	\label{fig:lisp2}
+\end{figure}
 
-Der Algorithmus verfährt nun recht intuitiv:
+Der Algorithmus verfährt nun recht intuitiv (siehe Abbildung~\ref{fig:lisp2}):
 Beginnend am Anfang des Heaps werden der Reihe nach alle markierten Objekte besucht und an die vorderste Stelle bewegt, an der noch kein markiertes Objekt steht.
 Dabei wird für jedes verschobene Objekt alte und neue Speicheradresse in einer Tabelle \Var{log} hinterlegt (Zeile~6 in Algorithmus~\ref{algo:lisp2gc}).
 Nach jeder Verschiebung wird der Zeiger \Var{pos} auf das neue Ende des kompaktierten Bereichs und \Var{next} auf das nächste markierte Objekt gesetzt (Zeile~8f).
@@ -130,17 +139,24 @@ Damit wird die Arbeit von Allokatoren, die verwandte Objekte zur Optimierung der
 
 Der von \textsc{Kermany} und \textsc{Petrank} vorgestellte \textit{Compressor}-Algorithmus zielt darauf ab, die durch die Kompaktierung entstehenden Verzögerungen vor allem für größere Heaps zu minimieren, indem in einem einzigen Durchlauf Objekte an ihre neue Speicheradresse verschoben werden und sämtliche Referenzen angepasst werden \cite{kermany2006}.
 Dazu wird davon ausgegangen, dass der Heapspeicher in gleich große \textit{Blöcke} eingeteilt ist und Objekte an \textit{Wörtern} ausgerichtet angelegt werden.\footnote{\textsc{Kermany} und \textsc{Petrank} gehen exemplarisch von einer Wortbreite von 4 Bytes (32 Bit) und einer Blockgröße von 512 Bytes aus.}
-Während der Markierungsphase kann dann ein Bitvektor angelegt werden, der angibt, ob ein Wort durch ein erreichbares Objekt belegt ist (siehe Abbildung~\ref{fig:compressor}).
+Während der Markierungsphase kann dann ein Bitvektor angelegt werden, der angibt, ob ein Wort durch ein erreichbares Objekt belegt ist (siehe Abbildung~\ref{fig:bitvector}).
 Alle weiteren Berechnungen können dann mithilfe des Bitvektors realisiert werden, anstelle auf den Heap zuzugreifen.
+
+\begin{figure}[h]
+	\centering
+	\includestandalone[scale=1.1]{img/tikz/ch4-bitvector}
+	\caption[Bitvektor]{Ein Bitvektor speichert zu jedem Wort des Heaps, ob es durch ein erreichbares Objekt belegt wird.}
+	\label{fig:bitvector}
+\end{figure}
 
 Zu Beginn der Kompaktierungsphase wird durch die Prozedur \Method{calculateOffsets} in Algorithmus~\ref{algo:compressor} ein Vektor \Var{offset} angelegt, der für jeden Block $\Var{blk}_k$ angibt, an welche Speicheradresse das erste Objekt des Blocks verschoben werden muss.
 Diese ergibt sich aus dem Offset des vorigen Blocks $\Var{blk}_{k-1}$ und dem Speicherplatz, den die Objekte belegen, deren Beginn im Block $\Var{blk}_{k-1}$ liegt.
 Diese Information kann durch Zählung der korrespondierenden Bits im Bitvektor erhalten werden.
 Die neue Speicheradresse eines Objekts kann nun wie folgt anhand der alten Speicheradresse \Var{adr} ermittelt werden (vgl. Prozedur \Method{newAddress}):
 Zunächst wird anhand des Blocks, in dem sich die Speicheradresse befindet, der Offset ermittelt.
-Die genaue Zieladresse ergbit sich nun durch den Speicherplatz der Objekte, die sich im gleichen Block, aber vor \Var{adr} befinden (Zeile 8f).
+Die genaue Zieladresse ergibt sich nun durch den Speicherplatz der Objekte, deren Beginn im gleichen Block liegt, sich aber vor \Var{adr} befinden (Zeile 8f).
+Dies kann ebenfalls durch Zählung der belegten Bits erfasst werden.
 Somit ist sichergestellt, dass die Reihenfolge der Objekte im Heap erhalten bleibt.
-
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
@@ -170,12 +186,25 @@ Somit ist sichergestellt, dass die Reihenfolge der Objekte im Heap erhalten blei
 \label{algo:compressor}
 \end{algorithm}
 
-\todo[inline]{Beispiel}
+Betrachten wir beispielhaft, wie die neuen Speicheradressen der Objekte \Var{a} bis \Var{d} aus Abbildung~\ref{fig:bitvector} bestimmt werden, nachdem der Offsetvektor erstellt wurde (Abbildung~\ref{fig:compressor-example}).
+Für Objekt \Var{a} wird zunächst der Offset $0$ nachgeschlagen, da sich \Var{a} im ersten Block befindet.
+Da \Var{a} das erste Element des Blocks ist, ist dieser auch die neue Speicheradresse.
+Für \Var{b} wird ebenfalls Offset $0$ ermittelt, allerdings wird dieser um $4$ korrigiert, da sich \Var{a} vor \Var{b} befindet und vier Wörter belegt.
+Analog zu \Var{a} wird für \Var{c} die neue Speicheradresse $8$ ermittelt, da \Var{c} das einzige Element im zweiten Block ist.
+Für \Var{d} ergibt sich als Offset und Speicheradresse der Wert $15$:
+Zwar befindet sich auch der hintere Teil von \Var{c} im dritten Block, allerdings wurde die Größe von \Var{c} bereits bei der Offsetberechnung berücksichtigt, sodass der Offset hier nicht korrigiert werden muss.
+
+\begin{figure}[h]
+	\centering
+	\includestandalone[scale=1.1]{img/tikz/ch4-compressor-example}
+	\caption[Beispiel zum Compressor-Algorithmus]{Beispiel zum Compressor-Algorithmus. Die neue Speicheradresse eines Objekts berechnet sich aus dem Offset des zugehörigen Blocks und dem Speicherplatz, der durch die davorliegenden Objekte im Block beansprucht wird.}
+	\label{fig:compressor-example}
+\end{figure}
 
 Der Performancegewinn durch den Verzicht auf eine zweite Heaptraversierung ist offenkundig, wird jedoch mit zusätzlichem Speicherbedarf erkauft.
 Der Bitvektor benötigt ein Bit pro Wort Speicherplatz, während der Offsetvektor pro Block ein Wort belegt.
 Für die oben genannte Wortbreite und Blockgröße ergibt sich daher Overhead von etwa 4\% des Heaps.
-Eine Erhöhung der Wortbreite $w$ kann diesen Anteil zwar reduzieren (siehe Tabelle~\ref{tab:compressor}), aber auch eine ineffizientere Speichernutzung verursachen, da jedes Objekt stets ein Vielfaches von $w$ an Speicher belegt.
+Eine Erhöhung der Wortbreite $w$, an der Objekte im Heap ausgerichtet werden, kann diesen Anteil zwar reduzieren (siehe Tabelle~\ref{tab:compressor}), aber auch eine ineffizientere Speichernutzung verursachen, da jedes Objekt stets ein Vielfaches von $w$ an Speicher belegt.
 Größere Blöcke wiederum erhöhen den Aufwand zur Berechnung der neuen Speicheradressen, da eine höhere Anzahl an Objekten pro Block zu erwarten ist.
 
 \begin{table}
