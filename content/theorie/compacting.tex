@@ -161,7 +161,7 @@ Somit ist sichergestellt, dass die Reihenfolge der Objekte im Heap erhalten blei
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
 	\State \MethodHead{calculateOffsets}():
-	\State \quad $\Var{offset}(0) \gets 0$
+	\State \quad $\Var{offset}(0) \gets \Var{HEAP\_START}$
 	\State \quad \FOR $\Var{k} \in \{1, \dots, \abs{\Blocks}\}$
 	\State \quad \quad $\Var{offset}(k) \gets \Var{offset}(k-1) + \Method{usedWords}(i-1)$
 	\Statex
@@ -225,3 +225,74 @@ Größere Blöcke wiederum erhöhen den Aufwand zur Berechnung der neuen Speiche
 	\caption[Speicherbedarf des Compressor-Algorithmus]{Verhältnis $M$ des Speicherbedarfs des Compressor-Algorithmus zum gesamten Heap in Abhängigkeit von Wortbreite $w$ in Bit und Blockgröße $b$ in Byte. Es gilt $M = \frac{1}{w} + \frac{w}{8 \cdot b}$.}
 	\label{tab:compressor}
 \end{table}
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+
+\section{Kopierende Garbage Collection}
+\label{sec:copying}
+Die zweite Kategorie der Algorithmen, die eine Kompaktierung des Heaps erreichen, bilden die \textit{kopierenden} Algorithmen.
+Hier werden Markierungs- und Kompaktierungsphase vereint:
+Analog zu Mark-Sweep-Ansätzen werden Referenzen verfolgt, um erreichbare Objekte zu identifizieren.
+Im Gegensatz zu den in den vorigen beiden Abschnitten vorgestellten Mark-Compact-Algorithmen werden Objekte jedoch nicht durch eine zusätzliche lineare Traversierung des Heaps zusammengefasst, sondern unmittelbar bei Entdeckung an eine neue Position kopiert.
+Dazu wird der Heap in zwei Halbräume (engl. \textit{semispaces}) aufgeteilt, zwischen denen die Objekte hin- und herkopiert werden und die nach jedem Kollektionszyklus ihre Rollen tauschen.
+Diese Idee wurde ursprünglich von \textsc{Fenichel} und \textsc{Yochelson} für LISP entwickelt (vgl. \cite{fenichel1969}); wir betrachten im Folgenden eine Anlehnung an eine Variante von \textsc{Cheney}, die ohne Rekursion auskommt (vgl. \cite{cheney1970}).
+
+\begin{algorithm}[h]
+\begin{algorithmic}[1]
+	\Global \Var{source}, \Var{target}, \Var{pos}, \Var{newAdr}, \Var{toDo}
+	\State \MethodHead{initialize}():
+%	\State \quad $\Var{spaceSize} \gets (\Var{HEAP\_END} - \Var{HEAP\_START}) / 2$
+%	\State \quad $\Var{limit} \gets \Var{HEAP\_START} + \Var{spaceSize}$
+	\State \quad $\Var{target} \gets \Var{HEAP\_START}$		\Comment{Erste Hälfte}
+	\State \quad $\Var{source} \gets (\Var{HEAP\_START} + \Var{HEAP\_END}) / 2$		\Comment{Zweite Hälfte}
+	\State \quad $\Var{pos} \gets \Var{target}$		\Comment{Füllstand}
+	\Statex
+	\State \Atomic \MethodHead{collectGarbage}():
+	\State \quad \Method{swap}(\Var{target}, \Var{source})		\Comment{Halbräume tauschen}
+%	\State \quad $\Var{limit} \gets \Var{target} + \Var{spaceSize}$
+	\State \quad $\Var{pos} \gets \Var{target}$
+	\State \quad \FOREACH $\Var{field} \in \Fields(\Roots)$		\Comment{Beginne mit Basisobjekten}
+	\State \quad \quad \IF $\Var{*field} \neq \Null$
+	\State \quad \quad \quad \Method{update}(\Var{field})		\Comment{Feld aktualisieren und Ziel zu \Var{toDo} hinzufügen}
+	\State \quad \WHILE $\Var{toDo} \neq \emptyset$		\Comment{Solange kopierte, nicht aktualisierte}
+	\State \quad \quad $\Var{ref} \gets \Method{remove}(\Var{toDo})$	\CommentCont{Objekte existieren\dots}
+	\State \quad \quad \FOREACH $\Var{field} \in \Fields(\Var{*ref})$
+	\State \quad \quad \quad \IF $\Var{*field} \neq \Null$
+	\State \quad \quad \quad \quad \Method{update}(\Var{field})	\Comment{\dots aktualisiere ihre Felder}
+	\State \quad \Method{clear}(\Var{newAdr})
+	\Statex
+	\State \MethodHead{update}(\Var{field}):
+	\State \quad $\Var{oldAdr} \gets \Var{*field}$		\Comment{Adresse aus Feld holen}
+	\State \quad \IF $\Var{newAdr}(\Var{oldAdr}) = \Null$	\Comment{Falls Ziel noch nicht kopiert wurde\dots}
+	\State \quad \quad $\Var{newAdr}(\Var{oldAdr}) \gets \Var{pos}$		\Comment{\dots definiere neue Position}
+	\State \quad \quad $\Method{moveObject}(\Var{oldAdr}, \Var{newAdr}(\Var{oldAdr}))$
+	\State \quad \quad $\Var{pos} \gets \Var{pos} + \Method{sizeOf}(\Var{*oldAdr})$	\Comment{Kopiere Objekt an neue Position}
+	\State \quad \quad $\Method{add}(\Var{toDo}, \Var{newAdr}(\Var{oldAdr}))$	\Comment{Füge Kopie zu \Var{toDo} hinzu}
+	\State \quad $\Var{*field} \gets \Var{newAdr}(\Var{oldAdr})$	\Comment{Feld aktualisieren}
+\end{algorithmic}
+\caption[Kopierende Garbage Collection nach \textsc{Fenichel}, \textsc{Yochelson} und \textsc{Cheney}]{Kopierende Garbage Collection zwischen Halbräumen nach \textsc{Fenichel}, \textsc{Yochelson} und \textsc{Cheney} (vgl. \cite{fenichel1969} und \cite{cheney1970}).}
+\label{algo:copying-gc}
+\end{algorithm}
+
+Zur Vorbereitung wird der Heap zu Beginn in zwei Hälften eingeteilt, die durch zwei Zeiger \Var{source} und \Var{target} markiert werden (Prozedur \Method{initialize} in Algorithmus~\ref{algo:copying-gc}).
+Der durch \Var{target} referenzierte Halbraum ist stets derjenige, der neu angelegte bzw. zu kopierende Objekte aufnimmt.
+Ein dritter Pointer \Var{pos} zeigt den Füllstand von \Var{target} und damit die Position an, an der ein neues Objekt angelegt bzw. kopiert wird.
+Der Allokator ist entsprechend so zu modifizieren, dass neue Objekte an der Stelle \Var{pos} angelegt werden und \Var{pos} anschließend angepasst wird, sowie die Garbage Collection bereits dann ausgelöst wird, wenn der freie Speicher in \Var{target} zu Neige geht.
+
+Kommt es zu einem Kollektionszyklus, werden zunächst die Rollen von \Var{source} und \Var{target} vertauscht (Zeile 6).
+Der Füllstandsanzeiger \Var{pos} wird auf den Beginn des nun leeren Halbraums \Var{target} gesetzt.
+Um alle erreichbaren Objekte aus \Var{source} nach \Var{target} zu kopieren, werden erst alle Felder von Basisobjekten auf Referenzen zu Heapobjekten untersucht (Zeile~8 bis 10).
+Diese Felder und die entsprechend referenzierten Objekte werden durch die Prozedur \Method{update} bearbeitet.
+Diese schlägt in einer Tabelle \Var{newAdr} nach, ob das Objekt bereits nach \Var{target} kopiert und eine neue Speicheradresse in \Var{newAdr} hinterlegt wurde (Zeile~19).
+Falls nein, wird die neue Adresse des Objekts auf die Position von \Var{pos} gesetzt, das Objekt an diese Stelle kopiert und \Var{pos} hinter das Objekt gesetzt (Zeile~20 bis 22).
+Damit alle Objekte erfasst werden können, die vom kopierten Objekt referenziert werden, wird dieses zu \Var{toDo} hinzugefügt.
+In \Var{toDo} befinden sich demnach alle Objekte, die bereits kopiert, aber deren ausgehende Referenzen noch nicht untersucht wurden.
+Schließlich kann die Referenz des untersuchten Feldes auf die neue Speicheradresse aktualisiert werden (Zeile~24).
+Ist in \Var{newAdr} bereits eine Speicheradresse hinterlegt worden, so wurde das Ziel bereits nach \Var{target} kopiert; in diesem Fall genügt es, den Feldinhalt zu aktualisieren.
+Die Prozedur \Method{collectGarbage} kann anschließend mit der Abarbeitung der Objekte in \Var{toDo} beginnen (Zeile~11 bis 15).
+
+\todo[inline]{Analogie Tricolor}

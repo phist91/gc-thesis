@@ -44,9 +44,9 @@ Daher bieten sich zur Realisierung Schreibbarrieren an, die bereits in Abschnitt
 	\Input Objekt \Var{obj}, in dem Referenz gesetzt wird; Index des Feldes \Var{i}; zu setzende Referenz \Var{ref}
 	\State \Atomic \MethodHead{writeRef}(\Var{obj}, \Var{i}, \Var{ref}):
 	\State \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Var{*ref} $\neq$ \Var{obj})	\Comment{Erhöhe \Var{rc}, falls nicht \Null oder}
-	\State \quad \quad $\Var{rc}(\Var{*ref}) \gets \Var{rc}(\Var{*ref}) + 1$ \Comment{Selbstreferenz geschrieben wird}
+	\State \quad \quad $\Var{rc}(\Var{*ref}) \gets \Var{rc}(\Var{*ref}) + 1$ \CommentCont{Selbstreferenz geschrieben wird}
 	\State \quad \IF (\Var{obj[i]} $\neq$ \Null $\wedge$ \Var{*obj[i]} $\neq$ \Var{obj})	\Comment{Reduziere \Var{rc}, falls nicht \Null oder}
-	\State \quad \quad \Method{decRefCount}(\Var{*obj[i]})	\Comment{Selbstreferenz überschrieben wird}
+	\State \quad \quad \Method{decRefCount}(\Var{*obj[i]})	\CommentCont{Selbstreferenz überschrieben wird}
 	\State \quad \Var{obj[i]} $\gets$ \Var{ref}
 	\Statex
 	\State \MethodHead{decRefCount}(\Var{obj}):
@@ -233,7 +233,7 @@ Dazu wird nach einem dreischrittigen Verfahren vorgegangen, das im Folgenden bes
 	\State \quad \quad \Method{setColor}(\Var{obj}, \Var{GRAY})
 	\State \quad \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
 	\State \quad \quad \quad \IF ($\Var{ref} \neq \Null \wedge \Var{*ref} \neq \Var{obj}$)	\Comment{Entferne interne Referenz,}
-	\State \quad \quad \quad \quad $\Var{rc}(\Var{*ref}) \gets \Var{rc}(\Var{*ref})-1$ \Comment{die von \Var{obj} ausgeht}
+	\State \quad \quad \quad \quad $\Var{rc}(\Var{*ref}) \gets \Var{rc}(\Var{*ref})-1$ \CommentCont{die von \Var{obj} ausgeht}
 	\State \quad \quad \quad \quad \Method{markGray}(\Var{*ref})	\Comment{Reduziere rekursiv weitere \Var{rc}}
 	\Statex
 	\State \MethodHead{scan}(\Var{obj}):

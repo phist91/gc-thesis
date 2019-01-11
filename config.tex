@@ -216,6 +216,9 @@
 \usepackage[chapter]{algorithm}
 \floatname{algorithm}{Algorithmus}
 \usepackage{algpseudocode}
+\definecolor{commentcolor}{gray}{0.4}
+\renewcommand{\algorithmiccomment}[1]{\textcolor{commentcolor}{\hfill$\triangleright$ #1}}
+\newcommand{\CommentCont}[1]{\hfill \textcolor{commentcolor}{#1}}
 
 % ===========================================================
 \input{MathCmds.tex}
