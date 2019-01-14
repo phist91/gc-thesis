@@ -21,16 +21,15 @@ Eine Kompaktierung lebendiger Objekte kann ferner die räumliche Lokalität verb
 	\label{fig:fragmentation}
 \end{figure}
 
-Die Vermeidung von Heapfragmentierung durch optimale Allokation ist nicht zielführend, da die Prognose zukünftige Allokationen in der Regel unmöglich, zumindest aber NP-schwer ist (vgl. \cite{robson1980}).
+Die Vermeidung von Heapfragmentierung durch optimale Allokation ist nicht zielführend, da die Prognose zukünftiger Allokationen in der Regel unmöglich, zumindest aber NP-schwer ist (vgl. \cite{robson1980}).
 Allerdings existieren akzeptable Lösungen, die die Fragmentierung des Heaps durch geschickte Allokation in Grenzen halten.\footnote{Für einen Überblick siehe etwa \cite[Kap. 7]{handbook}.}
-Nichtsdestoweniger betrachten wir in diesem Kapitel ausschließlich Algorithmen, die den Heap im Rahmen einer Garbage Collection defragmentieren, da die Durchführung eines Kollektionszyklus ursächlich für die Entstehung von Fragmentierung ist.
+Nichtsdestoweniger betrachten wir in diesem Kapitel ausschließlich Algorithmen, die den Heap im Rahmen einer Garbage Collection \textbf{kompaktieren}, da die Durchführung eines Kollektionszyklus ursächlich für die Entstehung von Fragmentierung ist.
 
-Algorithmen, die im Rahmen der Garbge Collection die Fragmentierung des Heaps beseitigen, lassen sich grob in zwei Kategorien einteilen:
+Algorithmen, die im Rahmen der Garbge Collection die Fragmentierung des Heaps beseitigen oder verhindern, lassen sich grob in zwei Kategorien einteilen:
 Die erste Kategorie der \textit{Mark-Compact-Algorithmen} baut auf der Markierungsphase eines Mark-Sweep-Kollektors auf und können die Bereinigungsphase ersetzen, indem aus den Markierungsinformationen die zukünftigen Positionen der Objekte generiert werden.
-
-
-\todo[inline]{evtl. noch Ausblick über beide Varianten}
-
+Im Folgenden werden wir mit dem \textit{LISP-2-Algorithmus} und \textit{The Compressor} zwei Exemplare dieser Gattung vorstellen.
+Die zweite Kategorie der \textit{kopierenden} Algorithmen -- gelegentlich auch \textit{Mark-Copy-Algorithmen} genannt -- vereinen Markierungs- und Kompaktierungsphase, indem als erreichbar identifizierte Objekte unmittelbar an eine neue Position kopiert werden.
+Hier werden wir exemplarisch einen Algorithmus betrachten, der den Heap in zwei Halbräume aufteilt.
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -326,7 +325,6 @@ Die kopierten Objekte, die sich in \Var{toDo} befinden, sind vergleichbar mit de
 Sie wurden bereits durch den Kollektor entdeckt und nach \Var{target} kopiert, aber ihre Felder wurden noch nicht auf Referenzen zu noch unentdeckten Objekten untersucht.
 Entsprechend analog zu Satz~\ref{satz:tricolor-correctness} lässt sich die Terminierung des Algorithmus beweisen, da kein Objekt mehrfach zu \Var{toDo} hinzugefügt wird.
 
-
 \begin{mybox}
 \begin{satz}[Korrektheit der kopierenden Garbage Collection]
 	Die kopierende Garbage Collection nach \textsc{Fenichel}, \textsc{Yochelson} und \textsc{Cheney} ist korrekt.
@@ -341,6 +339,38 @@ Entsprechend analog zu Satz~\ref{satz:tricolor-correctness} lässt sich die Term
 	
 	Ist $\Var{b} \notin \Roots$, so sei \Var{b} ohne Einschränkung aus dem Halbraum \Var{target}.\footnote{Andernfalls ist \Var{b} selbst ein erreichbares Objekt im Halbraum \Var{source} und die Behauptung folgt per Induktion.}
 	Da \Var{b} also nach \Var{target} kopiert wurde, wurde \Var{\&b} auch zuvor zur Menge \Var{toDo} hinzugefügt (Zeile~23).
-	Foglich kam es zu einer Iteration der \WHILE-Schleife (Zeile~11) mit $\Var{ref} = \&b$ und, da $\Var{\&b[i]} \in \Fields(\Var{b})$, wurde auch hier \Var{a} nach \Var{target} kopiert und \Var{b[i]} angepasst.
+	Foglich kam es zu einer Iteration der \WHILE-Schleife (Zeile~11) mit $\Var{ref} = \Var{\&b}$ und, da $\Var{\&b[i]} \in \Fields(\Var{b})$, wurde auch hier \Var{a} nach \Var{target} kopiert und \Var{b[i]} angepasst.
 	Somit werden alle erreichbaren Objekte nach \Var{target} kopiert.	
 \end{proof}
+
+Die Laufzeit der kopierenden Garbage Collection ist vergleichbar mit der Markierungsphase des Mark-Sweep-Algorithmus (siehe Satz~\ref{satz:mark-sweep-complexity}), da alle erreichbaren Objekte und ihre Felder aufgesucht bzw. aktualisiert werden müssen.
+Hinzu kommen allerdings Verzögerungen, die durch das Kopieren aller erreichbaren Objekte entstehen.
+Dies wiederum bietet die Möglichkeit, Objekte innerhalb des Heaps neu anzuordnen:
+Abbildung~\ref{fig:fenichel-example} lässt bereits erkennen, dass zwei Objekte, die vom selben Objekt referenziert werden, nebeneinander kopiert werden können.
+Dies kann sich positiv auf die räumliche Lokalität von zueinander in Beziehung stehenden Objekten auswirken.
+Wie bereits in Abschnitt~\ref{sec:mark-sweep-variations} angedeutet, hängt die Ausprägung dieses Effekts stark von der Traversierungsreihenfolge der Objekte -- und damit von der Realisierung der Menge \Var{toDo} -- ab, die optimalerweise an den konkreten Anwendungsfall angepasst wird (vgl. \cite[Kap. 4.2]{handbook}).
+Darüber hinaus bietet die Analogie zur Drei-Farben-Abstraktion auch hier die Möglichkeit, die Atomizität des Algorithmus aufzuweichen, indem Objekte, deren ausgehende Referenzen während der Kollektion manipuliert werden, gegebenenfalls erneut zu \Var{toDo} hinzugefügt werden, indem geeignete Lese- und Schreibbarrieren verwendet werden (vgl. \cite[S. 129]{kero2007}, \cite[S. 41]{hosking2006}).
+
+Größter und offensichtlicher Nachteil des Algorithmus ist die permanente Halbierung des potenziell verfügbaren Heapspeichers, da ein Halbraum ausschließlich während eines Kollektionszyklus verwendet wird.
+Dies erhöht potenziell die Häufigkeit von Garbage-Collection-Zyklen.
+Hinzu kommt während der Arbeit des Kollektors zusätzlicher Speicherbedarf zur Verwaltung von \Var{toDo} (siehe Abschnitt~\ref{sec:mark-sweep-variations}) und \Var{newAdr}.
+Letzterer lässt jedoch vermeiden, indem etwa die neue Speicheradresse des kopierten Objekts an der ursprünglichen Position hinterlegt wird.
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+
+\section{Optimierung von Referenzanpassungen}
+\label{sec:handle}
+In allen drei vorgestellten Algorithmen haben wir gesehen, dass eine Anpassung von Referenzen notwendig ist, wenn ein Objekt im Speicher verschoben oder kopiert wird.
+Dies erfordert im Allgemeinen eine Anpassung aller Felder von Objekten, die die ursprüngliche Speicheradresse enthalten.
+Um den Aufwand hierfür zu reduzieren, können \textbf{Handles} verwendet werden.
+Ein Handle $\mathtt{\tilde{a}}$ eines Objekts \Var{a} ist ein weiteres Objekt, das lediglich die Speicheradresse von \Var{a} enthält und eine feste Position im Speicher besitzt.
+Alle Objekte besitzen anstelle einer Referenz auf \Var{a} dann eine solche auf $\mathtt{\tilde{a}}$.
+Ändert sich die Position von \Var{a} im Speicher, ist lediglich eine Anpassung der Speicheradresse in $\mathtt{\tilde{a}}$ nötig.
+
+\todo[inline]{Bild Handles}
+
+\todo[inline]{Realisierung, doppelte Speicherzugriffe}
