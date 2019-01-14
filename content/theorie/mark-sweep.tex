@@ -251,6 +251,7 @@ An dieser Stelle gehen wir auf die Terminierung und Korrektheit des modifizierte
 
 \begin{mybox}
 \begin{satz}
+	\label{satz:tricolor-correctness}
 	Der Mark-Sweep-Algorithmus mit Drei-Farben-Abstraktion terminiert und ist korrekt, sofern während der Arbeit des Kollektors keine neuen Objekte erzeugt werden.
 \end{satz}
 \end{mybox}
@@ -305,7 +306,7 @@ Für Systeme ohne hardware- oder softwareseitige Unterstützung für Multithread
 \begin{figure}[h]
 	\centering
 	\includestandalone{img/tikz/ch2-heap-region}
-	\caption[Visualisierung eines in Regionen aufgeteilten Heaps]{Visualisierung eines in Regionen aufgeteilten Heaps. Jede Region kann Objekten einer festgelegten Größenordnung zugewiesen werden. Für eine Größenordnung können allerdings mehrere Regionen verwendet werden.}
+	\caption[Veranschaulichung eines in Regionen aufgeteilten Heaps]{Veranschaulichung eines in Regionen aufgeteilten Heaps. Jede Region kann Objekten einer festgelegten Größenordnung zugewiesen werden. Für eine Größenordnung können allerdings mehrere Regionen verwendet werden.}
 	\label{fig:heap-region}
 \end{figure}
 
@@ -424,6 +425,7 @@ Die Komplexität dieser Operation ist analog zur vollständigen Traversierung ei
 
 \begin{mybox}
 \begin{satz}[Speicherbedarf und Komplexität des Mark-Sweep-Algorithmus]
+	\label{satz:mark-sweep-complexity}
 	Für den naiven Mark-Sweep-Algorithmus gelten folgende Eigenschaften:
 	\begin{enumerate}[(1)]
 		\item Der Speicherbedarf des gesamten Algorithmus ist $\oh(|\Reach|)$.

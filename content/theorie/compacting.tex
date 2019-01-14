@@ -17,7 +17,7 @@ Eine Kompaktierung lebendiger Objekte kann ferner die räumliche Lokalität verb
 \begin{figure}[h]
 	\centering
 	\includestandalone[scale=1.2]{img/tikz/ch4-fragmentation}
-	\caption[Fragmentierter Heap]{Ein stark fragmentierter Heap erschwert die erschwert die Allokation größerer Speichermengen, auch wenn ein Großteil des Heaps ungenutzt ist.}
+	\caption[Fragmentierter Heap]{Ein stark fragmentierter Heap erschwert die Allokation größerer Speichermengen, auch wenn ein Großteil des Heaps ungenutzt ist.}
 	\label{fig:fragmentation}
 \end{figure}
 
@@ -226,6 +226,10 @@ Größere Blöcke wiederum erhöhen den Aufwand zur Berechnung der neuen Speiche
 	\label{tab:compressor}
 \end{table}
 
+Die Korrektheit der beiden vorgestellten Mark-Compact-Algorithmen ergibt sich aus der Korrektheit der Markierungsphase.
+Wurden alle erreichbaren Objekte erfasst, werden auch die Zeiger \Var{pos} und \Var{next} im LISP-2-Algorithmus korrekt weitergeschoben, ohne dass es zur Überschreibung erreichbarer Objekte kommt.
+Mit gleichem Argument sind auch die berechneten Speicheradressen im Compressor-Algorithmus korrekt.
+
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
  % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -295,4 +299,48 @@ Schließlich kann die Referenz des untersuchten Feldes auf die neue Speicheradre
 Ist in \Var{newAdr} bereits eine Speicheradresse hinterlegt worden, so wurde das Ziel bereits nach \Var{target} kopiert; in diesem Fall genügt es, den Feldinhalt zu aktualisieren.
 Die Prozedur \Method{collectGarbage} kann anschließend mit der Abarbeitung der Objekte in \Var{toDo} beginnen (Zeile~11 bis 15).
 
-\todo[inline]{Analogie Tricolor}
+\begin{figure}[h]
+	\centering
+	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel01}\\[1cm]
+	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel02}\\[1cm]
+	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel03}\\[1cm]
+	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel04}\\[1cm]
+	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel05}\\[1cm]
+	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel06}\\[1cm]
+	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel07}
+	\caption[Ausführung der kopierenden Garbage Collection]{Beispielhafte Ausführung von Algorithmus~\ref{algo:copying-gc}. Die Nummerierung der Kopien zeigt die aktuelle Position in \Var{toDo} an. Referenzen der ursprünglichen Objekte aus \Var{source} werden hier aus Gründen der Übersichtlichkeit nicht mehr aufgeführt, sobald das Objekt nach \Var{target} kopiert wurde.}
+	\label{fig:fenichel-example}
+\end{figure}
+
+Abbildung~\ref{fig:fenichel-example} veranschaulicht die Arbeitsweise des Algorithmus an einem Beispiel:
+Nachdem die Rollen der Halbräume \Var{source} und \Var{target} vertauscht wurden, wird zunächst das einzige Basisobjekt \Var{b} kopiert \textbf{(2)}.
+Anschließend wird es zu \Var{toDo} hinzugefügt, was durch eine Nummerierung der Kopie \Var{b'} angezeigt wird \textbf{(3)}.
+Da nun alle Basisobjekte kopiert wurden, wird \Var{toDo} abgearbeitet.
+Daher werden alle Felder von \Var{b'} untersucht, die Ziele der enthaltenen Referenzen -- hier \Var{f} und \Var{g} -- nach \Var{target} kopiert und die Kopien zu \Var{toDo} hinzugefügt \textbf{(4)}.
+Analog wird mit \Var{f'} verfahren \textbf{(5)}.
+Bei der Abarbeitung von \Var{g'} tritt nun die Besonderheit auf, dass das referenzierte Objekt \Var{f} bereits kopiert wurde.
+Entsprechend wird hier lediglich die Referenz angepasst \textbf{(6)}.
+Sobald \Var{toDo} vollständig abgearbeitet wurde, sind alle erreichbaren Objekte kopiert worden und der Halbraum \Var{source} kann in Gänze verworfen werden \textbf{(7)}.
+
+Die kopierten Objekte, die sich in \Var{toDo} befinden, sind vergleichbar mit den grauen Objekten der Drei-Farben-Abstraktion (siehe Abschnitt~\ref{sec:tricolor}):
+Sie wurden bereits durch den Kollektor entdeckt und nach \Var{target} kopiert, aber ihre Felder wurden noch nicht auf Referenzen zu noch unentdeckten Objekten untersucht.
+Entsprechend analog zu Satz~\ref{satz:tricolor-correctness} lässt sich die Terminierung des Algorithmus beweisen, da kein Objekt mehrfach zu \Var{toDo} hinzugefügt wird.
+
+
+\begin{mybox}
+\begin{satz}[Korrektheit der kopierenden Garbage Collection]
+	Die kopierende Garbage Collection nach \textsc{Fenichel}, \textsc{Yochelson} und \textsc{Cheney} ist korrekt.
+\end{satz}
+\end{mybox}
+
+\begin{proof}
+	Wir beweisen, dass nach Terminierung des Algorithmus kein erreichbares Objekt im Halbraum \Var{source} verbleibt.
+	Sei also $\Var{a} \in \Reach$ ein erreichbares Objekt.
+	Dann gilt $\Var{b[i]} = \Var{\&a}$ für Feld \Var{b[i]} eines Objektes \Var{b}.
+	Ist $\Var{b} \in \Roots$, so ist $\Var{\&b[i]} \in \Fields(\Roots)$ und $\Var{a}$ wird in einer Iteration der \FOREACH-Schleife (Zeile~8 bis 10) nach \Var{target} kopiert sowie \Var{b[i]} angepasst.
+	
+	Ist $\Var{b} \notin \Roots$, so sei \Var{b} ohne Einschränkung aus dem Halbraum \Var{target}.\footnote{Andernfalls ist \Var{b} selbst ein erreichbares Objekt im Halbraum \Var{source} und die Behauptung folgt per Induktion.}
+	Da \Var{b} also nach \Var{target} kopiert wurde, wurde \Var{\&b} auch zuvor zur Menge \Var{toDo} hinzugefügt (Zeile~23).
+	Foglich kam es zu einer Iteration der \WHILE-Schleife (Zeile~11) mit $\Var{ref} = \&b$ und, da $\Var{\&b[i]} \in \Fields(\Var{b})$, wurde auch hier \Var{a} nach \Var{target} kopiert und \Var{b[i]} angepasst.
+	Somit werden alle erreichbaren Objekte nach \Var{target} kopiert.	
+\end{proof}
