@@ -534,7 +534,7 @@ Wird nun über die in \Var{log} eingetragenen Felder iteriert, so wird geprüft,
 Nur dann sind Anpassungen der jeweiligen Referenzzähler nötig.
 Anschließend wird die Markierung des Feldes zurückgesetzt und der Eintrag aus der Tabelle entfernt.
 
-\begin{algorithm}[h]
+\begin{algorithm}[h!]
 \begin{algorithmic}[1]
 	\State \Atomic \MethodHead{writeRef}(\Var{obj}, \Var{i}, \Var{ref}):
 	\State \quad \IF \NOT \Method{isModified}(\Var{\&obj[i]})

@@ -1,0 +1,33 @@
+\input{standalone.tex}
+
+\newcommand{\object}[1]{
+	\draw[thick] (0,#1) rectangle (1,#1+0.5);
+}
+
+\begin{document}
+	\begin{tikzpicture}	
+		\object{0}
+		\object{0.75}
+		\object{1.5}
+		\object{2.25}
+		\object{3}
+		
+		\draw[very thick] (2.5,1.25) rectangle (4.5,2.25);
+		\draw (3.5,1.75) node{$\mathtt{0x0100}$};
+		\draw (3.5,2.25) node[above]{$\mathtt{\tilde{a}}$};
+		
+		\draw[->] (1.05,0.25) -- (2.45,1.41666);
+		\draw[->] (1.05,1) -- (2.45,1.58333);
+		\draw[->] (1.05,1.75) -- (2.45,1.75);
+		\draw[->] (1.05,2.5) -- (2.45,1.91666);
+		\draw[->] (1.05,3.25) -- (2.45,2.08333);
+		
+		\draw[thick,fill=gray!60] (6,2.5) rectangle (7,3);
+		\draw (6.5,2.75) node{\Var{a}};
+		
+		\draw [very thick] (6,0.25) -- (6,3.25);
+		\draw [very thick] (7,0.25) -- (7,3.25);
+		
+		\draw [->] (4.55,2) -- (5.95,2.625);
+	\end{tikzpicture}
+\end{document}

@@ -47,28 +47,24 @@ Wie schon in Kapitel~\ref{cha:mark-sweep} setzen wir voraus, dass eine Prozedur 
 Entsprechend kann leicht eine Prozedur \Method{nextMarkedObject} realisiert werden, die nur markierte Objekte liefert.
 Weiter soll eine Prozedur \Method{moveObject}(\Var{old}, \Var{new}) existieren, die das Objekt an der Speicheradresse \Var{old} an die Speicheradresse \Var{new} verschiebt.
 
-\begin{figure}[h]
-	\centering
-	\includestandalone[scale=1]{img/tikz/ch4-lisp2}
-	\caption[LISP-2-Algorithmus]{Veranschaulichung des LISP-2-Algorithmus.}
-	\label{fig:lisp2}
-\end{figure}
-
 Der Algorithmus verfährt nun recht intuitiv (siehe Abbildung~\ref{fig:lisp2}):
 Beginnend am Anfang des Heaps werden der Reihe nach alle markierten Objekte besucht und an die vorderste Stelle bewegt, an der noch kein markiertes Objekt steht.
 Dabei wird für jedes verschobene Objekt alte und neue Speicheradresse in einer Tabelle \Var{log} hinterlegt (Zeile~6 in Algorithmus~\ref{algo:lisp2gc}).
 Nach jeder Verschiebung wird der Zeiger \Var{pos} auf das neue Ende des kompaktierten Bereichs und \Var{next} auf das nächste markierte Objekt gesetzt (Zeile~8f).
 Die erreichbaren Objekte befinden sich nun lückenlos am Anfang des Heaps.
 
-Im Anschluss müssen alle Referenzen auf verschobene Objekte in den Feldern aller Objekte aktualisiert werden.
-Die Prozedur \Method{updateRefs} iteriert dabei zunächst über alle Felder von Basisobjekten (Zeile~12 bis 14).
-Falls der Inhalt \Var{*field} eines Felds als Schlüssel in der Tabelle auftaucht, so handelt es sich um die alte Adresse eines verschobenen Objekts.
-Entsprechend muss der Feldinhalt auf die neue Adresse \Var{log}(\Var{*field}) gesetzt werden.
-Um auch die Objekte des Heaps anzupassen, wird dieser ein weiteres Mal linear traversiert und analog die Felder aller markierten Objekte angepasst (Zeile~15 bis 20).
-Zuletzt wird die Tabelle mit den zwischengespeicherten Adressen geleert.
-Dadurch, dass der Heap in aufsteigender Reihenfolge durchlaufen wird, die Objekte jedoch in entgegengesetzte Richtung verschoben werden, werden keine lebendigen Daten überschrieben.
+\newpage
 
-\begin{algorithm}[h]
+\begin{figure}[H]
+	\centering
+	\includestandalone[scale=1]{img/tikz/ch4-lisp2}
+	\caption[LISP-2-Algorithmus]{Veranschaulichung des LISP-2-Algorithmus.}
+	\label{fig:lisp2}
+\end{figure}
+
+\vfill
+
+\begin{algorithm}[h!]
 \begin{algorithmic}[1]
 	\State \Atomic \MethodHead{compact}():
 	\State \quad $\Var{pos} \gets \Var{HEAP\_START}$	\Comment{Zeiger auf Ende des kompaktierten Bereichs}
@@ -96,6 +92,16 @@ Dadurch, dass der Heap in aufsteigender Reihenfolge durchlaufen wird, die Objekt
 \caption[LISP-2-Kompaktierung]{LISP-2-Kompaktierung (vgl. \cite[S. 35]{handbook} und \cite[S. 7ff]{lisp2gc}).}
 \label{algo:lisp2gc}
 \end{algorithm}
+
+\newpage
+
+Im Anschluss müssen alle Referenzen auf verschobene Objekte in den Feldern aller Objekte aktualisiert werden.
+Die Prozedur \Method{updateRefs} iteriert dabei zunächst über alle Felder von Basisobjekten (Zeile~12 bis 14).
+Falls der Inhalt \Var{*field} eines Felds als Schlüssel in der Tabelle auftaucht, so handelt es sich um die alte Adresse eines verschobenen Objekts.
+Entsprechend muss der Feldinhalt auf die neue Adresse \Var{log}(\Var{*field}) gesetzt werden.
+Um auch die Objekte des Heaps anzupassen, wird dieser ein weiteres Mal linear traversiert und analog die Felder aller markierten Objekte angepasst (Zeile~15 bis 20).
+Zuletzt wird die Tabelle mit den zwischengespeicherten Adressen geleert.
+Dadurch, dass der Heap in aufsteigender Reihenfolge durchlaufen wird, die Objekte jedoch in entgegengesetzte Richtung verschoben werden, werden keine lebendigen Daten überschrieben.
 
 Die Laufzeit des gesamten Algorithmus lässt sich wie folgt einschätzen:
 Im schlimmsten Fall läuft der Zeiger \Var{pos} in der Prozedur \Method{compact} über den gesamten Heap.
@@ -193,6 +199,8 @@ Analog zu \Var{a} wird für \Var{c} die neue Speicheradresse $8$ ermittelt, da \
 Für \Var{d} ergibt sich als Offset und Speicheradresse der Wert $15$:
 Zwar befindet sich auch der hintere Teil von \Var{c} im dritten Block, allerdings wurde die Größe von \Var{c} bereits bei der Offsetberechnung berücksichtigt, sodass der Offset hier nicht korrigiert werden muss.
 
+%\newpage
+
 \begin{figure}[h]
 	\centering
 	\includestandalone[scale=1.1]{img/tikz/ch4-compressor-example}
@@ -202,11 +210,11 @@ Zwar befindet sich auch der hintere Teil von \Var{c} im dritten Block, allerding
 
 Der Performancegewinn durch den Verzicht auf eine zweite Heaptraversierung ist offenkundig, wird jedoch mit zusätzlichem Speicherbedarf erkauft.
 Der Bitvektor benötigt ein Bit pro Wort Speicherplatz, während der Offsetvektor pro Block ein Wort belegt.
-Für die oben genannte Wortbreite und Blockgröße ergibt sich daher Overhead von etwa 4\% des Heaps.
+Für die oben genannte Wortbreite und Blockgröße ergibt sich daher ein Overhead von etwa 4\% des Heaps.
 Eine Erhöhung der Wortbreite $w$, an der Objekte im Heap ausgerichtet werden, kann diesen Anteil zwar reduzieren (siehe Tabelle~\ref{tab:compressor}), aber auch eine ineffizientere Speichernutzung verursachen, da jedes Objekt stets ein Vielfaches von $w$ an Speicher belegt.
 Größere Blöcke wiederum erhöhen den Aufwand zur Berechnung der neuen Speicheradressen, da eine höhere Anzahl an Objekten pro Block zu erwarten ist.
 
-\begin{table}
+\begin{table}[h]
 	\centering \renewcommand{\arraystretch}{1.15} \setstretch{1.15}
 	\begin{tabular}{|r|cccc|}
 		\hline
@@ -298,19 +306,6 @@ Schließlich kann die Referenz des untersuchten Feldes auf die neue Speicheradre
 Ist in \Var{newAdr} bereits eine Speicheradresse hinterlegt worden, so wurde das Ziel bereits nach \Var{target} kopiert; in diesem Fall genügt es, den Feldinhalt zu aktualisieren.
 Die Prozedur \Method{collectGarbage} kann anschließend mit der Abarbeitung der Objekte in \Var{toDo} beginnen (Zeile~11 bis 15).
 
-\begin{figure}[h]
-	\centering
-	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel01}\\[1cm]
-	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel02}\\[1cm]
-	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel03}\\[1cm]
-	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel04}\\[1cm]
-	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel05}\\[1cm]
-	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel06}\\[1cm]
-	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel07}
-	\caption[Ausführung der kopierenden Garbage Collection]{Beispielhafte Ausführung von Algorithmus~\ref{algo:copying-gc}. Die Nummerierung der Kopien zeigt die aktuelle Position in \Var{toDo} an. Referenzen der ursprünglichen Objekte aus \Var{source} werden hier aus Gründen der Übersichtlichkeit nicht mehr aufgeführt, sobald das Objekt nach \Var{target} kopiert wurde.}
-	\label{fig:fenichel-example}
-\end{figure}
-
 Abbildung~\ref{fig:fenichel-example} veranschaulicht die Arbeitsweise des Algorithmus an einem Beispiel:
 Nachdem die Rollen der Halbräume \Var{source} und \Var{target} vertauscht wurden, wird zunächst das einzige Basisobjekt \Var{b} kopiert \textbf{(2)}.
 Anschließend wird es zu \Var{toDo} hinzugefügt, was durch eine Nummerierung der Kopie \Var{b'} angezeigt wird \textbf{(3)}.
@@ -321,9 +316,26 @@ Bei der Abarbeitung von \Var{g'} tritt nun die Besonderheit auf, dass das refere
 Entsprechend wird hier lediglich die Referenz angepasst \textbf{(6)}.
 Sobald \Var{toDo} vollständig abgearbeitet wurde, sind alle erreichbaren Objekte kopiert worden und der Halbraum \Var{source} kann in Gänze verworfen werden \textbf{(7)}.
 
+\newpage
+
+\begin{figure}[h!]
+	\centering
+	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel01}\\[0.5cm]
+	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel02}\\[0.5cm]
+	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel03}\\[0.5cm]
+	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel04}\\[0.5cm]
+	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel05}\\[0.5cm]
+	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel06}\\[0.5cm]
+	\includestandalone[scale=0.9]{img/tikz/ch4-fenichel07}
+	\caption[Ausführung der kopierenden Garbage Collection]{Beispielhafte Ausführung von Algorithmus~\ref{algo:copying-gc}. Die Nummerierung der Kopien zeigt die aktuelle Position in \Var{toDo} an. Referenzen der ursprünglichen Objekte aus \Var{source} werden hier aus Gründen der Übersichtlichkeit nicht mehr aufgeführt, sobald das Objekt nach \Var{target} kopiert wurde.}
+	\label{fig:fenichel-example}
+\end{figure}
+
 Die kopierten Objekte, die sich in \Var{toDo} befinden, sind vergleichbar mit den grauen Objekten der Drei-Farben-Abstraktion (siehe Abschnitt~\ref{sec:tricolor}):
 Sie wurden bereits durch den Kollektor entdeckt und nach \Var{target} kopiert, aber ihre Felder wurden noch nicht auf Referenzen zu noch unentdeckten Objekten untersucht.
 Entsprechend analog zu Satz~\ref{satz:tricolor-correctness} lässt sich die Terminierung des Algorithmus beweisen, da kein Objekt mehrfach zu \Var{toDo} hinzugefügt wird.
+
+\newpage
 
 \begin{mybox}
 \begin{satz}[Korrektheit der kopierenden Garbage Collection]
@@ -367,10 +379,105 @@ Letzterer lässt jedoch vermeiden, indem etwa die neue Speicheradresse des kopie
 In allen drei vorgestellten Algorithmen haben wir gesehen, dass eine Anpassung von Referenzen notwendig ist, wenn ein Objekt im Speicher verschoben oder kopiert wird.
 Dies erfordert im Allgemeinen eine Anpassung aller Felder von Objekten, die die ursprüngliche Speicheradresse enthalten.
 Um den Aufwand hierfür zu reduzieren, können \textbf{Handles} verwendet werden.
-Ein Handle $\mathtt{\tilde{a}}$ eines Objekts \Var{a} ist ein weiteres Objekt, das lediglich die Speicheradresse von \Var{a} enthält und eine feste Position im Speicher besitzt.
-Alle Objekte besitzen anstelle einer Referenz auf \Var{a} dann eine solche auf $\mathtt{\tilde{a}}$.
-Ändert sich die Position von \Var{a} im Speicher, ist lediglich eine Anpassung der Speicheradresse in $\mathtt{\tilde{a}}$ nötig.
+Ein Handle \handle{a} eines Objekts \Var{a} ist ein weiteres Objekt, das lediglich die Speicheradresse von \Var{a} enthält und eine feste Position im Speicher besitzt.
+Alle Objekte besitzen anstelle einer Referenz auf \Var{a} dann eine solche auf \handle{a}.
+Ändert sich die Position von \Var{a} im Speicher, ist lediglich eine Anpassung der Speicheradresse in \handle{a} nötig (vgl. \cite{brooks1984}).
 
-\todo[inline]{Bild Handles}
+\begin{figure}[h]
+	\centering
+	\includestandalone[scale=0.8]{img/tikz/ch4-handle}~\hspace{1cm}~
+	\includestandalone[scale=0.8]{img/tikz/ch4-handle2}
+	\caption[Handle zur indirekten Adressierung von Objekten]{Der Handle \handle{a} enthält die Speicheradresse des Objekts \Var{a}. Erfolgt der Zugriff auf \Var{a} ausschließlich über \handle{a}, so genügt es, lediglich die Adresse in \handle{a} anzupassen.}
+	\label{fig:handle}
+\end{figure}
 
-\todo[inline]{Realisierung, doppelte Speicherzugriffe}
+Die Realisierung dieses Mechanismus kann auf unterschiedlichen Wegen erfolgen.
+Denkbar ist unter anderem eine zentrale Tabelle, in der zu jedem Objekt die aktuelle Position aufgeführt wird, die mittels einer eindeutigen ID des Objekts ermittelt werden kann.
+Anstelle von Adressen wird durch den Mutator dann die ID zur Referenzierung von Objekten verwendet.
+Wie bereits in Abschnitt~\ref{sec:rc-optimizing} angedeutet, kann sich das Nachschlagen in großen Tabellen jedoch negativ auf die Performance auswirken.
+Alternativ empfehlen \textsc{Kalibera} und \textsc{Jones}, Handles analog zu Objekten zu verwalten und im Heap abzulegen.
+Da Handles eine unveränderliche Position besitzen, bietet es sich etwa an, bestimmte Bereiche des Heaps ausschließlich für Handles zu reservieren, die von Kompaktierungsmechanismen ausgespart werden (vgl. \cite[S. 90f]{kalibera2011}).
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+	\State \MethodHead{new}():
+	\State \quad \Var{adr} $\gets$ \Method{allocate}()	
+	\State \quad \IF \Var{adr} $=$ \Null
+	\State \quad \quad \Method{collectGarbage}()
+	\State \quad \quad \Var{adr} $\gets$ \Method{allocate}()
+	\State \quad \Var{handle} $\gets$ \Method{allocateHandle}()	\Comment{Anforderung im separaten Heapbereich}
+	\State \quad \IF \Var{handle} $=$ \Null
+	\State \quad \quad \Method{collectGarbage}()
+	\State \quad \quad \Var{handle} $\gets$ \Method{allocateHandle}()	
+	\State \quad \IF \Var{adr} $=$ \Null $\vee$ \Var{handle} $=$ \Null
+	\State \quad \quad \Method{error}(\Var{"Nicht genügend Speicher"})
+	\State \quad \Var{forward}(\Var{*handle}) $\gets$ \Var{adr}		\Comment{Objektadresse im Handle eintragen}
+	\State \quad \Var{handle}(\Var{*adr}) $\gets$ \Var{handle}		\Comment{Handle-Adresse im Objekt eintragen}
+	\State \quad \Return \Var{handle}	\Comment{Adresse des Handles zurückgeben}
+\end{algorithmic}
+\caption[Erzeugung von Objekt und Handle mittels \Method{new}]{Erzeugung von Objekt und Handle mittels \Method{new}. Anstelle einer Referenz auf das eigentliche Objekt erhält der Mutator eine Referenz auf den Handle des Objekts.}
+\label{algo:new-handle}
+\end{algorithm}
+
+Die in Algorithmus~\ref{algo:new-handle} modifizierte Variante von \Method{new} zur Erzeugung neuer Objekte legt für jedes erzeugte Objekt \Var{a} gleichzeitig einen Handle \handle{a} an, dessen Adresse zurückgegeben wird.
+In \Var{forward}(\handle{a}) wird die Adresse von \Var{a} gespeichert, während \Var{handle}(a) eine Referenz auf \handle{a} im Header von \Var{a} bereithält.
+Diese ist notwendig, damit nach Verschiebung von \Var{a} der zugehörige Handle angepasst werden kann.
+
+Aus Sicht des Mutators soll die Existenz der Handles im Verborgenen bleiben:
+Müsste die Entwicklerin auf den korrekten Umgang mit Handles achten, stünde dies im Widerspruch zur Idee einer Garbage Collection, die Entwicklerin von der Speicherverwaltung zu entlasten.
+Insofern sollte der Zugriff auf \Var{header}(\Var{a}) nur dem Kollektor ermöglicht werden.
+Je nach Programmiersprache müssen dafür auch gewisse Operatoren angepasst werden, wenn sie durch den Mutator verwendet werden.
+So muss etwa die Dereferenzierung einer Speicheradresse nicht den Handle, sondern das vom Handle referenzierte Objekt liefern (siehe Algorithmus~\ref{algo:operator-overload}).
+Dies trifft beispielsweise auf die Programmiersprache C++ zu, in welcher unter anderem Adress- und Dereferenzierungsoperator überladen werden können (vgl. \cite[Kap. 18]{cpp}).
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+	\State \MethodHead{mutatorOperator*}(\Var{ref}):
+	\State \quad \Return \Var{*forward}(\Var{*ref})		\Comment{Dereferenziere Speicheradresse im Handle}
+	\Statex
+	\State \MethodHead{mutatorOperator\&}(\Var{obj}):
+	\State \quad \Return \Var{handle}(\Var{obj})		\Comment{Gib Adresse des Handles zurück}
+\end{algorithmic}
+\caption[Operatoranpassung zur Verbergung von Handles]{Sollen Handles für den Mutator verborgen bleiben, müssen Operatoren überschrieben werden, die mit Speicheradressen von Objekten arbeiten.}
+\label{algo:operator-overload}
+\end{algorithm}
+
+Die Verwendung von Handles vereinfacht die betrachteten Mark-Compact-Algorithmen deutlich, da auf eine kostspielige Aktualisierung aller Objektfelder verzichtet und eine Anpassung des Handles unmittelbar nach Verschiebung eines Objekts vorgenommen werden kann.
+Im LISP-2-Algorithmus wird damit die Prozedur \Method{updateRefs} obsolet und die Buchführung über alte und neue Adressen ist nicht länger notwendig (siehe Algorithmus~\ref{algo:handle-compaction}).
+Allerdings besitzen diese Vorteile auch hier ihren Preis:
+Da jedes Objekt im Heap einen Handle besitzt, der ebenfalls dynamisch erzeugt wurde, verdoppelt dieser Ansatz die Zahl der Objekte und reduziert den verfügbaren Heapspeicher.
+Wie bereits diskutiert kann dies zu häufigeren Garbage-Collection-Zyklen führen, weswegen Handles in Kombination mit der kopierenden Garbage Collection eher unattraktiv sind.
+Zudem müssen Handles durch eine eigene Garbage Collection behandelt werden, da sie nicht verschoben werden dürfen.
+Zwar ist ein Handle genau dann erreichbar, wenn das zugehörige Objekt erreichbar ist.
+Allerdings werden in den oben betrachteten Algorithmen verwaiste Objekte nicht explizit freigegeben, sondern dadurch überschreibbar, dass sie sich außerhalb des kompaktierten Bereichs befinden.
+Ein gleichzeitiges Freigeben von Handle und Objekt ist somit nicht realisierbar.
+Weiter verursacht die feste Position der Handles eine Fragmentierung des Heaps, die eigentlich beseitigt werden soll.
+Das Problem lässt sich jedoch in Grenzen halten:
+Falls Handles ausschließlich eine einzige Speicheradresse enthalten, belegen sie gegebenenfalls gleich viel Speicher.
+Neu erzeugte Handles fügen sich somit passgenau in entstandene Lücken ein.
+Nicht zuletzt sollte auch beachtet werden, dass sich Handles auf die Performance des Mutators auswirken können.
+Wird auf eine Folge $\Var{a}_1 \rightarrow \Var{a}_2 \rightarrow \dots \rightarrow \Var{a}_n$ von Referenzen von Objekten zugegriffen, so erfolgt zwischen zwei Objekten stets ein Zugriff auf die jeweiligen Handles.
+Da Handles und Objekte in verschiedenen Bereichen des Heaps aufbewahrt werden, lässt sich hier keine räumliche Lokalität herstellen, die von Caching-Mechanismen ausgenutzt werden könnte.
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+	\State \MethodHead{compact}():	\Comment{LISP-2-Algorithmus}
+	\State \quad $\Var{pos} \gets \Var{HEAP\_START}$
+	\State \quad $\Var{next} \gets \Method{nextMarkedObject}(\Var{HEAP\_START})$
+	\State \quad \WHILE $\Var{next} \neq \Null$			
+	\State \quad \quad \IF $\Var{pos} \neq \Var{next}$
+	\State \quad \quad \quad \Var{forward}(\Var{*handle}(\Var{*next})) $\gets$ \Var{pos}	\Comment{Adresse im Handle anpassen}
+	\State \quad \quad \quad \Method{moveObject}(\Var{next}, \Var{pos})
+	\State \quad \quad $\Var{pos} \gets \Var{pos} + \Method{sizeOf}(\Var{*pos})$
+	\State \quad \quad $\Var{next} \gets \Method{nextMarkedObject}(\Var{next})$
+	\Statex
+	\State \MethodHead{compactAndUpdate}():		\Comment{Compressor-Algorithmus}
+	\State \quad $\Var{pos} \gets \Method{nextMarkedObject}(\Var{HEAP\_START})$
+	\State \quad \WHILE $\Var{pos} \neq \Null$
+	\State \quad \quad \Var{forward}(\Var{*handle}(\Var{*pos})) $\gets$ \Method{newAddress}(\Var{pos})	\Comment{Handle anpassen}
+	\State \quad \quad \Method{moveObject}(\Var{pos}, \Method{newAddress}(\Var{pos}))
+	\State \quad \quad $\Var{pos} \gets \Method{nextMarkedObject}(\Var{pos})$
+\end{algorithmic}
+\caption[Optimierung der Kompaktierungsalgorithmen mit Handles]{Optimierung des LISP-2- und Compressor-Algorithmus mit von Handles.}
+\label{algo:handle-compaction}
+\end{algorithm}
