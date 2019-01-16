@@ -1,0 +1,64 @@
+%!TEX root = ../../thesis.tex
+\chapter{Hybride und generationelle Ansätze}
+\label{cha:generational}
+
+In den vorigen Kapiteln wurden hauptsächlich Algorithmen betrachtet, deren Anwendung stets den gesamten Heap betrifft.
+An zwei Stellen war jedoch zu erkennen, dass es zielführend sein kann, auf diesen Grundsatz zu verzichten:
+Die verzögerte Bereinigung nach \textsc{Hughes} (Abschnitt~\ref{algo:lazy-sweep}) teilt den Heap nach Objekten gleicher Größe ein, um das Sweeping nur bei Bedarf auf einen Bruchteil des Heaps ausführen zu müssen.
+Die Einführung von Handles in Abschnitt~\ref{sec:handle} legt die Speicherung eben jener in einem separaten Bereich nahe.
+Da die Handles im Gegensatz zu den eigentlichen Objekten nicht verschoben werden, muss dieser Bereich mit einem anderen Garbage-Collection-Ansatz verwaltet werden.
+
+Die Partitionierung des Heaps in Bereiche ermöglicht eine feingranularere Auswahl an Garbage-Collection-Strategien.
+Die verschiedenen Bereiche können unterschiedlich häufig, durch passend abgestimmte Algorithmen und/oder eine Kombination verschiedener Ansätze bereinigt werden.
+Im Folgenden werden wir daher zunächst auf diverse Kriterien zur Heappartitionierung eingehen, bevor anschließend eine Auswahl dieser hybriden Algorithmen betrachtet wird.
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+
+\section{Algorithmus von Lieberman und Hewitt}
+\label{sec:lieberman}
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+	\State \MethodHead{collectGarbage}(\Var{k}):
+	\State \quad \Var{source} $\gets \textsc{Gen}_k$
+	\State \quad \Var{target} $\gets \Method{newVersion}(\textsc{Gen}_k)$
+	\State \quad $\textsc{Gen}_k \gets$ \Var{target}
+	\State \quad \Var{pos} $\gets$ \Var{target}
+	\State \quad \Method{updateHandles}(\Var{source},\Var{target})
+	\State \quad \Method{updateFields}(\Var{source})
+	\State \quad \Method{clear}(\Var{newAdr})
+	\State \quad \Method{free}(\Var{source})
+	\Statex
+	\State \MethodHead{updateHandles}(\Var{source},\Var{target}):
+	\State \quad \FOREACH \Var{handle} $\in$ \Handles(\Var{source})
+	\State \quad \quad \Var{obj} $\gets$ \Var{*forward}(\Var{handle})
+	\State \quad \quad \Method{copy}(\Var{obj}, \Var{pos})
+	\State \quad \quad \Var{*origin}(\Var{handle}) $\gets$ \Method{newHandle}(\Var{target}, \Var{newAdr}(\Var{obj})
+	\Statex
+	\State \MethodHead{updateFields}(\Var{source}):
+	\State \quad \FOREACH $j > \Var{generation}(\Var{source})$
+	\State \quad \quad \FOREACH \Var{field} $\in \Fields(\textsc{Gen}_j)$
+	\State \quad \quad \quad \IF ($\Var{*field} \neq \Null \wedge \Var{**field} \in \Var{source}$)
+	\State \quad \quad \quad \quad \Method{copy}(\Var{**field}, \Var{pos})
+	\State \quad \quad \quad \quad \Var{*field} $\gets$ \Var{newAdr}(\Var{**field})
+	\State \quad \WHILE \Var{toDo} $\neq$ \Null
+	\State \quad \quad \Var{ref} $\gets$ \Method{remove}(\Var{toDo})
+	\State \quad \quad \FOREACH \Var{field} $\in$ \Fields(\Var{*ref})
+	\State \quad \quad \quad \IF ($\Var{*field} \neq \Null \wedge \Var{**field} \in \Var{source}$)
+	\State \quad \quad \quad \quad \Method{copy}(\Var{**field}, \Var{pos})
+	\State \quad \quad \quad \quad \Var{*field} $\gets$ \Var{newAdr}(\Var{**field}
+	\Statex
+	\State \MethodHead{copy}(\Var{obj}, \Var{pos}):
+	\State \quad \IF $\Var{newAdr}(\Var{obj}) = \Null$
+	\State \quad \quad $\Var{newAdr}(\Var{obj}) \gets \Var{pos}$
+	\State \quad \quad \Method{moveObject}(\Var{\&obj}, \Var{pos})
+	\State \quad \quad $\Var{pos} \gets \Var{pos} + \Method{sizeOf}(\Var{obj})$
+	\State \quad \quad \Method{add}(\Var{toDo}, \Var{newAdr}(\Var{obj}))
+\end{algorithmic}
+\caption[Generationelle Garbage Collection nach \textsc{Lieberman} und \textsc{Hewitt}]{Generationelle Garbage Collection nach \textsc{Lieberman} und \textsc{Hewitt} (vgl. \cite[S. 421ff]{lieberman1983}).}
+\label{algo:lieberman}
+\end{algorithm}
