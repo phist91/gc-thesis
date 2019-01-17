@@ -37,7 +37,7 @@ Im Folgenden werden wir daher zunächst auf diverse Kriterien zur Heappartitioni
 	\State \quad \FOREACH \Var{handle} $\in$ \Handles(\Var{source})
 	\State \quad \quad \Var{obj} $\gets$ \Var{*forward}(\Var{handle})
 	\State \quad \quad \Method{copy}(\Var{obj}, \Var{pos})
-	\State \quad \quad \Var{*origin}(\Var{handle}) $\gets$ \Method{newHandle}(\Var{target}, \Var{newAdr}(\Var{obj})
+	\State \quad \quad \Var{*origin}(\Var{handle}) $\gets$ \Method{newHandle}(\Var{target}, \Var{newAdr}(\Var{obj}))
 	\Statex
 	\State \MethodHead{updateFields}(\Var{source}):
 	\State \quad \FOREACH $j > \Var{generation}(\Var{source})$
@@ -50,7 +50,7 @@ Im Folgenden werden wir daher zunächst auf diverse Kriterien zur Heappartitioni
 	\State \quad \quad \FOREACH \Var{field} $\in$ \Fields(\Var{*ref})
 	\State \quad \quad \quad \IF ($\Var{*field} \neq \Null \wedge \Var{**field} \in \Var{source}$)
 	\State \quad \quad \quad \quad \Method{copy}(\Var{**field}, \Var{pos})
-	\State \quad \quad \quad \quad \Var{*field} $\gets$ \Var{newAdr}(\Var{**field}
+	\State \quad \quad \quad \quad \Var{*field} $\gets$ \Var{newAdr}(\Var{**field})
 	\Statex
 	\State \MethodHead{copy}(\Var{obj}, \Var{pos}):
 	\State \quad \IF $\Var{newAdr}(\Var{obj}) = \Null$

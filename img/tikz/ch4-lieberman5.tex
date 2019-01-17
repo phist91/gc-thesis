@@ -1,0 +1,66 @@
+\input{standalone.tex}
+
+\newcommand{\object}[3]{
+	\draw[thick] (#1,#2) rectangle (#1+0.75,#2+0.5);
+	\draw (#1+0.375,#2+0.25) node{\Var{#3}};
+}
+
+\newcommand{\objectFaded}[3]{
+	\draw[thick,gray!60] (#1,#2) rectangle (#1+0.75,#2+0.5);
+	\draw[thick,gray!60] (#1+0.375,#2+0.25) node{\Var{#3}};
+}
+
+\newcommand{\generation}[3]{
+	\draw [very thick] (#1,#2) rectangle (#1+2.5,#2+3);
+	\draw [very thick] (#1,#2+0.5) -- (#1+2.5,#2+0.5);
+	\draw [very thick] (#1+2,#2+0) -- (#1+2,#2+0.5);
+	\draw (#1+2.25,#2+0.25) node{\textbf{#3}};
+}
+
+\begin{document}
+	\begin{tikzpicture}	
+		\draw (-1.75,3) node[above]{$\textsc{Gen}_0$};
+		\generation{-3}{0}{4}
+		\object{-2.75}{2.25}{a}
+		\object{-1.5}{2.25}{b}
+
+		\draw (1.25,3) node[above]{\Var{source}};
+		\generation{0}{0}{1}
+		\objectFaded{0.25}{0.75}{f}
+		\objectFaded{1.5}{0.75}{g}
+		\objectFaded{0.875}{1.5}{e}
+		\objectFaded{1.5}{2.25}{d}
+		\object{0.25}{2.25}{c}
+		
+		\draw (4.25,3) node[above]{$\textsc{Gen}_2$};
+		\generation{3}{0}{0}
+		\object{3.25}{2.25}{h}
+		\object{4.5}{2.25}{j}
+		
+		\draw[->] (0.23,2.5) -- (-0.73,2.5);	% c -> d
+
+		\draw [ctcoloraccessory,fill] (0.625,0.25) circle (0.07); % handle
+		\draw [->,ctcoloraccessory] (0.625,0.25) -- (0.625,0.73);	% handle -> f
+		
+		%%%%%%%%%%
+		
+		\draw (4,-3.25) node[right,align=left]{\textbf{toDo:} \\[-0.2cm] \Var{d'}, \Var{g'}, \Var{e'}};
+		
+		\draw (1.25,-1) node[above]{\Var{target}};
+		\generation{0}{-4}{2}
+		\object{0.25}{-3.25}{f'}
+		\draw[->,ctcoloraccessory] (-2.375,2.23) to[bend angle=20, bend right] (0.55,-3.75);	% a -> handle
+		\draw [ctcoloraccessory,fill] (0.625,-3.75) circle (0.07); % handle
+		\draw [->,ctcoloraccessory] (0.625,-3.75) -- (0.625,-3.27);	% handle -> f'
+		\draw[->,ctcolormain] (0.625,-2.73) -- (0.625,-1.73);	% f' -> e'
+		
+		\object{1.5}{-3.25}{g'}
+		\object{1.5}{-1.75}{d'}
+		\draw[->] (3.625,2.23) to [bend angle=25, bend left] (2.28,-1.4);		% h -> d'
+		\draw[->] (4.9,2.23) to [bend angle=25, bend left] (2.28,-1.65);	% j -> d'
+		\draw[->] (5.1,2.23) to [bend angle=25, bend left] (2.28,-3);		% j -> g'
+		\draw[->,ctcolormain] (2,-1.23) to[bend angle=40,bend right] (1.625,1.75);	% d' -> e
+		
+		\object{0.25}{-1.75}{e'}
+	\end{tikzpicture}
+\end{document}
