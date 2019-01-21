@@ -22,11 +22,11 @@ Im Folgenden werden wir daher zunächst auf diverse Kriterien zur Heappartitioni
 \label{sec:lieberman}
 Eines der ersten Verfahren, der die Lebensdauer der Objekte als Kriterium für einen Kollektionszyklus nutzt, stammt von \textsc{Lieberman} und \textsc{Hewitt} \cite{lieberman1983}.
 Der Heap wird dazu ebenfalls in Blöcke eingeteilt, die durch zwei Zahlen charakterisiert werden:
-Die \textit{Generation} eines Blocks ist ein Indikator für die Lebensdauer der enthaltenen Objekte und wird bei Initialisierung eines neuen Blocks inkrementiert.
+Die \textit{Generation} eines Blocks ist ein Indikator für die Lebensdauer der enthaltenen Objekte und wird regelmäßig inkrementiert, sodass zu jeder Generation genau ein Block gehört.
 Blöcke, die jünger sind, besitzen somit eine höhere Generationenzahl und neue Objekte werden immer in der zuletzt erzeugten Generation gespeichert.
 Die \textit{Version} eines Blocks gibt an, wie oft er durch die Garbage Collection bereinigt wurde.
 Die Idee ist nun (analog zu Abschnitt~\ref{sec:lazy-sweep}), die Garbage Collection generationenweise arbeiten zu lassen und die Laufzeit des Algorithmus für jüngere Generationen möglichst kurz zu halten.
-Dies geht zurück auf eine Feststellung von \textsc{Deutsch} und \textsc{Bobrow}, wonach ein Großteil der Objekte entweder frühzeitig verwaist oder langfristig erreichbar bleibt (vgl. \cite[S. 523]{deutsch1976}).
+Dies geht zurück auf eine Hypothese von \textsc{Deutsch} und \textsc{Bobrow}, wonach ein Großteil der Objekte entweder frühzeitig verwaist oder langfristig erreichbar bleibt (vgl. \cite[S. 523]{deutsch1976}).
 Um dies zu erreichen, wird die Konvention eingeführt, dass nur direkte Referenzen innerhalb einer Generation oder von Objekten einer jüngeren Generation auf solche einer älteren erlaubt sind.
 Eine Referenz $\Var{a} \rightarrow \Var{b}$ eines älteren Objekts \Var{a} auf ein jüngeres Objekt \Var{b} wird indirekt über einen Handle realisiert, welcher in einem separaten Bereich der Generation von \Var{b} gespeichert wird und -- neben einer internen Referenz auf \Var{b} -- zusätzlich eine \textit{Rückreferenz} \Var{origin} auf das entsprechende Feld von \Var{a} besitzt (siehe Abbildung~\ref{fig:lieberman-generations})\footnote{Wir gehen im Folgenden davon aus, dass jeder Handle eine einzelne Referenz verwaltet. Natürlich können auch alle Referenzen auf \Var{b} über einen einzigen Handle realisiert werden; dieser muss entsprechend Rückreferenzen auf alle Felder speichern, die \Var{b} referenzieren. Der Algorithmus ist entsprechend anzupassen.}.
 
@@ -95,7 +95,9 @@ Da kopierte Objekte ebenfalls Referenzen auf Objekte derselben Generation enthal
 Bei der Abarbeitung von \Var{toDo} (Zeile~21 bis 26) werden somit auch Objekte aufgespürt, die nur durch generationeninterne Referenzen erreichbar sind.
 Abbildung~\ref{fig:lieberman-example} zeigt die Arbeitsweise am Beispiel der oben dargestellten Objektkonstellation.
 
-\begin{figure}[h] \newcommand{\liebermanscale}{0.75} \newcommand{\liebermanspace}{1cm}
+\newpage
+
+\begin{figure}[H] \newcommand{\liebermanscale}{0.75} \newcommand{\liebermanspace}{1cm}
 	\centering
 	\begin{subfigure}[t]{0.45\textwidth}
 		\centering
@@ -130,3 +132,26 @@ Abbildung~\ref{fig:lieberman-example} zeigt die Arbeitsweise am Beispiel der obe
 	\caption[Beispielhafte Ausführung von Algorithmus~\ref{algo:lieberman}]{Beispielhafte Ausführung von Algorithmus~\ref{algo:lieberman} für Generation $k = 1$.}
 	\label{fig:lieberman-example}
 \end{figure}
+
+\newpage
+
+Die Stärke des Algorithmus besteht nun darin, die Häufigkeit der Garbage Collection von der Generation von Objekten und der Versionszahl abhängig zu machen.
+Sehr junge Generationen niedriger Version enthalten nach der Hypothese von \textsc{Deutsch} und \textsc{Bobrow} potenziell viele Objekte, die bereits verwaist sind.
+Entsprechend ist es attraktiv, diese zu bereinigen, da sie eine vielversprechende Ausbeute bieten.
+Die erwartete Laufzeit des Kollektors hält sich dabei gleichzeitig in Grenzen, da nur wenige Nachfolgegenerationen existieren, die Referenzen auf die zu reinigende Generation besitzen könnten.
+Ältere Generationen, die schon häufig bereinigt wurden, enthalten wiederum tendenziell weniger verwaiste Objekte.
+Da bei ihrer Bereinigung viele jüngere Generationen betrachtet werden müssen, sollte diese eher selten stattfinden (vgl. \cite[S. 423]{lieberman1983}).
+
+Abgesehen von Generation und Versionszahl gibt es noch weitere Stellschrauben zur Optimierung des Algorithmus.
+Eine periodische Erhöhung der Generationenzahl hat den Vorteil, dass Objekte, die fast zeitgleich erzeugt werden, in derselben Generation gespeichert werden, was sich für einige Datenstrukturen positiv auf die räumliche Lokalität auswirken dürfte.
+Alternativ kann jedoch auch eine neue Generation erst dann angelegt werden, wenn die aktuelle nicht mehr genügend freien Speicher besitzt, um eine Speicheranforderung zu erfüllen.
+Das verringert den möglichen Speicherverschnitt durch nur teilweise belegte Blöcke.
+Da neue Objekte stets in der jüngsten Generation angelegt werden, tendieren ältere Generationen dazu, mit jedem Kollektionszyklus zu schrumpfen.
+Aus demselben Grund bietet es sich daher an, die Größe jeder neuen Version einer Generation auf die Größe aktuell erhaltenen Objekte zu setzen.
+Eine andere Möglichkeit wäre, zusätzliche Konsolidierungsphasen einzubauen, in welchen Generationen verschmolzen werden.
+Eine weitere, nicht zu verachtende Maßnahme ist die Parallelisierung des Algorithmus, indem mehrere Generationen gleichzeitig gepflegt werden (vgl. \cite[S. 426]{lieberman1983}.
+
+Zuletzt sollte beachtet werden, dass die eingangs erwähnte Hypothese über die Lebensdauer von Objekten in der Praxis nicht zutreffen muss, wenngleich sie auch in neueren Programmiersprachen empirisch bestätigt wurde (vgl. \cite{jones2008}).
+Ebenso mag die Annahme, dass nur wenige Referenzen von älteren auf jüngere Objekte zu Stande kommen und sich die Zahl der benötigten Handles damit in Grenzen hält, auf die von \textsc{Lieberman} und \textsc{Hewitt} betrachteten LISP-Systeme zutreffen, da die Komponenten eines Objekts in den meisten Fällen unveränderlich sind und bereits vor Erzeugung des Objekts existieren (vgl. \cite[S. 422]{lieberman1983}).
+In objektorientierten Programmiersprachen etwa sind Attribute von Objekten in der Regel mutabel, weswegen dieser Gedanke nicht notwendigerweise auf diese Fälle übertragbar ist.
+Die Anzahl der Handles liegt dann viel höher, womit die in Abschnitt~\ref{sec:handle} angesprochenen Nachteile relevant werden können.
