@@ -35,11 +35,13 @@
 		\draw[->] (4.48,2.23) to [bend angle=15, bend left] (2.28,2.23);	% j -> d
 		\draw[->] (4.875,2.23) to [bend angle=15, bend left] (2.28,1);		% j -> g
 		
-		\draw[->,ctcoloraccessory] (-2.375,2.23) to[bend angle=20, bend right] (0.55,0.25);	% a -> handle
+		\draw[<->,ctcoloraccessory] (-2.375,2.23) to[bend angle=20, bend right] (0.55,0.25);	% a -> handle
 		\draw [ctcoloraccessory,fill] (0.625,0.25) circle (0.07); % handle
 		\draw [->,ctcoloraccessory] (0.625,0.25) -- (0.625,0.73);	% handle -> f
 		
 		\draw[->,ctcolormain] (0.625,1.27) -- (0.625,2.23);	% f' -> e'
 		\draw[->,ctcolormain] (1.47,2.5) -- (1.02,2.5);	% d' -> e'
+		
+		\draw [draw=none, very thick] (0,-4) rectangle (2.5,-1);
 	\end{tikzpicture}
 \end{document}

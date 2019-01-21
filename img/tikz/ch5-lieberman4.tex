@@ -27,9 +27,9 @@
 		\draw (1.25,3) node[above]{\Var{source}};
 		\generation{0}{0}{1}
 		\objectFaded{0.25}{0.75}{f}
-		\object{1.5}{0.75}{g}
+		\objectFaded{1.5}{0.75}{g}
 		\object{0.875}{1.5}{e}
-		\object{1.5}{2.25}{d}
+		\objectFaded{1.5}{2.25}{d}
 		\object{0.25}{2.25}{c}
 		
 		\draw (4.25,3) node[above]{$\textsc{Gen}_2$};
@@ -38,25 +38,27 @@
 		\object{4.5}{2.25}{j}
 		
 		\draw[->] (0.23,2.5) -- (-0.73,2.5);	% c -> d
-		\draw[->] (3.23,2.5) -- (2.23,2.5);		% h -> d
-		\draw[->] (4.48,2.23) to [bend angle=15, bend left] (2.28,2.23);	% j -> d
-		\draw[->] (4.875,2.23) to [bend angle=15, bend left] (2.28,1);		% j -> g
-		
 
 		\draw [ctcoloraccessory,fill] (0.625,0.25) circle (0.07); % handle
 		\draw [->,ctcoloraccessory] (0.625,0.25) -- (0.625,0.73);	% handle -> f
-		\draw[->,ctcolormain] (2.0625,2.23) to[bend angle=40,bend left] (1.625,1.75);	% d -> e
 		
 		%%%%%%%%%%
 		
-		\draw (4,-3.25) node[right,align=left]{\textbf{toDo:} \\[-0.2cm] \Var{f'}};
+		\draw (4,-3.25) node[right,align=left]{\textbf{toDo:} \\[-0.2cm] \Var{f'}, \Var{d'}, \Var{g'}};
 		
 		\draw (1.25,-1) node[above]{\Var{target}};
 		\generation{0}{-4}{2}
 		\object{0.25}{-3.25}{f'}
-		\draw[->,ctcoloraccessory] (-2.375,2.23) to[bend angle=20, bend right] (0.55,-3.75);	% a -> handle
+		\draw[<->,ctcoloraccessory] (-2.375,2.23) to[bend angle=20, bend right] (0.55,-3.75);	% a -> handle
 		\draw [ctcoloraccessory,fill] (0.625,-3.75) circle (0.07); % handle
 		\draw [->,ctcoloraccessory] (0.625,-3.75) -- (0.625,-3.27);	% handle -> f'
 		\draw[->,ctcolormain] (0.4375,-2.73) to[bend angle=40,bend left] (0.875,1.75);	% f' -> e
+		
+		\object{1.5}{-3.25}{g'}
+		\object{1.5}{-1.75}{d'}
+		\draw[->] (3.625,2.23) to [bend angle=25, bend left] (2.28,-1.4);		% h -> d'
+		\draw[->] (4.9,2.23) to [bend angle=25, bend left] (2.28,-1.65);	% j -> d'
+		\draw[->] (5.1,2.23) to [bend angle=25, bend left] (2.28,-3);		% j -> g'
+		\draw[->,ctcolormain] (2,-1.23) to[bend angle=40,bend right] (1.625,1.75);	% d' -> e
 	\end{tikzpicture}
 \end{document}

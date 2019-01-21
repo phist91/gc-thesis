@@ -4,7 +4,7 @@
 
 In den vorigen Kapiteln wurden hauptsächlich Algorithmen betrachtet, deren Anwendung stets den gesamten Heap betrifft.
 An zwei Stellen war jedoch zu erkennen, dass es zielführend sein kann, auf diesen Grundsatz zu verzichten:
-Die verzögerte Bereinigung nach \textsc{Hughes} (Abschnitt~\ref{algo:lazy-sweep}) teilt den Heap nach Objekten gleicher Größe ein, um das Sweeping nur bei Bedarf auf einen Bruchteil des Heaps ausführen zu müssen.
+Die verzögerte Bereinigung nach \textsc{Hughes} (Abschnitt~\ref{sec:lazy-sweep}) teilt den Heap nach Objekten gleicher Größe ein, um das Sweeping nur bei Bedarf auf einen Bruchteil des Heaps ausführen zu müssen.
 Die Einführung von Handles in Abschnitt~\ref{sec:handle} legt die Speicherung eben jener in einem separaten Bereich nahe.
 Da die Handles im Gegensatz zu den eigentlichen Objekten nicht verschoben werden, muss dieser Bereich mit einem anderen Garbage-Collection-Ansatz verwaltet werden.
 
@@ -20,40 +20,65 @@ Im Folgenden werden wir daher zunächst auf diverse Kriterien zur Heappartitioni
 
 \section{Algorithmus von Lieberman und Hewitt}
 \label{sec:lieberman}
+Eines der ersten Verfahren, der die Lebensdauer der Objekte als Kriterium für einen Kollektionszyklus nutzt, stammt von \textsc{Lieberman} und \textsc{Hewitt} \cite{lieberman1983}.
+Der Heap wird dazu ebenfalls in Blöcke eingeteilt, die durch zwei Zahlen charakterisiert werden:
+Die \textit{Generation} eines Blocks ist ein Indikator für die Lebensdauer der enthaltenen Objekte und wird bei Initialisierung eines neuen Blocks inkrementiert.
+Blöcke, die jünger sind, besitzen somit eine höhere Generationenzahl und neue Objekte werden immer in der zuletzt erzeugten Generation gespeichert.
+Die \textit{Version} eines Blocks gibt an, wie oft er durch die Garbage Collection bereinigt wurde.
+Die Idee ist nun (analog zu Abschnitt~\ref{sec:lazy-sweep}), die Garbage Collection generationenweise arbeiten zu lassen und die Laufzeit des Algorithmus für jüngere Generationen möglichst kurz zu halten.
+Dies geht zurück auf eine Feststellung von \textsc{Deutsch} und \textsc{Bobrow}, wonach ein Großteil der Objekte entweder frühzeitig verwaist oder langfristig erreichbar bleibt (vgl. \cite[S. 523]{deutsch1976}).
+Um dies zu erreichen, wird die Konvention eingeführt, dass nur direkte Referenzen innerhalb einer Generation oder von Objekten einer jüngeren Generation auf solche einer älteren erlaubt sind.
+Eine Referenz $\Var{a} \rightarrow \Var{b}$ eines älteren Objekts \Var{a} auf ein jüngeres Objekt \Var{b} wird indirekt über einen Handle realisiert, welcher in einem separaten Bereich der Generation von \Var{b} gespeichert wird und -- neben einer internen Referenz auf \Var{b} -- zusätzlich eine \textit{Rückreferenz} \Var{origin} auf das entsprechende Feld von \Var{a} besitzt (siehe Abbildung~\ref{fig:lieberman-generations})\footnote{Wir gehen im Folgenden davon aus, dass jeder Handle eine einzelne Referenz verwaltet. Natürlich können auch alle Referenzen auf \Var{b} über einen einzigen Handle realisiert werden; dieser muss entsprechend Rückreferenzen auf alle Felder speichern, die \Var{b} referenzieren. Der Algorithmus ist entsprechend anzupassen.}.
 
-\begin{algorithm}
+\begin{figure}[h]
+	\centering
+	\includestandalone[scale=1]{img/tikz/ch5-lieberman1}
+	\caption[Beispielhafte Objektkonstellation zwischen drei Generationen]{Beispielhafte Objektkonstellation zwischen drei Generationen. Der Zähler unten rechts gibt die akuelle Version einer Generation an. Neben Referenzen von jüngeren auf ältere Objekten existieren auch interne Referenzen zwischen gleich alten Objekten (\textcolor{ctcolormain}{blau}) und indirekte Referenzen von älteren auf jüngere Objekte über Handles (\textcolor{ctcoloraccessory}{purpur}).}
+	\label{fig:lieberman-generations}
+\end{figure}
+
+Der Kollektor geht bei der Bereinigung der Generation $k$  (\Var{source}) in mehreren Schritten vor (siehe Algorithmus~\ref{algo:lieberman}):
+Als erstes wird ein Block für eine neue Version \Var{target} der betrachteten Generation angelegt (Zeile~3).
+Nun werden die erreichbaren Objekte in \Var{source} nach \Var{target} kopiert, vergleichbar mit dem Halbraumverfahren aus Abschnitt~\ref{sec:copying}.
+Zunächst werden dazu alle Objekte kopiert, die über Handles erreichbar sind (Prozedur \Method{updateHandles}).
+Dabei wird für jeden auffindbaren Handle in \Var{source} das entsprechende Ziel nach \Var{target} kopiert, ein neuer Handle in \Var{target} angelegt und das Feld des älteren Objekts angepasst, das eine Referenz auf den ursprünglichen Handle enthält (Zeile~12 bis 14).
+Weiter werden alle direkten Referenzen auf Objekte der $k$-ten Generation durch die Prozedur \Method{updateFields} aktualisiert.
+Aufgrund der oben eingeführten Konvention genügt es, alle Blöcke mit höherer Generationenzahl zu untersuchen (Zeile~16).
+Auch hier werden dann Referenzen auf Objekte aus der $k$-ten Generation nach \Var{target} kopiert und die korrespondierenden Felder angepasst.
+
+\begin{algorithm}[h!]
 \begin{algorithmic}[1]
 	\State \MethodHead{collectGarbage}(\Var{k}):
-	\State \quad \Var{source} $\gets \textsc{Gen}_k$
-	\State \quad \Var{target} $\gets \Method{newVersion}(\textsc{Gen}_k)$
-	\State \quad $\textsc{Gen}_k \gets$ \Var{target}
-	\State \quad \Var{pos} $\gets$ \Var{target}
-	\State \quad \Method{updateHandles}(\Var{source},\Var{target})
-	\State \quad \Method{updateFields}(\Var{source})
+	\State \quad $\Var{source} \gets \textsc{Gen}_k$
+	\State \quad $\Var{target} \gets \Method{newVersion}(\textsc{Gen}_k)$		\Comment{Neue Version der Generation initialisieren}
+	\State \quad $\textsc{Gen}_k \gets \Var{target}$
+	\State \quad $\Var{pos} \gets \Var{target}$
+	\State \quad \Method{updateHandles}(\Var{source},\Var{target})		\Comment{Handles anpassen}
+	\State \quad \Method{updateFields}(\Var{source})		\Comment{Übrige Objekte kopieren}
 	\State \quad \Method{clear}(\Var{newAdr})
-	\State \quad \Method{free}(\Var{source})
+	\State \quad \Method{free}(\Var{source})		\Comment{Alte Version freigeben}
 	\Statex
 	\State \MethodHead{updateHandles}(\Var{source},\Var{target}):
-	\State \quad \FOREACH \Var{handle} $\in$ \Handles(\Var{source})
-	\State \quad \quad \Var{obj} $\gets$ \Var{*forward}(\Var{handle})
+	\State \quad \FOREACH $\Var{handle} \in \Handles(\Var{source})$		\Comment{Handles der Generation anpassen}
+	\State \quad \quad $\Var{obj} \gets \Var{*forward}(\Var{handle})$
 	\State \quad \quad \Method{copy}(\Var{obj}, \Var{pos})
-	\State \quad \quad \Var{*origin}(\Var{handle}) $\gets$ \Method{newHandle}(\Var{target}, \Var{newAdr}(\Var{obj}))
+	\State \quad \quad $\Var{*origin}(\Var{handle}) \gets \Method{newHandle}(\Var{target}, \Var{newAdr}(\Var{obj}))$
 	\Statex
 	\State \MethodHead{updateFields}(\Var{source}):
-	\State \quad \FOREACH $j > \Var{generation}(\Var{source})$
-	\State \quad \quad \FOREACH \Var{field} $\in \Fields(\textsc{Gen}_j)$
+	\State \quad \FOREACH $j > \Var{generation}(\Var{source})$		\Comment{Referenzen aus jüngeren}
+	\State \quad \quad \FOREACH $\Var{field} \in \Fields(\textsc{Gen}_j)$	\CommentCont{Generationen anpassen}
 	\State \quad \quad \quad \IF ($\Var{*field} \neq \Null \wedge \Var{**field} \in \Var{source}$)
 	\State \quad \quad \quad \quad \Method{copy}(\Var{**field}, \Var{pos})
-	\State \quad \quad \quad \quad \Var{*field} $\gets$ \Var{newAdr}(\Var{**field})
-	\State \quad \WHILE \Var{toDo} $\neq$ \Null
-	\State \quad \quad \Var{ref} $\gets$ \Method{remove}(\Var{toDo})
-	\State \quad \quad \FOREACH \Var{field} $\in$ \Fields(\Var{*ref})
+	\State \quad \quad \quad \quad $\Var{*field} \gets \Var{newAdr}(\Var{**field})$
+	\State \quad \WHILE $\Var{toDo} \neq \Null$
+	\State \quad \quad $\Var{ref} \gets \Method{remove}(\Var{toDo})$
+	\State \quad \quad \FOREACH $\Var{field} \in \Fields(\Var{*ref})$	\Comment{Interne Referenzen anpassen}
 	\State \quad \quad \quad \IF ($\Var{*field} \neq \Null \wedge \Var{**field} \in \Var{source}$)
 	\State \quad \quad \quad \quad \Method{copy}(\Var{**field}, \Var{pos})
-	\State \quad \quad \quad \quad \Var{*field} $\gets$ \Var{newAdr}(\Var{**field})
+	\State \quad \quad \quad \quad $\Var{*field} \gets \Var{newAdr}(\Var{**field})$
 	\Statex
 	\State \MethodHead{copy}(\Var{obj}, \Var{pos}):
-	\State \quad \IF $\Var{newAdr}(\Var{obj}) = \Null$
+	\State \quad \IF $\Var{newAdr}(\Var{obj}) = \Null$		\Comment{vgl. \Method{update} in Algorithmus~\ref{algo:copying-gc}}
 	\State \quad \quad $\Var{newAdr}(\Var{obj}) \gets \Var{pos}$
 	\State \quad \quad \Method{moveObject}(\Var{\&obj}, \Var{pos})
 	\State \quad \quad $\Var{pos} \gets \Var{pos} + \Method{sizeOf}(\Var{obj})$
@@ -62,3 +87,46 @@ Im Folgenden werden wir daher zunächst auf diverse Kriterien zur Heappartitioni
 \caption[Generationelle Garbage Collection nach \textsc{Lieberman} und \textsc{Hewitt}]{Generationelle Garbage Collection nach \textsc{Lieberman} und \textsc{Hewitt} (vgl. \cite[S. 421ff]{lieberman1983}).}
 \label{algo:lieberman}
 \end{algorithm}
+
+Das Kopieren eines Objekts wird stets durch die Prozedur \Method{copy} bewerkstelligt.
+Genau wie in der Prozedur \Method{update} im Halbraumverfahren (Algorithmus~\ref{algo:copying-gc}) wird ein Objekt nur dann kopiert, wenn es nicht zuvor bereits kopiert wurde.
+Andernfalls genügt es, lediglich die im Feld gespeicherte Adresse anzupassen.
+Da kopierte Objekte ebenfalls Referenzen auf Objekte derselben Generation enthalten können, werden sie zu \Var{toDo} hinzugefügt.
+Bei der Abarbeitung von \Var{toDo} (Zeile~21 bis 26) werden somit auch Objekte aufgespürt, die nur durch generationeninterne Referenzen erreichbar sind.
+Abbildung~\ref{fig:lieberman-example} zeigt die Arbeitsweise am Beispiel der oben dargestellten Objektkonstellation.
+
+\begin{figure}[h] \newcommand{\liebermanscale}{0.75} \newcommand{\liebermanspace}{1cm}
+	\centering
+	\begin{subfigure}[t]{0.45\textwidth}
+		\centering
+		\includestandalone[scale=\liebermanscale]{img/tikz/ch5-lieberman2}
+		\caption{Anlegen einer neuen Version.}
+	\end{subfigure}~\hspace{\liebermanspace}~
+	\begin{subfigure}[t]{0.45\textwidth}
+		\centering
+		\includestandalone[scale=\liebermanscale]{img/tikz/ch5-lieberman3}
+		\caption{Kopieren der von älteren Generationen referenzierten Objekte und Erzeugung neuer Handles.}
+	\end{subfigure}\\[1cm]
+	\begin{subfigure}[t]{0.45\textwidth}
+		\centering
+		\includestandalone[scale=\liebermanscale]{img/tikz/ch5-lieberman4}
+		\caption{Kopieren der von jüngeren Generationen referenzierten Objekte.}
+	\end{subfigure}~\hspace{\liebermanspace}~
+	\begin{subfigure}[t]{0.45\textwidth}
+		\centering
+		\includestandalone[scale=\liebermanscale]{img/tikz/ch5-lieberman5}
+		\caption{Abarbeitung der \Var{toDo}-Menge zur Aktualisierung interner Referenzen.}
+	\end{subfigure}\\[1cm]
+	\begin{subfigure}[t]{0.45\textwidth}
+		\centering
+		\includestandalone[scale=\liebermanscale]{img/tikz/ch5-lieberman6}
+		\caption{\Var{toDo} ist abgearbeitet. Nicht kopierte Elemente in \Var{source} sind verwaist.}
+	\end{subfigure}~\hspace{\liebermanspace}~
+	\begin{subfigure}[t]{0.45\textwidth}
+		\centering
+		\includestandalone[scale=\liebermanscale]{img/tikz/ch5-lieberman7}
+		\caption{\Var{source} wird en bloc freigegeben.}
+	\end{subfigure}\\[0.5cm]
+	\caption[Beispielhafte Ausführung von Algorithmus~\ref{algo:lieberman}]{Beispielhafte Ausführung von Algorithmus~\ref{algo:lieberman} für Generation $k = 1$.}
+	\label{fig:lieberman-example}
+\end{figure}
