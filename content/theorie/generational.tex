@@ -155,3 +155,58 @@ Zuletzt sollte beachtet werden, dass die eingangs erwähnte Hypothese über die 
 Ebenso mag die Annahme, dass nur wenige Referenzen von älteren auf jüngere Objekte zu Stande kommen und sich die Zahl der benötigten Handles damit in Grenzen hält, auf die von \textsc{Lieberman} und \textsc{Hewitt} betrachteten LISP-Systeme zutreffen, da die Komponenten eines Objekts in den meisten Fällen unveränderlich sind und bereits vor Erzeugung des Objekts existieren (vgl. \cite[S. 422]{lieberman1983}).
 In objektorientierten Programmiersprachen etwa sind Attribute von Objekten in der Regel mutabel, weswegen dieser Gedanke nicht notwendigerweise auf diese Fälle übertragbar ist.
 Die Anzahl der Handles liegt dann viel höher, womit die in Abschnitt~\ref{sec:handle} angesprochenen Nachteile relevant werden können.
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+
+\section{Verborgene Garbage Collection}
+\label{sec:ulterior}
+
+\begin{algorithm}[h]
+\begin{algorithmic}[1]
+	\State \MethodHead{collectGarbage}():
+	\State \quad \FOREACH $\Var{field} \in \Fields(\Roots)$
+	\State \quad \quad \IF $\Var{*field} \in \Nursery$		\Comment{Referenzen \Roots $\rightarrow$ \Nursery behandeln}
+	\State \quad \quad \quad \Method{tenure}(\Var{field})
+	\State \quad \quad \Method{incRefCount}(\Var{**field})	\Comment{vgl. Algorithmus~\ref{algo:deferred-rc}}
+	\State \quad \FOREACH $\Var{field} \in \Var{log}$	\Comment{Referenzen \Mature $\rightarrow$ \Nursery behandeln}
+	\State \quad \quad \Method{tenure}(\Var{field})
+	\State \quad \quad \Method{incRefCount}(\Var{**field})
+	\State \quad \quad \Method{removeLog}(\Var{field})
+	\State \quad \WHILE $\Var{toDo} \neq \emptyset$
+	\State \quad \quad $\Var{ref} \gets \Var{toDo}$
+	\State \quad \quad \FOREACH $\Var{field} \in \Fields(\Var{*ref})$
+	\State \quad \quad \quad \IF $\Var{*field} \in \Nursery$	\Comment{Referenzen \Nursery $\rightarrow$ \Nursery behandeln}
+	\State \quad \quad \quad \quad \Method{tenure}(\Var{field})
+	\State \quad \quad \quad \Method{incRefCount}(\Var{**field})
+	\State \quad \Method{free}(\Var{ZCT})	\Comment{Objekte mit $\Var{rc} = 0$ entfernen}
+	\State \quad \Method{free}(\Nursery)
+	\State \quad \FOREACH $\Var{ref} \in \Pointers(\Roots)$	\Comment{RC-Anpassungen rückgängig machen}
+	\State \quad \quad \Method{decRefCount}(\Var{*ref})	\Comment{vgl. Algorithmus~\ref{algo:deferred-rc}}
+\end{algorithmic}
+\caption[Verborgene Garbage Collection nach \textsc{Blackburn} und \textsc{McKinley}]{Verborgene Garbage Collection nach \textsc{Blackburn} und \textsc{McKinley} (vgl. \cite[S. 346ff]{blackburn2003}).}
+\label{algo:ulterior-gc}
+\end{algorithm}
+
+
+\begin{algorithm}[h]
+\begin{algorithmic}[1]
+	\State \MethodHead{writeRef}(\Var{obj}, \Var{i}, \Var{ref}):
+	\State \quad \IF $\Var{obj} \in \Mature$
+	\State \quad \quad \Atomic
+	\State \quad \quad \quad \IF ($\Var{*obj[i]} \in \Nursery \wedge \Var{*ref} \notin \Nursery$)	
+	\State \quad \quad \quad \quad \Method{removeLog}(\Var{\&obj[i]})	\Comment{Falls \Mature $\rightarrow$ \Nursery entfernt wird}
+	\State \quad \quad \quad \ELSE \IF ($\Var{*obj[i]} \notin \Nursery \wedge \Var{*ref} \in \Nursery$)
+	\State \quad \quad \quad \quad \Method{addLog}(\Var{\&obj[i]})	\Comment{Falls \Mature $\rightarrow$ \Nursery erzeugt wird}
+	\State \quad \quad \quad \IF $\Var{*ref} \in \Mature$		\Comment{Referenzen \Mature $\rightarrow$ \Mature behandeln}
+	\State \quad \quad \quad \quad \Method{incRefCount}(\Var{*ref})
+	\State \quad \quad \quad \IF $\Var{*obj[i]} \in \Mature$
+	\State \quad \quad \quad \quad \Method{decRefCount}(\Var{*obj[i]})
+	\State \quad $\Var{obj[i]} \gets \Var{ref}$
+\end{algorithmic}
+\caption[Schreibbarriere der verborgenen Garbage Collection]{Schreibbarriere der verborgenen Garbage Collection nach \textsc{Blackburn} und \textsc{McKinley}.}
+\label{algo:ulterior-barrier}
+\end{algorithm}
