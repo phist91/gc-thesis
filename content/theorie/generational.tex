@@ -165,6 +165,16 @@ Die Anzahl der Handles liegt dann viel höher, womit die in Abschnitt~\ref{sec:h
 \section{Verborgene Garbage Collection}
 \label{sec:ulterior}
 
+Eine periodische Erzeugung neuer Heapbschnitte hat zwar den Vorteil, eine feingranularere Abstimmung der Garbage Collection angepasst an die Lebensdauer der Objekte zu ermöglichen, aber auch den Nachteil, zusätzliche Metainformationen über jede Generation verwalten zu müssen (siehe dazu auch die in Abschnitt~\ref{sec:lazy-sweep} genannten Nachteile).
+Als Kompromiss kann es zielführend sein, gröber zwischen jüngeren und älteren Objekten zu entscheiden und sich somit auf zwei Altersklassen zu beschränken:
+Jüngere Objekte tendieren nicht nur zu einer hohen Verwaisungswahrscheinlichkeit, sondern auch zu einer höheren Veränderungsrate, während ältere Objekte eher seltener manipuliert werden.
+Diese Feststellung nutzen \textsc{Blackburn} und \textsc{McKinley} in ihrem Konzept der \textit{verborgenen Referenzzählung} (engl. \textit{ulterior reference counting}), um die Vorteile markierender und referenzzählender Algorithmen zu vereinigen \cite{blackburn2003}.
+Der Heap wird dazu aufgeteilt in zwei (nicht notwendigerweise gleich große) Teile \Nursery (dt. etwa \textit{Kinderzimmer}) und \Mature (dt. \textit{erwachsen}, \textit{ausgewachsen}).
+
+
+
+
+
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
 	\State \MethodHead{collectGarbage}():
@@ -187,8 +197,8 @@ Die Anzahl der Handles liegt dann viel höher, womit die in Abschnitt~\ref{sec:h
 	\State \quad \FOREACH $\Var{ref} \in \Pointers(\Roots)$	\Comment{RC-Anpassungen rückgängig machen}
 	\State \quad \quad \Method{decRefCount}(\Var{*ref})	\Comment{vgl. Algorithmus~\ref{algo:deferred-rc}}
 \end{algorithmic}
-\caption[Verborgene Garbage Collection nach \textsc{Blackburn} und \textsc{McKinley}]{Verborgene Garbage Collection nach \textsc{Blackburn} und \textsc{McKinley} (vgl. \cite[S. 346ff]{blackburn2003}).}
-\label{algo:ulterior-gc}
+\caption[Verborgene Referenzzählung nach \textsc{Blackburn} und \textsc{McKinley}]{Verborgene Referenzzählung nach \textsc{Blackburn} und \textsc{McKinley} (vgl. \cite[S. 346ff]{blackburn2003}).}
+\label{algo:ulterior-rc}
 \end{algorithm}
 
 
@@ -207,6 +217,6 @@ Die Anzahl der Handles liegt dann viel höher, womit die in Abschnitt~\ref{sec:h
 	\State \quad \quad \quad \quad \Method{decRefCount}(\Var{*obj[i]})
 	\State \quad $\Var{obj[i]} \gets \Var{ref}$
 \end{algorithmic}
-\caption[Schreibbarriere der verborgenen Garbage Collection]{Schreibbarriere der verborgenen Garbage Collection nach \textsc{Blackburn} und \textsc{McKinley}.}
+\caption[Schreibbarriere der verborgenen Referenzzählung]{Schreibbarriere der verborgenen Referenzzählung (vgl. \cite[S. 346ff]{blackburn2003}).}
 \label{algo:ulterior-barrier}
 \end{algorithm}
