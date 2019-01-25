@@ -256,15 +256,19 @@ Folglich kann der gesamte Bereich freigegeben werden (Zeile~17).
 Zuletzt müssen die Korrekturen der Referenzzähler rückgängig gemacht werden.
 Dazu genügt es, nochmals alle von \Roots ausgehenden Referenzen zu betrachten, da diese nun lediglich auf Objekte aus \Mature verweisen.
 
-Ein ausführliches Beispiel zum Ablauf des Algorithmus, das sämtliche Arten von Referenzen zwischen den einzelnen Heapbereichen berücksichtigt, befindet sich im Anhang dieser Arbeit (siehe Abschnitt~\ref{sec:ulterior-example}).
-Wir gehen an dieser Stelle daher auf die Korrektheit des Algorithmus ein.
+Ein ausführliches Beispiel zum Ablauf des Algorithmus, das sämtliche Arten von Referenzen zwischen den einzelnen Heapbereichen berücksichtigt, befindet sich im Anhang dieser Arbeit (siehe Anhang~\ref{cha:ulterior-example}), weswegen wir an dieser Stelle abschließend auf die Vor- und Nachteile eingehen.
+Ist die Aufteilung des Heaps in \Nursery und \Mature geschickt gewählt, vermag der vorgestellte Algorithmus die Schwächen der in den vorigen Kapiteln vorgestellten Algorithmen zu reduzieren.
+Wie bereits erläutert, wird durch die Aussparung jüngerer Objekte der Performanceverlust durch Zählermanipulationen teilweise vermieden.
+Die Integration der verzögerten Referenzzählung nach \textsc{Deutsch} und \textsc{Bobrow} verhindert zudem Löschkaskaden und die unmittelbare Nachverfolgung von Referenzmanipulationen in Basisobjekten, etwa bei lokalen Variablen einer Prozedur.
+Die Verwaltung älterer Objekte mithilfe der Referenzzählung erspart wiederum die Kosten, die Markierungs- und Kompaktierungsansätze bei Betrachtung des gesamten Heaps mit sich bringen würden.
+Hier wirkt sich auch die Protokollierung derjenigen Felder in \Mature aus, die Referenzen nach \Nursery enthalten, da keine gesamte Traversierung des Heaps notwendig ist, um Referenzen auf kopierte Objekte anzupassen.
+Die Unterbrechungen im Programmablauf werden damit deutlich verringert.
+Beachtet werden muss jedoch die Schwierigkeit, das richtige Verhältnis von \Nursery und \Mature zu finden:
+Ist \Nursery zu klein angelegt, verursacht dies häufigere -- wenn auch kürzere -- Kollektionszyklen.
+Zudem besteht die Gefahr, dass Objekte frühzeitig nach \Mature verschoben werden, obwohl sie in naher Zukunft noch häufig manipuliert werden.
+Ist \Nursery jedoch zu groß, verlängern sich potenziell die Kollektionsphasen, da mehr Referenzen verfolgt werden müssen.
+Zwei weitere Probleme bereffen vor allem die \Mature-Region:
+Zum einen vermag der Speicher in diesem Bereich nach und nach zu fragmentieren, was jedoch durch geschicktes Kopieren an geeignete Positionen in Grenzen gehalten werden kann.
+Zum anderen besitzt der vorgestellte Algorithmus keine Möglichkeit, verwaiste zyklische Referenzen älterer Objekte zu erkennen.
+\textsc{Blackburn} und \textsc{McKinley} empfehlen daher, beim Erreichen eines gewissen Füllstandes des Heaps zusätzliche Erkennungen verwaister Zyklen einzustreuen (vgl. \cite[S. 349]{blackburn2003}).
 
-\begin{mybox}
-\begin{satz}[Korrektheit der verborgenen Referenzzählung]
-	Die verborgene Referenzzählung nach \textsc{Blackburn} und \textsc{McKinley} ist korrekt.
-\end{satz}
-\end{mybox}
-
-\begin{proof}
-	
-\end{proof}
