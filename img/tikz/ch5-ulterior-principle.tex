@@ -1,0 +1,17 @@
+\input{standalone.tex}
+\begin{document}
+	\begin{tikzpicture}[->, auto, node distance=2cm and 2cm, thick,
+		state/.style={circle, draw, minimum width= 2cm}]
+		%\draw (0,0) grid (10,-5);
+		\node[state] (N) {\Nursery};
+		\node[state] (R) [above right=of N] {\Roots};
+		\node[state] (M) [below right=of R] {\Mature};
+		
+		\draw [<-,thick] (N) to node[pos=0.9,sloped,font=\footnotesize]{ignorieren} (R);
+		\path (N) edge [thick, loop left] node[midway,left,font=\footnotesize]{ignorieren} (N);
+		\draw [->,thick] (N) to [bend angle=20, bend left] node[midway,font=\footnotesize]{verzögern} (M);
+		\draw [->,thick] (M) to [bend angle=20, bend left] node[midway,font=\footnotesize]{protokollieren} (N);
+		\path (M) edge [thick, loop right] node[midway,right,font=\footnotesize]{RC} (M);
+		\draw [->,thick] (R) to node[pos=0.2,sloped,font=\footnotesize]{verzögern} (M);
+	\end{tikzpicture}
+\end{document}

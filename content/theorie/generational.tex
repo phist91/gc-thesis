@@ -162,7 +162,7 @@ Die Anzahl der Handles liegt dann viel höher, womit die in Abschnitt~\ref{sec:h
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 
-\section{Verborgene Garbage Collection}
+\section{Verborgene Referenzzählung}
 \label{sec:ulterior}
 
 Eine periodische Erzeugung neuer Heapbschnitte hat zwar den Vorteil, eine feingranularere Abstimmung der Garbage Collection angepasst an die Lebensdauer der Objekte zu ermöglichen, aber auch den Nachteil, zusätzliche Metainformationen über jede Generation verwalten zu müssen (siehe dazu auch die in Abschnitt~\ref{sec:lazy-sweep} genannten Nachteile).
@@ -170,37 +170,24 @@ Als Kompromiss kann es zielführend sein, gröber zwischen jüngeren und ältere
 Jüngere Objekte tendieren nicht nur zu einer hohen Verwaisungswahrscheinlichkeit, sondern auch zu einer höheren Veränderungsrate, während ältere Objekte eher seltener manipuliert werden.
 Diese Feststellung nutzen \textsc{Blackburn} und \textsc{McKinley} in ihrem Konzept der \textit{verborgenen Referenzzählung} (engl. \textit{ulterior reference counting}), um die Vorteile markierender und referenzzählender Algorithmen zu vereinigen \cite{blackburn2003}.
 Der Heap wird dazu aufgeteilt in zwei (nicht notwendigerweise gleich große) Teile \Nursery (dt. etwa \textit{Kinderzimmer}) und \Mature (dt. \textit{erwachsen}, \textit{ausgewachsen}).
+Neu erzeugte Objekte werden zunächst in \Nursery angelegt und verbleiben dort bis zum nächsten Kollektionszyklus.
+In \Mature befinden sich alle Objekte, die mindestens einen Kollektionszyklus überlebt haben.
 
+\begin{figure}[h]
+	\centering
+	\includestandalone{img/tikz/ch5-ulterior-principle}
+	\caption[Prinzip der verborgenen Referenzzählung]{Prinzip der verborgenen Referenzzählung. Das Schema zeigt, wie Referenzen zwischen den einzelnen Heapbereichen durch die Referenzzählung behandelt werden (vgl. \cite[S. 346]{blackburn2003}).}
+	\label{fig:ulterior-principle}
+\end{figure}
 
-
-
-
-\begin{algorithm}[h]
-\begin{algorithmic}[1]
-	\State \MethodHead{collectGarbage}():
-	\State \quad \FOREACH $\Var{field} \in \Fields(\Roots)$
-	\State \quad \quad \IF $\Var{*field} \in \Nursery$		\Comment{Referenzen \Roots $\rightarrow$ \Nursery behandeln}
-	\State \quad \quad \quad \Method{tenure}(\Var{field})
-	\State \quad \quad \Method{incRefCount}(\Var{**field})	\Comment{vgl. Algorithmus~\ref{algo:deferred-rc}}
-	\State \quad \FOREACH $\Var{field} \in \Var{log}$	\Comment{Referenzen \Mature $\rightarrow$ \Nursery behandeln}
-	\State \quad \quad \Method{tenure}(\Var{field})
-	\State \quad \quad \Method{incRefCount}(\Var{**field})
-	\State \quad \quad \Method{removeLog}(\Var{field})
-	\State \quad \WHILE $\Var{toDo} \neq \emptyset$
-	\State \quad \quad $\Var{ref} \gets \Var{toDo}$
-	\State \quad \quad \FOREACH $\Var{field} \in \Fields(\Var{*ref})$
-	\State \quad \quad \quad \IF $\Var{*field} \in \Nursery$	\Comment{Referenzen \Nursery $\rightarrow$ \Nursery behandeln}
-	\State \quad \quad \quad \quad \Method{tenure}(\Var{field})
-	\State \quad \quad \quad \Method{incRefCount}(\Var{**field})
-	\State \quad \Method{free}(\Var{ZCT})	\Comment{Objekte mit $\Var{rc} = 0$ entfernen}
-	\State \quad \Method{free}(\Nursery)
-	\State \quad \FOREACH $\Var{ref} \in \Pointers(\Roots)$	\Comment{RC-Anpassungen rückgängig machen}
-	\State \quad \quad \Method{decRefCount}(\Var{*ref})	\Comment{vgl. Algorithmus~\ref{algo:deferred-rc}}
-\end{algorithmic}
-\caption[Verborgene Referenzzählung nach \textsc{Blackburn} und \textsc{McKinley}]{Verborgene Referenzzählung nach \textsc{Blackburn} und \textsc{McKinley} (vgl. \cite[S. 346ff]{blackburn2003}).}
-\label{algo:ulterior-rc}
-\end{algorithm}
-
+Ob und in welcher Form die Referenzzählung zum Einsatz kommt, richtet sich nun danach, ob sich Quelle oder Ziel in \Roots, \Nursery oder \Mature befinden (siehe Abbildung~\ref{fig:ulterior-principle}).
+Bereits in Abschnitt~\ref{sec:naive-rc} haben wir festgestellt, dass Referenzzählungen -- bedingt durch nötige Schreibbarrieren -- die Performance einer Anwendung beeinträchtigt, wenn viele Manipulationen von Referenzen stattfinden.
+Da junge Objekte in \Nursery tendenziell häufiger Manipulationen von eingehenden wie ausgehenden Referenzen unterworfen sind, bietet es sich an, diese von der Referenzzählung auszusparen.
+Referenzen von \Roots nach \Nursery sowie innerhalb von \Nursery sind von der Schreibbarriere nicht betroffen; Referenzen von \Mature nach \Nursery werden zunächst protokolliert und während des nächsten Kollektionszyklus behandelt.
+Objekte in \Mature verändern sich tendenziell seltener, weshalb Markierungs- und Kompaktierungsalgorithmen keine hohe Ausbeute versprechen, aber dennoch aufwendig sind.
+Schreibbarriere und Zähleranpassungen sind für Referenzen innerhalb \Mature daher tolerabel.
+Manipulationen, die Referenzen von \Roots bzw. \Nursery nach \Mature betreffen, werden hingegen verzögert behandelt und ihre Auswirklungen auf Referenzzähler erst während einer Kollektionsphase beachtet.\footnote{Zur Erinnerung: Ein Referenzzählerwert $\Var{rc}(\Var{a}) = 0$ bedeutet somit nicht, dass \Var{a} nicht erreichbar ist, sondern dass keine Referenzen auf \Var{a} von Objekten aus \Mature existieren. Jedoch können Referenzen auf \Var{a} von Objekten aus \Roots oder \Nursery existieren (siehe Abschnitt~\ref{sec:rc-optimizing}).}
+Algorithmus~\ref{algo:ulterior-barrier} zeigt die entsprechende Schreibbarriere.
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
@@ -219,4 +206,32 @@ Der Heap wird dazu aufgeteilt in zwei (nicht notwendigerweise gleich große) Tei
 \end{algorithmic}
 \caption[Schreibbarriere der verborgenen Referenzzählung]{Schreibbarriere der verborgenen Referenzzählung (vgl. \cite[S. 346ff]{blackburn2003}).}
 \label{algo:ulterior-barrier}
+\end{algorithm}
+
+
+
+\begin{algorithm}[h]
+\begin{algorithmic}[1]
+	\State \Atomic \MethodHead{collectGarbage}():
+	\State \quad \FOREACH $\Var{field} \in \Fields(\Roots)$
+	\State \quad \quad \IF $\Var{*field} \in \Nursery$		\Comment{Referenzen \Roots $\rightarrow$ \Nursery behandeln}
+	\State \quad \quad \quad \Method{tenure}(\Var{field})	\Comment{Ziel nach \Mature kopieren und Feld anpassen}
+	\State \quad \quad \Method{incRefCount}(\Var{**field})	\Comment{vgl. Algorithmus~\ref{algo:deferred-rc}}
+	\State \quad \FOREACH $\Var{field} \in \Var{log}$	\Comment{Referenzen \Mature $\rightarrow$ \Nursery behandeln}
+	\State \quad \quad \Method{tenure}(\Var{field})
+	\State \quad \quad \Method{incRefCount}(\Var{**field})
+	\State \quad \quad \Method{removeLog}(\Var{field})
+	\State \quad \WHILE $\Var{toDo} \neq \emptyset$
+	\State \quad \quad $\Var{ref} \gets \Var{toDo}$
+	\State \quad \quad \FOREACH $\Var{field} \in \Fields(\Var{*ref})$
+	\State \quad \quad \quad \IF $\Var{*field} \in \Nursery$	\Comment{Referenzen \Nursery $\rightarrow$ \Nursery behandeln}
+	\State \quad \quad \quad \quad \Method{tenure}(\Var{field})
+	\State \quad \quad \quad \Method{incRefCount}(\Var{**field})
+	\State \quad \Method{free}(\Var{ZCT})	\Comment{Objekte mit $\Var{rc} = 0$ entfernen}
+	\State \quad \Method{free}(\Nursery)	\Comment{Verbleibende junge Objekte entfernen}
+	\State \quad \FOREACH $\Var{ref} \in \Pointers(\Roots)$	\Comment{RC-Anpassungen rückgängig machen}
+	\State \quad \quad \Method{decRefCount}(\Var{*ref})	\Comment{vgl. Algorithmus~\ref{algo:deferred-rc}}
+\end{algorithmic}
+\caption[Verborgene Referenzzählung nach \textsc{Blackburn} und \textsc{McKinley}]{Verborgene Referenzzählung nach \textsc{Blackburn} und \textsc{McKinley} (vgl. \cite[S. 346ff]{blackburn2003}).}
+\label{algo:ulterior-rc}
 \end{algorithm}
