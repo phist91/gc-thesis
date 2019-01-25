@@ -175,7 +175,7 @@ In \Mature befinden sich alle Objekte, die mindestens einen Kollektionszyklus ü
 
 \begin{figure}[h]
 	\centering
-	\includestandalone{img/tikz/ch5-ulterior-principle}
+	\includestandalone[scale=0.9]{img/tikz/ch5-ulterior-principle}
 	\caption[Prinzip der verborgenen Referenzzählung]{Prinzip der verborgenen Referenzzählung. Das Schema zeigt, wie Referenzen zwischen den einzelnen Heapbereichen durch die Referenzzählung behandelt werden (vgl. \cite[S. 346]{blackburn2003}).}
 	\label{fig:ulterior-principle}
 \end{figure}
@@ -208,7 +208,20 @@ Algorithmus~\ref{algo:ulterior-barrier} zeigt die entsprechende Schreibbarriere.
 \label{algo:ulterior-barrier}
 \end{algorithm}
 
+Kommt es nun zu einem Garbage-Collection-Zyklus, etwa weil der freie Speicher im \Nursery-Bereich zu Neige geht, werden alle erreichbare Objekte aus \Nursery nach \Mature kopiert.
+Da die Objekte in \Nursery von der Referenzzählung ausgeschlossen sind, wird dies analog zum Halbraumverfahren aus Abschnitt~\ref{sec:copying} bewerkstelligt.
+Zunächst werden daher alle Felder von Basisobjekten untersucht (Zeile~2 bis~5 aus Algorithmus~\ref{algo:ulterior-rc}).
+Enthält ein Feld eine Referenz auf ein junges Objekt, wird es an die Prozedur \Method{tenure} übergeben.
+Diese kopiert ein zuvor noch nicht entdecktes Objekt nach \Mature, fügt es zur Menge \Var{toDo} hinzu und aktualisiert die Speicheradresse im übergebenen Feld (vgl. Prozedur \Method{update} in Algorithmus~\ref{algo:copying-gc}).
+Im Anschluss wird -- unabhängig davon, ob das Objekt kopiert wurde -- der Referenzzähler des Objekts inkrementiert, da es sich nun in jedem Fall in \Mature befindet und mittels Referenzzählung verwaltet wird.
+Zudem wird hierdurch der Referenzzähler um die Anzahl an Referenzen aus \Roots korrigiert (siehe Algorithmus~\ref{algo:deferred-rc}).
 
+Weiter werden alle Referenzen von älteren auf jüngere Objekte behandelt (Zeile~6 bis~9).
+Felder von Objekten in \Mature, die eine Referenz auf Objekte aus \Nursery enthalten, wurden zuvor von der Schreibbarriere zur Menge \Var{log} hinzugefügt.
+Somit genügt eine Iteration über diese Menge, um die entsprechenden Objekte zu kopieren.
+Auch hier werden wieder alle betroffenen Referenzzähler korrigiert, da Referenzen von \Mature nach \Nursery nun Referenzen innerhalb \Mature sind.
+Anschließend erfolgt eine Abarbeitung der \Var{toDo}-Menge, die alle Objekte enthält, die in diesem Kollektionszyklus nach \Mature kopiert wurden (Zeile~10 bis~15).
+Da diese Referenzen auf bislang unentdeckte Objekte in \Nursery besitzen können, werden ihre Felder entsprechend untersucht, die Ziele gegebenenfalls kopiert und die Referenzzähler korrigiert.
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
@@ -222,7 +235,7 @@ Algorithmus~\ref{algo:ulterior-barrier} zeigt die entsprechende Schreibbarriere.
 	\State \quad \quad \Method{incRefCount}(\Var{**field})
 	\State \quad \quad \Method{removeLog}(\Var{field})
 	\State \quad \WHILE $\Var{toDo} \neq \emptyset$
-	\State \quad \quad $\Var{ref} \gets \Var{toDo}$
+	\State \quad \quad $\Var{ref} \gets \Method{remove}(\Var{toDo})$
 	\State \quad \quad \FOREACH $\Var{field} \in \Fields(\Var{*ref})$
 	\State \quad \quad \quad \IF $\Var{*field} \in \Nursery$	\Comment{Referenzen \Nursery $\rightarrow$ \Nursery behandeln}
 	\State \quad \quad \quad \quad \Method{tenure}(\Var{field})
@@ -235,3 +248,23 @@ Algorithmus~\ref{algo:ulterior-barrier} zeigt die entsprechende Schreibbarriere.
 \caption[Verborgene Referenzzählung nach \textsc{Blackburn} und \textsc{McKinley}]{Verborgene Referenzzählung nach \textsc{Blackburn} und \textsc{McKinley} (vgl. \cite[S. 346ff]{blackburn2003}).}
 \label{algo:ulterior-rc}
 \end{algorithm}
+
+Alle Objekte, die sich abschließend in \Mature befinden und deren Referenzzähler $0$ beträgt, werden weder von Basisobjekten, noch von anderen Objekten aus \Mature referenziert und sind unerreichbar.
+Somit können sie durch Bereinigen der \textit{zero count table} \Var{ZCT} freigegeben werden (Zeile~16, siehe auch Algorithmus~\ref{algo:deferred-rc}).
+Objekte, die sich in \Nursery befinden und erreichbar sind, wurden nach \Mature kopiert.
+Folglich kann der gesamte Bereich freigegeben werden (Zeile~17).
+Zuletzt müssen die Korrekturen der Referenzzähler rückgängig gemacht werden.
+Dazu genügt es, nochmals alle von \Roots ausgehenden Referenzen zu betrachten, da diese nun lediglich auf Objekte aus \Mature verweisen.
+
+Ein ausführliches Beispiel zum Ablauf des Algorithmus, das sämtliche Arten von Referenzen zwischen den einzelnen Heapbereichen berücksichtigt, befindet sich im Anhang dieser Arbeit (siehe Abschnitt~\ref{sec:ulterior-example}).
+Wir gehen an dieser Stelle daher auf die Korrektheit des Algorithmus ein.
+
+\begin{mybox}
+\begin{satz}[Korrektheit der verborgenen Referenzzählung]
+	Die verborgene Referenzzählung nach \textsc{Blackburn} und \textsc{McKinley} ist korrekt.
+\end{satz}
+\end{mybox}
+
+\begin{proof}
+	
+\end{proof}
