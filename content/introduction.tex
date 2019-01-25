@@ -60,14 +60,14 @@ Mit $\Pointers(\code{a})$ bezeichnen wir zudem die Menge aller Felder eines Obje
 
 \subsubsection*{Heap}
 Als \textbf{Heap} bezeichnen wir denjenigen Speicherbereich, in dem zur Laufzeit eines Programms Objekte in beliebiger Reihenfolge erzeugt und freigegeben werden können.
-Der Heap besteht aus Blöcken einer festen Größe, auf die über eine Speicheradresse zugegriffen werden kann; ein \textit{Block} ist dabei die kleinste zuweisbare Speichermenge und kann die Zustände \textit{belegt} (bzw. \textit{zugewiesen}) oder \textit{frei} annehmen.
+Der Heap besteht aus \textit{Wörtern} einer festen Größe, auf die über eine Speicheradresse zugegriffen werden kann; ein \textit{Wort} ist dabei die kleinste zuweisbare Speichermenge und kann die Zustände \textit{belegt} (bzw. \textit{zugewiesen}) oder \textit{frei} annehmen.
 Sofern nichts anderes vereinbart ist, gehen wir davon aus, dass der Heap ein zusammenhängender linearer Speicherbereich ist.\footnote{Tatsächlich ist dies eine starke Vereinfachung. In der Praxis ist der Bereich des physikalischen Speichers, der von einer Anwendung verwendet wird, häufig fragmentiert und inhomogen. Die Speicherverwaltung eines Betriebssystems bildet diesen Bereich auf einen \textit{virtuellen Speicher} ab, der der Anwendung zu Verfügung gestellt wird und aus ihrer Sicht linear zusammenhängend ist. Für einen Überblick hierzu siehe etwa \cite[Kap. 3.3]{tanenbaum}.}
 
 \todo[inline]{Grafik zu Heap und Objekten einfügen}
 
 \subsubsection*{Allokator, Mutator und Kollektor}
 Aufgabe des \textbf{Allokators}, der zur Laufzeitumgebung eines Programms gehört, ist zum einen die Zuweisung von Heapspeicher bei dynmaischer Instanziierung eines neuen Objektes und zum anderen die Freigabe von Objekten.
-Der Allokator führt somit Buch über die belegten und freien Blöcke des Heaps.
+Der Allokator führt somit Buch über die belegten und freien Wörter des Heaps.
 Die genaue Realisierung dieser Mechanismen werden in dieser Arbeit weitestgehend außen vor gelassen, jedoch setzen wir in gewissen Situationen das Vorhandensein bestimmter Funktionalitäten voraus.
 Beispielsweise verlangen wir, dass eine Prozedur \Method{new} zu Verfügung steht, die bei der Erzeugung eines neuen Objekts Speicher reserviert und die entsprechende Speicheradresse zurückgibt.
 Die Funktionsweise von \Method{new} kann dabei vom verwendeten Garbage-Collection-Algorithmus abhängen (siehe Algorithmus~\ref{algo:new}).
