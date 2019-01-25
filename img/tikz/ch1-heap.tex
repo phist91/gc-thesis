@@ -1,0 +1,36 @@
+\input{standalone.tex}
+
+\newcommand{\xscale}{0.2}
+\newcommand{\yscale}{0.8}
+\newcommand{\object}[3]{
+	\draw [fill=gray!50] (#1*\xscale,0) rectangle (#2*\xscale+\xscale,\yscale);
+	\draw (#1*0.5*\xscale + #2*0.5*\xscale + 0.5*\xscale,\yscale/2) node{\Var{#3}};
+}
+
+\begin{document}
+	\begin{tikzpicture}	
+		\object{1}{4}{a}
+		\object{6}{9}{b}
+		\object{17}{23}{c}
+		\object{25}{29}{d}
+		\object{33}{36}{e}
+		\object{39}{45}{f}
+		\object{48}{49}{g}
+		
+		\draw [thick] (0,0) rectangle (50*\xscale,1*\yscale);
+		
+		\draw [dashed] (22*\xscale,0) rectangle (23*\xscale,\yscale);
+		
+		\draw [thick,->] (22.5*\xscale,0) -- (22.5*\xscale,-0.5) -- (39*\xscale,-0.5) -- (39*\xscale,0);
+		\draw [dashed] (22.5*\xscale,\yscale*0.5) -- (19*\xscale,-0.8) node[anchor=north east]{\Var{c[3] = \&f}};
+				
+		\draw (0,0) node[anchor=north east]{\Var{HEAP\_START}};
+		\draw (50*\xscale,0) node[anchor=north west]{\Var{HEAP\_END}};
+		\draw (0,\yscale) node[anchor=south east,font=\footnotesize\ttfamily]{0x0200};
+		\draw (6*\xscale,\yscale) -- (6*\xscale,\yscale + 0.5) node[above,font=\footnotesize\ttfamily]{0x0466};
+		\draw (17*\xscale,\yscale) -- (17*\xscale,\yscale + 0.5) node[above,font=\footnotesize\ttfamily]{0x08D0};
+		\draw (25*\xscale,\yscale) -- (25*\xscale,\yscale + 0.5) node[above,font=\footnotesize\ttfamily]{0x0C00};	
+		\draw (39*\xscale,\yscale) -- (39*\xscale,\yscale + 0.5) node[above,font=\footnotesize\ttfamily]{0x119C};			
+		\draw (50*\xscale,\yscale) node[anchor=south west,font=\footnotesize\ttfamily]{0x1600};
+	\end{tikzpicture}
+\end{document}
