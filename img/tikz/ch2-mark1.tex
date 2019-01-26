@@ -1,0 +1,34 @@
+\input{standalone.tex}
+\begin{document}
+	\begin{tikzpicture}[->, auto, node distance= 1.5cm and 2cm, on grid, semithick,%
+		state/.style={circle, draw, font=\ttfamily, minimum width= 0.7cm}]
+		%\draw (0,0) grid (10,-5);
+		\node[state] (A) {a};
+		\node[state] (C) [right=of A] {c};
+		\node[state] (D) [below right=of C] {d};
+		\node[state] (E) [above right=of D] {e};
+		\node[state] (F) [below left=of D] {f};
+		\node[state] (B) [left=of F] {b};
+		\node[state] (G) [right=of F] {g};
+		\node[state] (J) [right=of G] {j};
+		\node[state] (H) [above=of J] {h};
+		
+		\path (A) edge (C);
+		\path (B) edge (C);
+		\path (C) edge [bend left = 20] (D);
+		\path (D) edge [bend left = 20] (C);
+		\path (D) edge (E);
+		\path (C) edge (F);
+		\path (B) edge (F);
+		\path (G) edge (F);
+		\path (G) edge [bend left = 20] (J);
+		\path (J) edge [bend left = 20] (G);
+		\path (H) edge [loop left] (H);
+		\path (H) edge (E);
+		\path (H) edge (J);
+		\path (G) edge (D);
+		
+		\draw [very thick,dashed] (-0.7,0.5) rectangle (0.7,-3.5);
+		\draw [draw=none] (0,0.5) node[above]{\Roots};
+	\end{tikzpicture}
+\end{document}

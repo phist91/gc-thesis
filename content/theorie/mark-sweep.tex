@@ -75,9 +75,38 @@ Wenn dieses Objekt noch nicht markiert wurde, wird es in diesem Augenblick zum e
 Da es somit erreichbar ist, kann es markiert und zu \Var{toDo} hinzugefügt werden, um zu einem späteren Zeitpunkt abgearbeitet zu werden (Zeile 15 und 16).
 Verweist die Referenz hingegen auf ein Objekt, das bereits markiert wurde, wurde dieses schon zuvor entdeckt.
 Auch hier ist ein erneutes Hinzufügen zu \Var{toDo} überflüssig.
-Sobald \Var{toDo} leer ist, erfolgt die Rückkehr zur Prozedur \Method{markStart}, sodass ggfs. das nächste Basisobjekt abgearbeitet wird.
+Sobald \Var{toDo} leer ist, erfolgt die Rückkehr zur Prozedur \Method{markStart}, sodass gegebenenfalls das nächste Basisobjekt abgearbeitet wird.
+Abbildung~\ref{fig:mark-example} zeigt die Arbeitsweise des Algorithmus an einem Beispiel.
 
-\todo[inline]{Kleines Beispiel hier, großes in den Anhang?}
+\begin{figure}[H] \newcommand{\markexscale}{0.85} \newcommand{\markexspace}{0.7cm}
+	\centering
+	\begin{subfigure}[t]{0.45\textwidth}
+		\centering
+		\includestandalone[scale=\markexscale]{img/tikz/ch2-mark1}
+	\end{subfigure}~\hspace{\markexspace}~
+	\begin{subfigure}[t]{0.45\textwidth}
+		\centering
+		\includestandalone[scale=\markexscale]{img/tikz/ch2-mark2}
+	\end{subfigure}\\[1cm]
+	\begin{subfigure}[t]{0.45\textwidth}
+		\centering
+		\includestandalone[scale=\markexscale]{img/tikz/ch2-mark3}
+	\end{subfigure}~\hspace{\markexspace}~
+	\begin{subfigure}[t]{0.45\textwidth}
+		\centering
+		\includestandalone[scale=\markexscale]{img/tikz/ch2-mark4}
+	\end{subfigure}\\[1cm]
+	\begin{subfigure}[t]{0.45\textwidth}
+		\centering
+		\includestandalone[scale=\markexscale]{img/tikz/ch2-mark5}
+	\end{subfigure}~\hspace{\markexspace}~
+	\begin{subfigure}[t]{0.45\textwidth}
+		\centering
+		\includestandalone[scale=\markexscale]{img/tikz/ch2-mark6}
+	\end{subfigure}\\[0.5cm]
+	\caption[Beispielhafte Ausführung der Markierungsphase]{Beispielhafte Ausführung von Algorithmus~\ref{algo:naive-mark}.}
+	\label{fig:mark-example}
+\end{figure}
 
 Es ist wesentlich, dass Objekte bereits markiert werden, wenn sie der Menge \Var{toDo} hinzugefügt werden, und nicht etwa, nachdem sie abgearbeitet wurden (Zeile 8 und 9 bzw. 16 und 17).
 Andernfalls besteht bei zyklischen Referenzen die Gefahr einer Endlosschleife, da unmarkierte Objekte mehrfach hinzugefügt würden.
