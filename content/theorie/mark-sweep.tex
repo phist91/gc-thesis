@@ -39,12 +39,12 @@ Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekt
 \begin{algorithmic}[1]
 	\State \MethodHead{collectGarbage}():
 	\State \quad \Method{markStart}()
-	\State \quad \Method{sweepHeap}()
+	\State \quad \Method{sweep}()
 	\Statex
 	\State \MethodHead{markStart}():
 	\State \quad \Var{toDo} $\gets$ $\emptyset$				\Comment{Noch abzuarbeitende Objekte}
 	\State \quad \FOREACH \Var{obj} $\in \Roots$		\Comment{Beginne mit Basisobjekten}
-	\State \quad \quad \IF \Method{isNotMarked}(\Var{obj})
+	\State \quad \quad \IF \NOT \Method{isMarked}(\Var{obj})
 	\State \quad \quad \quad \Method{setMarked}(\Var{obj})	\Comment{Objekt als erreichbar markieren}
 	\State \quad \quad \quad \Method{add}(\Var{toDo}, \Var{obj})	
 	\State \quad \quad \quad \Method{mark}()			\Comment{Abarbeitung starten}
@@ -53,7 +53,7 @@ Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekt
 	\State \quad \WHILE \Var{toDo} $\neq \emptyset$
 	\State \quad \quad \Var{obj} $\gets$ \Method{remove}(\Var{toDo})			\Comment{Hole nächstes Objekt}
 	\State \quad \quad \FOREACH \Var{ref} $\in \Pointers(\Var{obj})$	\Comment{Hole nächste Referenz auf Objekt}
-	\State \quad \quad \quad \IF \Method{isNotMarked}(\Var{*ref})
+	\State \quad \quad \quad \IF \NOT \Method{isMarked}(\Var{*ref})
 	\State \quad \quad \quad \quad \Method{setMarked}(\Var{*ref})	
 	\State \quad \quad \quad \quad \Method{add}(\Var{toDo}, \Var{*ref})
 \end{algorithmic}
@@ -160,7 +160,7 @@ Insgesamt wird Objekt $\Var{c}$ somit nicht markiert, obwohl es erreichbar ist.
 In der Folge würde $\Var{c}$ irrtümlich freigegeben werden, sodass im schlimmsten Fall ein hängender Zeiger entsteht oder sogar Datenverlust verursacht wird -- der Algorithmus arbeitet also nicht korrekt.
 
 Situationen, in denen die nebenläufige Ausführung von Programmsegmenten zu unvorhersehbarem Verhalten führt, werden als \textit{race conditions} bezeichnet.
-Algorithmen, die zur Vermeidung von \textit{race conditions} zwischen Kollektor und Mutator die Arbeit des letzteren unterbrechen, werden auch als \textit{Stop-the-World-Algorithmen} (vgl. \cite[S. 17]{handbook}) bezeichnet.
+Algorithmen, die zur Vermeidung von \textit{race conditions} zwischen Kollektor und Mutator die Arbeit des letzteren unterbrechen, werden auch als \textit{Stop-the-World-Algorithmen} (vgl. \cite[S. 2]{levanoni2006}) bezeichnet.
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -334,7 +334,7 @@ Die Bereinigung beschränkt sich dadurch auf einen Bruchteil des Heaps.
 	\State \MethodHead{collect()}:
 	\State \quad \Method{markStart()}		\Comment{Siehe Algorithmus~\ref{algo:naive-sweep} bzw. \ref{algo:tricolor}}
 	\State \quad \FOREACH \Var{blk} $\in \Blocks$
-	\State \quad \quad \IF \Method{isNotMarked}(\Var{blk})
+	\State \quad \quad \IF \NOT \Method{isMarked}(\Var{blk})
 	\State \quad \quad \quad \Method{free}(\Var{blk})	\Comment{Gib komplett verwaisten Block sofort frei}
 	\State \quad \quad \ELSE \Method{add}(\Var{toSweep}, \Var{blk})
 	\Statex

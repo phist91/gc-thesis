@@ -267,7 +267,7 @@ Dabei werden gleichzeitig die zugehörigen Referenzzähler angepasst, sodass nac
 	\State \quad \Method{setColor}(\Var{obj}, \Var{WHITE})		\Comment{Objekt ist erreichbar}
 	\State \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
 	\State \quad \quad $\Var{rc}(\Var{*ref}) \gets \Var{rc}(\Var{*ref})+1$ \Comment{Interne Referenz wiederherstellen}
-	\State \quad \quad \IF \Method{isNotWhite}(\Var{*ref})
+	\State \quad \quad \IF \NOT \Method{isWhite}(\Var{*ref})
 	\State \quad \quad \quad \Method{unmark}(\Var{*ref})
 	\Statex
 	\State \MethodHead{collect}(\Var{obj}):
