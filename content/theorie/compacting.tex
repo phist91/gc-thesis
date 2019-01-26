@@ -267,13 +267,11 @@ Diese Idee wurde ursprünglich von \textsc{Fenichel} und \textsc{Yochelson} für
 %	\State \quad $\Var{limit} \gets \Var{target} + \Var{spaceSize}$
 	\State \quad $\Var{pos} \gets \Var{target}$
 	\State \quad \FOREACH $\Var{field} \in \Fields(\Roots)$		\Comment{Beginne mit Basisobjekten}
-	\State \quad \quad \IF $\Var{*field} \neq \Null$
-	\State \quad \quad \quad \Method{update}(\Var{field})		\Comment{Feld aktualisieren und Ziel zu \Var{toDo} hinzufügen}
+	\State \quad \quad \Method{update}(\Var{field})		\Comment{Feld aktualisieren und Ziel zu \Var{toDo} hinzufügen}
 	\State \quad \WHILE $\Var{toDo} \neq \emptyset$		\Comment{Solange kopierte, nicht aktualisierte}
 	\State \quad \quad $\Var{ref} \gets \Method{remove}(\Var{toDo})$	\CommentCont{Objekte existieren\dots}
 	\State \quad \quad \FOREACH $\Var{field} \in \Fields(\Var{*ref})$
-	\State \quad \quad \quad \IF $\Var{*field} \neq \Null$
-	\State \quad \quad \quad \quad \Method{update}(\Var{field})	\Comment{\dots aktualisiere ihre Felder}
+	\State \quad \quad \quad \Method{update}(\Var{field})	\Comment{\dots aktualisiere ihre Felder}
 	\State \quad \Method{clear}(\Var{newAdr})
 	\Statex
 	\State \MethodHead{update}(\Var{field}):

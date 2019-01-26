@@ -53,7 +53,7 @@ Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekt
 	\State \quad \WHILE \Var{toDo} $\neq \emptyset$
 	\State \quad \quad \Var{obj} $\gets$ \Method{remove}(\Var{toDo})			\Comment{Hole nächstes Objekt}
 	\State \quad \quad \FOREACH \Var{ref} $\in \Pointers(\Var{obj})$	\Comment{Hole nächste Referenz auf Objekt}
-	\State \quad \quad \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Method{isNotMarked}(\Var{*ref}))	
+	\State \quad \quad \quad \IF \Method{isNotMarked}(\Var{*ref})
 	\State \quad \quad \quad \quad \Method{setMarked}(\Var{*ref})	
 	\State \quad \quad \quad \quad \Method{add}(\Var{toDo}, \Var{*ref})
 \end{algorithmic}
@@ -210,7 +210,7 @@ Andernfalls wird ihre Markierung zurück auf weiß gesetzt.
 	\State \quad \quad \Var{obj} $\gets$ \Method{remove}(\Var{graySet})
 	\State \quad \quad \Method{setColor}(\Var{obj}, \Var{BLACK})		\Comment{Objekt wird nun abgearbeitet}
 	\State \quad \quad \FOREACH \Var{ref} $\in \Pointers(\Var{obj})$
-	\State \quad \quad \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Method{isWhite}(\Var{*ref}))	
+	\State \quad \quad \quad \IF \Method{isWhite}(\Var{*ref})
 	\State \quad \quad \quad \quad \Method{setColor}(\Var{*ref}, \Var{GRAY})	\Comment{Referenzierte Objekte grau markieren}
 	\State \quad \quad \quad \quad \Method{add}(\Var{graySet}, \Var{*ref})
 	\Statex
@@ -236,14 +236,14 @@ Entsprechend verbleiben sie zunächst im Speicher und werden erst im nächsten G
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
-	\Input Objekt \Var{obj}, in dem Referenz gesetzt wird; Index des Feldes \Var{i}; zu setzende Referenz \Var{ref}
+	\Input 
 	\State \Atomic \MethodHead{writeRef}(\Var{obj}, \Var{i}, \Var{ref}):
-	\State \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Method{isWhite}(\Var{*ref}))
+	\State \quad \IF \Method{isWhite}(\Var{*ref}))
 	\State \quad \quad \Method{setColor}(\Var{*ref}, \Var{GRAY})
 	\State \quad \quad \Method{add}(\Var{grayList}, \Var{*ref})
 	\State \quad \Var{obj[i]} $\gets$ \Var{ref}
 \end{algorithmic}
-\caption[Schreibbarriere zur Manipulation von Referenzen]{Schreibbarriere zur Manipulation von Referenzen in Objekten.}
+\caption[Schreibbarriere zur Manipulation von Referenzen]{Schreibbarriere zur Manipulation von Referenzen in Objekten. \Var{obj} bezeichnet das Objekt, in das die Referenz geschrieben wird, \Var{i} den Index des Feldes und \Var{ref} die zu schreibende Referenz.}
 \label{algo:tricolor-barrier}
 \end{algorithm}
 

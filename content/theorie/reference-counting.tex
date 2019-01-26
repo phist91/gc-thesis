@@ -36,12 +36,11 @@ Wie kann \Var{rc}(\Var{a}) nun verwendet werden, um automatisch ein nicht erreic
 Immer, wenn eine Referenz auf \Var{a} in ein Feld eines anderen Objekts geschrieben wird, so muss \Var{rc}(\Var{a}) inkrementiert werden.
 Gleichzeitig muss der Referenzzähler des Objekts \Var{b}, welches das Ziel der überschriebenen Referenz war, dekrementiert werden.
 Wenn dieser anschließend den Wert $0$ aufweist, kann \Var{b} sofort freigegeben werden.
-Diese Manipulationen der Referenzzähler sind unmittelbar auszuführen, nachdem eine Referenz manipuliert wurde.
+Diese Manipulationen der Referenzzähler sind unmittelbar auszuführen, wenn eine Referenz manipuliert wird.
 Daher bieten sich zur Realisierung Schreibbarrieren an, die bereits in Abschnitt~\ref{sec:tricolor} eingeführt wurden.
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
-	\Input Objekt \Var{obj}, in dem Referenz gesetzt wird; Index des Feldes \Var{i}; zu setzende Referenz \Var{ref}
 	\State \Atomic \MethodHead{writeRef}(\Var{obj}, \Var{i}, \Var{ref}):
 	\State \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Var{*ref} $\neq$ \Var{obj})	\Comment{Erhöhe \Var{rc}, falls nicht \Null oder}
 	\State \quad \quad $\Var{rc}(\Var{*ref}) \gets \Var{rc}(\Var{*ref}) + 1$ \CommentCont{Selbstreferenz geschrieben wird}
@@ -207,8 +206,7 @@ Anders formuliert: Besitzt die Komponente ein Objekt, das über eine externe Ref
 	\State \quad $\Var{rc}(\Var{obj}) \gets \Var{rc}(\Var{obj}) - 1$
 	\State \quad \IF $\Var{rc}(\Var{obj}) = 0$
 	\State \quad \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
-	\State \quad \quad \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Var{*ref} $\neq$ \Var{obj})
-	\State \quad \quad \quad \quad \Method{decRefCount}(\Var{*ref})
+	\State \quad \quad \quad \Method{decRefCount}(\Var{*ref})
 	\State \quad \quad \Method{free}(\Var{\&obj})
 	\State \quad \ELSE
 	\State \quad \quad \Method{markGray}(\Var{obj})		\Comment{Entferne Zählung interner Referenzen}
@@ -224,25 +222,23 @@ Nach Untersuchung der hypothetisch zyklischen Struktur sollen erreichbare Objekt
 Zu Beginn sind alle Objekte weiß markiert.
 Algorithmus~\ref{algo:cyclic-rc} ergänzt die Prozedur \Method{decRefCount} der naiven Referenzzählung um einen \ELSE-Fall, der ausgelöst wird, wenn der Referenzzähler \Var{rc}(\Var{obj}) nach Dekrementierung nicht $0$ beträgt (vgl. Zeile~8 bis 11).
 In diesem Fall muss überprüft werden, ob \Var{obj} das letzte Objekt einer Struktur war, durch welches diese erreichbar war.
-Dazu wird nach einem dreischrittigen Verfahren vorgegangen, das im Folgenden beschrieben wird.
+Dazu wird nach einem dreischrittigen Verfahren vorgegangen, das im Folgenden beschrieben wird. \footnote{Wie bereits eingangs der Arbeit erwähnt, verzichten wir im Folgenden auf die Überprüfung von \Null-Referenzen. Entsprechende \IF-Anweisungen lassen sich jedoch problemlos in die Algorithmen integrieren.}
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
 	\State \MethodHead{markGray}(\Var{obj}):
 	\State \quad \IF \Method{isWhite}(\Var{obj})
 	\State \quad \quad \Method{setColor}(\Var{obj}, \Var{GRAY})
-	\State \quad \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
-	\State \quad \quad \quad \IF ($\Var{ref} \neq \Null \wedge \Var{*ref} \neq \Var{obj}$)	\Comment{Entferne interne Referenz,}
-	\State \quad \quad \quad \quad $\Var{rc}(\Var{*ref}) \gets \Var{rc}(\Var{*ref})-1$ \CommentCont{die von \Var{obj} ausgeht}
-	\State \quad \quad \quad \quad \Method{markGray}(\Var{*ref})	\Comment{Reduziere rekursiv weitere \Var{rc}}
+	\State \quad \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$	\Comment{Entferne interne Referenz,}
+	\State \quad \quad \quad $\Var{rc}(\Var{*ref}) \gets \Var{rc}(\Var{*ref})-1$ \CommentCont{die von \Var{obj} ausgeht}
+	\State \quad \quad \quad \Method{markGray}(\Var{*ref})	\Comment{Reduziere rekursiv weitere \Var{rc}}
 	\Statex
 	\State \MethodHead{scan}(\Var{obj}):
 	\State \quad \IF \Method{isGray}(\Var{obj})
 	\State \quad \quad \IF $\Var{rc}(\Var{obj}) = 0$	\Comment{Objekt besitzt keine externen Referenzen}
 	\State \quad \quad \quad \Method{setColor}(\Var{obj}, \Var{BLACK})
 	\State \quad \quad \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
-	\State \quad \quad \quad \quad \IF ($\Var{ref} \neq \Null \wedge \Var{*ref} \neq \Var{obj}$)
-	\State \quad \quad \quad \quad \quad \Method{scan}(\Var{*ref})	\Comment{Prüfe rekursiv referenzierte Objekte}
+	\State \quad \quad \quad \quad \Method{scan}(\Var{*ref})	\Comment{Prüfe rekursiv referenzierte Objekte}
 	\State \quad \quad \ELSE \Method{unmark}(\Var{obj})	\Comment{Objekt besitzt mind. eine externe Referenz}
 \end{algorithmic}
 \caption[Zyklische Referenzzählung -- Markierungsphase]{Zyklische Referenzzählung -- Markierungsphase (vgl. \cite[S. 32f]{martinez1990})}
@@ -270,16 +266,14 @@ Dabei werden gleichzeitig die zugehörigen Referenzzähler angepasst, sodass nac
 	\State \MethodHead{unmark}(\Var{obj}):
 	\State \quad \Method{setColor}(\Var{obj}, \Var{WHITE})		\Comment{Objekt ist erreichbar}
 	\State \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
-	\State \quad \quad \IF ($\Var{ref} \neq \Null \wedge \Var{*ref} \neq \Var{obj}$)
-	\State \quad \quad \quad $\Var{rc}(\Var{*ref}) \gets \Var{rc}(\Var{*ref})+1$ \Comment{Interne Referenz wiederherstellen}
-	\State \quad \quad \quad \IF \Method{isNotWhite}(\Var{*ref})
-	\State \quad \quad \quad \quad \Method{unmark}(\Var{*ref})
+	\State \quad \quad $\Var{rc}(\Var{*ref}) \gets \Var{rc}(\Var{*ref})+1$ \Comment{Interne Referenz wiederherstellen}
+	\State \quad \quad \IF \Method{isNotWhite}(\Var{*ref})
+	\State \quad \quad \quad \Method{unmark}(\Var{*ref})
 	\Statex
 	\State \MethodHead{collect}(\Var{obj}):
 	\State \quad \IF \Method{isBlack}(\Var{obj})	\Comment{Objekt ist nicht erreichbar}
 	\State \quad \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
-	\State \quad \quad \quad \IF ($\Var{ref} \neq \Null \wedge \Var{*ref} \neq \Var{obj}$)
-	\State \quad \quad \quad \quad \Method{collect}(\Var{*ref})
+	\State \quad \quad \quad \Method{collect}(\Var{*ref})
 	\State \quad \quad \Method{free}(\Var{obj})
 \end{algorithmic}
 \caption[Zyklische Referenzzählung -- Aufräumphase]{Zyklische Referenzzählung -- Aufräumphase (vgl. \cite[S. 33]{martinez1990})}
@@ -434,10 +428,8 @@ Entsprechend wird ein Objekt genau einmal von einem Heapobjekt referenziert, wen
 	\State \MethodHead{writeRef}(\Var{obj}, \Var{i}, \Var{ref}):
 	\State \quad \IF $\Var{obj} \notin \Roots$		\Comment{Schreibbarriere für Basisobjekte aussetzen}
 	\State \quad \quad \Atomic
-	\State \quad \quad \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Var{*ref} $\neq$ \Var{obj})
-	\State \quad \quad \quad \quad \Method{incRefCount}(\Var{*ref})
-	\State \quad \quad \quad \IF (\Var{obj[i]} $\neq$ \Null $\wedge$ \Var{*obj[i]} $\neq$ \Var{obj})
-	\State \quad \quad \quad \quad \Method{decRefCount}(\Var{*obj[i]})
+	\State \quad \quad \quad \Method{incRefCount}(\Var{*ref})
+	\State \quad \quad \quad \Method{decRefCount}(\Var{*obj[i]})
 	\State \quad \Var{obj[i]} $\gets$ \Var{ref}
 	\Statex
 	\State \MethodHead{incRefCount}(\Var{obj}):
@@ -456,16 +448,13 @@ Entsprechend wird ein Objekt genau einmal von einem Heapobjekt referenziert, wen
 	\Statex
 	\State \Atomic \MethodHead{collect}():
 	\State \quad \FOREACH $\Var{ref} \in \Pointers(\Roots)$		\Comment{nicht gezählte Referenzen hinzufügen}
-	\State \quad \quad \IF $\Var{ref} \neq \Null$
-	\State \quad \quad \quad \Method{incRefCount}(\Var{*ref})
+	\State \quad \quad \Method{incRefCount}(\Var{*ref})
 	\State \quad \FOREACH $\Var{obj} \in \Var{ZCT}$
 	\State \quad \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
-	\State \quad \quad \quad \IF ($\Var{ref} \neq \Null \wedge \Var{*ref} \neq \Var{obj}$)
-	\State \quad \quad \quad \quad \Method{decRefCount}(\Var{*ref})
+	\State \quad \quad \quad \Method{decRefCount}(\Var{*ref})
 	\State \quad \quad \Method{free}(\Var{obj})
 	\State \quad \FOREACH $\Var{ref} \in \Pointers(\Roots)$		\Comment{vorige Anpassung korrigieren}
-	\State \quad \quad \IF $\Var{ref} \neq \Null$
-	\State \quad \quad \quad \Method{decRefCount}(\Var{*ref})
+	\State \quad \quad \Method{decRefCount}(\Var{*ref})
 \end{algorithmic}
 \caption[Verzögerte Referenzzählung nach \textsc{Deutsch} und \textsc{Bobrow}]{Verzögerte Referenzzählung nach \textsc{Deutsch} und \textsc{Bobrow} (vgl. \cite[S. 523f]{deutsch1976}).}
 \label{algo:deferred-rc}
@@ -545,10 +534,8 @@ Anschließend wird die Markierung des Feldes zurückgesetzt und der Eintrag aus 
 	\State \Atomic \MethodHead{processLog}():
 	\State \quad \FOREACH $\Var{field} \in \Var{log}$
 	\State \quad \quad \IF $\Var{*field} \neq \Var{log}(\Var{field})$	\Comment{Prüfe, ob Feldinhalt verändert wurde}
-	\State \quad \quad \quad \IF $\Var{*field} \neq \Null$
-	\State \quad \quad \quad \quad \Method{incRefCount}(\Var{**field})	\Comment{vgl. Algorithmus~\ref{algo:deferred-rc}}
-	\State \quad \quad \quad \IF $\Var{log}(\Var{field}) \neq \Null$
-	\State \quad \quad \quad \quad \Method{decRefCount}(\Var{*log}(\Var{field}))	\Comment{vgl. Algorithmus~\ref{algo:deferred-rc}}
+	\State \quad \quad \quad \Method{incRefCount}(\Var{**field})	\Comment{vgl. Algorithmus~\ref{algo:deferred-rc}}
+	\State \quad \quad \quad \Method{decRefCount}(\Var{*log}(\Var{field}))	\Comment{vgl. Algorithmus~\ref{algo:deferred-rc}}
 	\State \quad \quad \Method{unsetModified}(\Var{field})	\Comment{Markierung entfernen}
 	\State \quad \quad \Method{removeLog}(\Var{field})		\Comment{Entferne Eintrag aus Tabelle}
 	\State \quad \Method{collect}()		\Comment{vgl. Algorithmus~\ref{algo:deferred-rc}}

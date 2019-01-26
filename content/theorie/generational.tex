@@ -67,13 +67,13 @@ Auch hier werden dann Referenzen auf Objekte aus der $k$-ten Generation nach \Va
 	\State \MethodHead{updateFields}(\Var{source}):
 	\State \quad \FOREACH $j > \Var{generation}(\Var{source})$		\Comment{Referenzen aus jüngeren}
 	\State \quad \quad \FOREACH $\Var{field} \in \Fields(\textsc{Gen}_j)$	\CommentCont{Generationen anpassen}
-	\State \quad \quad \quad \IF ($\Var{*field} \neq \Null \wedge \Var{**field} \in \Var{source}$)
+	\State \quad \quad \quad \IF $\Var{**field} \in \Var{source}$
 	\State \quad \quad \quad \quad \Method{copy}(\Var{**field}, \Var{pos})
 	\State \quad \quad \quad \quad $\Var{*field} \gets \Var{newAdr}(\Var{**field})$
 	\State \quad \WHILE $\Var{toDo} \neq \Null$
 	\State \quad \quad $\Var{ref} \gets \Method{remove}(\Var{toDo})$
 	\State \quad \quad \FOREACH $\Var{field} \in \Fields(\Var{*ref})$	\Comment{Interne Referenzen anpassen}
-	\State \quad \quad \quad \IF ($\Var{*field} \neq \Null \wedge \Var{**field} \in \Var{source}$)
+	\State \quad \quad \quad \IF $\Var{**field} \in \Var{source}$
 	\State \quad \quad \quad \quad \Method{copy}(\Var{**field}, \Var{pos})
 	\State \quad \quad \quad \quad $\Var{*field} \gets \Var{newAdr}(\Var{**field})$
 	\Statex
