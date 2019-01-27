@@ -1,5 +1,5 @@
 %!TEX root = ../../thesis.tex
-\chapter{Mark and Sweep}
+\chapter{Mark-Sweep-Algorithmen}
 \label{cha:mark-sweep}
 Wir beginnen mit einer Vorstellung des ersten Garbage-Collection-Algorithmus, der auf \textsc{McCarthy} zurückgeht \cite[191--193]{mccarthy1960}.
 Im Rahmen eines im Jahr 1960 veröffentlichten Artikels über die Berechnung rekursiver Funktionen auf dem \textit{IBM 704} mithilfe des \textit{LISP Programming Systems} erläutert \textsc{McCarthy} die Speicherung von Daten in einer Listenstruktur.
@@ -148,7 +148,7 @@ Wir halten zunächst fest, dass der Mark-Sweep-Algorithmus in seiner Gänze term
 	Somit terminiert der gesamte Algorithmus.
 	
 	Weiter werden lediglich nicht markierte Objekte freigegeben (Zeile 4--6 in Algorithmus~\ref{algo:naive-sweep}).
-	Bleibt ein Objekt \code{obj} unmarkiert, so ist \code{obj} kein Basisobjekt, da \Method{markStart} alle Basisobjekte markiert.
+	Bleibt ein Objekt \Var{obj} unmarkiert, so ist \Var{obj} kein Basisobjekt, da \Method{markStart} alle Basisobjekte markiert.
 	Somit wird kein Basisobjekt freigegeben.
 	Wir zeigen, dass es nach der Markierungsphase zudem keine zwei Objekte $\Var{a}$, $\Var{b}$ mit $\Var{a} \rightarrow \Var{b}$ gibt, sodass $\Var{a}$ markiert und $\Var{b}$ unmarkiert ist:
 	Da $\Var{a}$ markiert ist, wurde $\Var{a}$ auch der Menge $\Var{toDo}$ hinzugefügt (Zeile 8f bzw. 16f in Algorithmus~\ref{algo:naive-mark}).
