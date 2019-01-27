@@ -38,34 +38,26 @@
 
 \begin{document}
 	\begin{tikzpicture}	
-		\object{0}{a}{0}
-		\objectFaded{1}{b}
-		\object{2}{c}{0}
-		\object{3}{d}{0}
-		\object{4}{e}{0}
-		\object{5}{f}{0}
-		\object{6}{g}{0}
 		\object{9}{A}{*}
 		\object{10}{B}{*}
-		\object{11}{C}{1}
-		\object{12}{D}{0}
-		\object{13}{E}{0}
-		\object{14}{b'}{1}
+		\object{11}{C}{0}
+		\object{12}{D}{1}
+		\object{14}{b'}{0}
+		\object{15}{g'}{1}
+		\object{16}{f'}{2}
+		\object{17}{e'}{1}
+		\object{18}{c'}{1}
 		
 		\arrowRoots{14.5}{0.75}
 		\arrowRoots{11.5}{0.75}
 		
-		\arrowTop{5.25}{2.5}{0.35}{}				% f -> c
-		\arrowTop{10.5}{5.75}{0.55}{\toNursery}		% B -> f
-		\arrowTop{9.5}{6.5}{0.35}{\toNursery}		% A -> g
-		\arrowBottom{14.5}{5.25}{0.55}{}			% b' -> f
-		\arrowBottom{6.5}{4.5}{0.75}{}				% g -> e
-		\arrowBottom{5.75}{12.5}{0.35}{\toMature}	% f -> D
-		\arrowBottom{0.5}{13.5}{0.95}{\toMature}		% a -> E
+		\arrowTop{16.25}{18.5}{0.35}{}				% f' -> c'
+		\arrowTop{10.5}{16.75}{0.55}{\toNursery}	% B -> f'
+		\arrowTop{9.5}{15.5}{0.35}{\toNursery}		% A -> g'
+		\arrowBottom{14.5}{16.25}{0.35}{}			% b' -> f'
+		\arrowBottom{15.5}{17.5}{0.75}{}			% g' -> e'
+		\arrowBottom{16.75}{12.5}{0.55}{\toMature}	% f' -> D
 		
-		\draw (2*\xscale,-2.5*\yscale) node[right]{\textbf{toDo:} \Var{b'}};
-		\draw (11*\xscale,-2.5*\yscale) node[right]{\textbf{log:} $\Var{A} \rightarrow \Var{g}$, $\Var{B} \rightarrow \Var{f}$};
-
 		\border{0}{7}
 		\border{9}{10}
 		

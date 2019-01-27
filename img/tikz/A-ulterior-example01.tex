@@ -54,18 +54,18 @@
 		\arrowRoots{1.5}{0.75}
 		\arrowRoots{11.5}{0.75}
 		
-		\arrowTop{5.25}{2.5}{0.5}{}
-		\arrowTop{10.5}{5.75}{0.75}{\toNursery}
-		\arrowTop{9.5}{6.5}{0.5}{\toNursery}
-		\arrowBottom{1.5}{5.25}{0.5}{}
-		\arrowBottom{6.5}{4.5}{0.75}{}
-		\arrowBottom{5.75}{12.5}{0.5}{\toMature}
-		\arrowBottom{0.5}{13.5}{1}{\toMature}
+		\arrowTop{5.25}{2.5}{0.35}{}					% f -> c
+		\arrowTop{10.5}{5.75}{0.55}{\toNursery}			% B -> f
+		\arrowTop{9.5}{6.5}{0.35}{\toNursery}			% A -> g
+		\arrowBottom{1.5}{5.25}{0.35}{}					% b -> f
+		\arrowBottom{6.5}{4.5}{0.55}{}					% g -> e
+		\arrowBottom{5.75}{12.5}{0.35}{\toMature}		% f -> D
+		\arrowBottom{0.5}{13.5}{0.75}{\toMature}		% a -> E
 		
 		\draw (2*\xscale,-2.5*\yscale) node[right]{\textbf{toDo:}};
 		\draw (11*\xscale,-2.5*\yscale) node[right]{\textbf{log:} $\Var{A} \rightarrow \Var{g}$, $\Var{B} \rightarrow \Var{f}$};
-		\draw (0,\yscale*0.5) node[left=0.2cm]{\Nursery};
-		\draw (19*\xscale,\yscale*0.5) node[right=0.2cm]{\Mature};
+		\draw (3.5*\xscale,\yscale*3) node{\Nursery};
+		\draw (14*\xscale,\yscale*3) node{\Mature};
 		\border{0}{7}
 		\border{9}{10}
 		
