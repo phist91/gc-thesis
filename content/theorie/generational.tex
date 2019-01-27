@@ -48,7 +48,7 @@ Auch hier werden dann Referenzen auf Objekte aus der $k$-ten Generation nach \Va
 
 \begin{algorithm}[h!]
 \begin{algorithmic}[1]
-	\State \MethodHead{collectGarbage}(\Var{k}):
+	\State \MethodHead{collect}(\Var{k}):
 	\State \quad $\Var{source} \gets \textsc{Gen}_k$
 	\State \quad $\Var{target} \gets \Method{newVersion}(\textsc{Gen}_k)$		\Comment{Neue Version der Generation initialisieren}
 	\State \quad $\textsc{Gen}_k \gets \Var{target}$
@@ -225,7 +225,7 @@ Da diese Referenzen auf bislang unentdeckte Objekte in \Nursery besitzen können
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
-	\State \Atomic \MethodHead{collectGarbage}():
+	\State \Atomic \MethodHead{collect}():
 	\State \quad \FOREACH $\Var{field} \in \Fields(\Roots)$
 	\State \quad \quad \IF $\Var{*field} \in \Nursery$		\Comment{Referenzen \Roots $\rightarrow$ \Nursery behandeln}
 	\State \quad \quad \quad \Method{tenure}(\Var{field})	\Comment{Ziel nach \Mature kopieren und Feld anpassen}

@@ -2,4 +2,62 @@
 \chapter{Beispiel zur verborgenen Referenzzählung}
 \label{cha:ulterior-example}
 
-\todo[inline]{Beispiel einfügen}
+Es sei die folgende Konstellation von Objekten in \Nursery und \Mature gegeben.
+Zur Wahrung der Übersichtlichkeit sind Referenzen von \Nursery nach \Mature \textcolor{ctcolormain}{blau}, Referenzen von \Mature nach \Nursery \textcolor{ctcoloraccessory}{purpur} und Referenzen innerhalb von \Nursery \textbf{schwarz} einzgezeichnet.
+Die Objekte \Var{b} und \Var{C} seien über Referenzen aus \Roots erreichbar.
+In der unteren rechten Ecke eines Objekts wird der Referenzzähler angezeigt.
+\Var{A} und \Var{B} seien über Referenzen innerhalb von \Mature erreichbar, besitzen also einen positiven Referenzzählerwert.
+Da diese Referenzen für Algorithmus~\ref{algo:ulterior-rc} nicht relevant sind, wurden sie in der Abbildung fortgelassen.
+Ebenso wurd auf die Darstellung ausgehender Referenzen bereits kopierter Objekte verzichtet.
+
+\begin{center}
+	\includestandalone[scale=1.2]{img/tikz/A-ulterior-example01}
+\end{center}
+
+Zunächst werden alle von \Roots ausgehenden Referenzen verfolgt, wobei die Objekte \Var{b} und \Var{C} entdeckt werden.
+\Var{b} wird daher nach \Mature kopiert und der Referenzzähler erhöht.
+Die Kopie \Var{b'} wird zu \Var{toDo} hinzugefügt, um später \Var{b} auf ausgehende Referenzen überprüfen zu können.
+Da sich \Var{C} bereits in \Mature befindet, wird lediglich dessen Zähler inkrementiert.
+Damit sind alle Referenzen von Basisobjekten abgearbeitet und die entsprechenden Referenzzähler von Heapobjekten angepasst.
+
+\begin{center}
+	\includestandalone[scale=1.2]{img/tikz/A-ulterior-example02}
+\end{center}
+
+Nun werden alle Referenzen von \Mature nach \Nursery verfolgt, die in \Var{log} verzeichnet sind.
+Daher werden die Objekte \Var{f} und \Var{g} nach \Mature kopiert, ihre Kopien zu \Var{toDo} hinzugefügt und die Referenzzähler inkrementiert.
+
+\begin{center}
+	\includestandalone[scale=1.2]{img/tikz/A-ulterior-example03}
+	
+	\includestandalone[scale=1.2]{img/tikz/A-ulterior-example04}
+\end{center}
+
+Zuletzt erfolgt die Abarbeitung von \Var{toDo}.
+\Var{b'} enthält eine Referenz auf das bereits kopierte Objekt \Var{f}, daher genügt es, diese Referenz anzupassen und den Referenzzähler von \Var{f'} zu erhöhen.
+
+\begin{center}
+	\includestandalone[scale=1.2]{img/tikz/A-ulterior-example05}
+\end{center}
+
+Objekt \Var{g'} besitzt eine Referenz auf \Var{c}, sodass auch dieses Objekt nach \Mature kopiert wird.
+
+\begin{center}
+	\includestandalone[scale=1.2]{img/tikz/A-ulterior-example06}
+\end{center}
+
+\Var{f'} enthält eine Referenz auf das Objekt \Var{D}, das sich bereits in \Mature befindet, sodass hier wieder ausreicht, die Referenz anzupassen und den Referenzzähler von \Var{D} zu inkrementieren.
+Objekt \Var{c}, das von \Var{f'} referenziert wird, wird kopiert.
+
+\begin{center}
+	\includestandalone[scale=1.2]{img/tikz/A-ulterior-example07}
+\end{center}
+
+Die Objekte \Var{e'} und \Var{c'} weisen keine Referenzen auf andere Objekte auf, sodass mit ihrer Abarbeitung \Var{toDo} geleert wird.
+Es verbleiben \Var{a} und \Var{d} in \Nursery, die nicht kopiert wurden, unerreichbar sind und somit entfernt werden.
+Zugleich wird auch \Var{E} freigegeben, da sein Referenzzähler $0$ beträgt.
+Nachdem die Referenzzähler von \Var{C} und \Var{b'} um die Referenzen aus \Roots korrigiert wurden, terminiert der Algorithmus.
+
+\begin{center}
+	\includestandalone[scale=1.2]{img/tikz/A-ulterior-example08}
+\end{center}

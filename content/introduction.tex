@@ -84,7 +84,7 @@ Die Funktionsweise von \Method{new} kann dabei vom verwendeten Garbage-Collectio
 	\State \MethodHead{new}():
 	\State \quad \Var{adr} $\gets$ \Method{allocate}()		\Comment{Versuche Zuweisung von Speicher}
 	\State \quad \IF \Var{adr} $=$ \Null		\Comment{Nicht genügend freier Speicher}
-	\State \quad \quad \Method{collectGarbage}()	\Comment{Aufruf der Garbage Collection}
+	\State \quad \quad \Method{collect}()	\Comment{Aufruf der Garbage Collection}
 	\State \quad \quad \Var{adr} $\gets$ \Method{allocate}()	\Comment{Neuer Versuch}
 	\State \quad \quad \IF \Var{adr} $=$ \Null
 	\State \quad \quad \quad \Method{error}(\Var{"Nicht genügend Speicher"})

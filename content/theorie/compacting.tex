@@ -262,7 +262,7 @@ Diese Idee wurde ursprünglich von \textsc{Fenichel} und \textsc{Yochelson} für
 	\State \quad $\Var{source} \gets (\Var{HEAP\_START} + \Var{HEAP\_END}) / 2$		\Comment{Zweite Hälfte}
 	\State \quad $\Var{pos} \gets \Var{target}$		\Comment{Füllstand}
 	\Statex
-	\State \Atomic \MethodHead{collectGarbage}():
+	\State \Atomic \MethodHead{collect}():
 	\State \quad \Method{swap}(\Var{target}, \Var{source})		\Comment{Halbräume tauschen}
 %	\State \quad $\Var{limit} \gets \Var{target} + \Var{spaceSize}$
 	\State \quad $\Var{pos} \gets \Var{target}$
@@ -302,7 +302,7 @@ Damit alle Objekte erfasst werden können, die vom kopierten Objekt referenziert
 In \Var{toDo} befinden sich demnach alle Objekte, die bereits kopiert, aber deren ausgehende Referenzen noch nicht untersucht wurden.
 Schließlich kann die Referenz des untersuchten Feldes auf die neue Speicheradresse aktualisiert werden (Zeile~24).
 Ist in \Var{newAdr} bereits eine Speicheradresse hinterlegt worden, so wurde das Ziel bereits nach \Var{target} kopiert; in diesem Fall genügt es, den Feldinhalt zu aktualisieren.
-Die Prozedur \Method{collectGarbage} kann anschließend mit der Abarbeitung der Objekte in \Var{toDo} beginnen (Zeile~11 bis 15).
+Die Prozedur \Method{collect} kann anschließend mit der Abarbeitung der Objekte in \Var{toDo} beginnen (Zeile~11 bis 15).
 
 Abbildung~\ref{fig:fenichel-example} veranschaulicht die Arbeitsweise des Algorithmus an einem Beispiel:
 Nachdem die Rollen der Halbräume \Var{source} und \Var{target} vertauscht wurden, wird zunächst das einzige Basisobjekt \Var{b} kopiert \textbf{(2)}.
@@ -401,11 +401,11 @@ Da Handles eine unveränderliche Position besitzen, bietet es sich etwa an, best
 	\State \MethodHead{new}():
 	\State \quad \Var{adr} $\gets$ \Method{allocate}()	
 	\State \quad \IF \Var{adr} $=$ \Null
-	\State \quad \quad \Method{collectGarbage}()
+	\State \quad \quad \Method{collect}()
 	\State \quad \quad \Var{adr} $\gets$ \Method{allocate}()
 	\State \quad \Var{handle} $\gets$ \Method{allocateHandle}()	\Comment{Anforderung im separaten Heapbereich}
 	\State \quad \IF \Var{handle} $=$ \Null
-	\State \quad \quad \Method{collectGarbage}()
+	\State \quad \quad \Method{collect}()
 	\State \quad \quad \Var{handle} $\gets$ \Method{allocateHandle}()	
 	\State \quad \IF \Var{adr} $=$ \Null $\vee$ \Var{handle} $=$ \Null
 	\State \quad \quad \Method{error}(\Var{"Nicht genügend Speicher"})
