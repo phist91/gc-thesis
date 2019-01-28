@@ -10,7 +10,10 @@ Da die Handles im Gegensatz zu den eigentlichen Objekten nicht verschoben werden
 
 Die Partitionierung des Heaps in Bereiche ermöglicht eine feingranularere Auswahl an Garbage-Collection-Strategien.
 Die verschiedenen Bereiche können unterschiedlich häufig, durch passend abgestimmte Algorithmen und/oder eine Kombination verschiedener Ansätze bereinigt werden.
-Im Folgenden werden wir daher zunächst auf diverse Kriterien zur Heappartitionierung eingehen, bevor anschließend eine Auswahl dieser hybriden Algorithmen betrachtet wird.
+Im Folgenden werden exemplarisch zwei Algorithmen vorgestellt, die diese Idee aufgreifen.
+Der erste unterscheidet Objekte nach ihrer Lebensdauer, was eine feine Abstimmung der Kollektionshäufigkeit ermöglicht.
+Der zweite Algorithmus verwendet für unterschiedlich alte Objekte verschiedene Ansätze, die in den vorigen Kapiteln dieser Arbeit behandelt wurden.
+Abschließend betrachten wir überblicksartig weitere Möglichkeiten zur Partitionierung des Heaps.
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -271,4 +274,13 @@ Zwei weitere Probleme bereffen vor allem die \Mature-Region:
 Zum einen vermag der Speicher in diesem Bereich nach und nach zu fragmentieren, was jedoch durch geschicktes Kopieren an geeignete Positionen in Grenzen gehalten werden kann.
 Zum anderen besitzt der vorgestellte Algorithmus keine Möglichkeit, verwaiste zyklische Referenzen älterer Objekte zu erkennen.
 \textsc{Blackburn} und \textsc{McKinley} empfehlen daher, beim Erreichen eines gewissen Füllstandes des Heaps zusätzliche Erkennungen verwaister Zyklen einzustreuen (vgl. \cite[S. 349]{blackburn2003}).
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+
+\section{Weitere Partitionierungsmöglichkeiten}
+\label{sec:partitioning}
 
