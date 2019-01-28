@@ -222,7 +222,7 @@ Nach Untersuchung der hypothetisch zyklischen Struktur sollen erreichbare Objekt
 Zu Beginn sind alle Objekte weiß markiert.
 Algorithmus~\ref{algo:cyclic-rc} ergänzt die Prozedur \Method{decRefCount} der naiven Referenzzählung um einen \ELSE-Fall, der ausgelöst wird, wenn der Referenzzähler \Var{rc}(\Var{obj}) nach Dekrementierung nicht $0$ beträgt (vgl. Zeile~8 bis 11).
 In diesem Fall muss überprüft werden, ob \Var{obj} das letzte Objekt einer Struktur war, durch welches diese erreichbar war.
-Dazu wird nach einem dreischrittigen Verfahren vorgegangen, das im Folgenden beschrieben wird. \footnote{Wie bereits eingangs der Arbeit erwähnt, verzichten wir im Folgenden auf die Überprüfung von \Null-Referenzen. Entsprechende \IF-Anweisungen lassen sich jedoch problemlos in die Algorithmen integrieren.}
+Dazu wird nach einem dreischrittigen Verfahren vorgegangen, das im Folgenden beschrieben wird.\footnote{Wie bereits eingangs der Arbeit erwähnt, verzichten wir im Folgenden auf die Überprüfung von \Null-Referenzen. Entsprechende \IF-Anweisungen lassen sich jedoch problemlos in die Algorithmen integrieren.}
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]

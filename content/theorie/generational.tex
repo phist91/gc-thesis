@@ -283,4 +283,21 @@ Zum anderen besitzt der vorgestellte Algorithmus keine Möglichkeit, verwaiste z
 
 \section{Weitere Partitionierungsmöglichkeiten}
 \label{sec:partitioning}
+Neben dem Ansatz, Objekte nach Lebensdauer bzw. Mutationsrate zu partitionieren, sind auch andere Aufteilungen des Heaps denkbar (vgl. \cite[Kap. 8]{handbook}).
+In Abschnitt~\ref{sec:lazy-sweep} wurde der Heap in Blöcke eingeteilt, um die Bereinigungsphase zu beschleunigen.
+Alternativ bietet es sich an, Objekte unterschiedlicher Größe mit verschiedenen Techniken zu bereinigen.
+Große Objekte zu verschieben ist eventuell so zeitaufwendig, dass eine Defragmentierung nicht lohnenswert ist.
+Deswegen kann es ratsam sein, entsprechende Bereiche von einer Kompaktierung auszuschließen.
+Dieser Gedanke führt zum Ansatz, Objekte nach Verschiebbarkeit anzuordnen.
+Hier hatten wir etwa bereits in Abschnitt~\ref{sec:handle} vorgeschlagen, nicht verschiebbare Handles in einer eigens reservierten Region zu lagern.
+Wenn keine Handles verwendet werden, können etwa häufig referenzierte Objekte als nicht verschiebbar deklariert werden, da ein Anpassung der betroffenen Referenzen zu kostspielig wäre.
+Entsprechend können auch diese Bereiche von Kompaktierungsalgorithmen ausgespart werden.
 
+In eine ähnliche Richtung geht der Ansatz, Objekte nach Typ zu sortieren.
+Zum Beispiel können Objekte, die keine ausgehenden Referenzen besitzen können, in eigene Bereiche gespeichert werden.
+Markierungsalgorithmen, die Referenzen verfolgen, profitieren gegebenenfalls davon, dies anhand der Speicheradresse zu erkennen und diese Objekte von einer weiteren Untersuchung auszuschließen.
+Ebenso können Objekte separiert werden, die dazu neigen, zyklische Referenzen zu bilden.
+Somit kann auch hier die kostspielige Überprüfung auf verwaiste Zyklen auf Teile des Heaps beschränkt werden.
+
+Letztlich sollte nicht nur beachtet werden, nach welchen Kriterien der Heap partitioniert wird, sondern auch, ob eine Aufteilung generell sinnvoll ist, da eine Einschränkung der möglichen Positionen eines Objekts negative Auswirkungen auf die räumliche Lokalität haben kann.
+Insofern sollte für jeden konkreten Anwendungsfall abgewägt werden, ob die Vorteile einer Partitionierung den Aufwand und die entsprechenden Nachteile aufwiegen kann.

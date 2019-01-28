@@ -1,0 +1,27 @@
+%!TEX root = ../../thesis.tex
+\chapter{Qualitativer Vergleich}
+\label{cha:comparision}
+
+In den vorigen Kapiteln wurde eine Reihe sowohl grundlegender als auch elaborierter Algorithmen diskutiert, deren Vor- und Nachteile erläutert sowie Einsatzfälle genannt, in denen sie potenziell ihre Stärken ausspielen können.
+Zum Abschluss des ersten Teils sollen daher nochmals die Algorithmen vergleichend gegenübergestellt werden.
+% Dieser Vergleich ist an Kriterien orientiert, deren Optimierung 
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+
+\subsubsection*{Durchsatz oder Responsivität?}
+Der Durchsatz ist ein Maß für die Performanz einer Software und beschreibt die Geschwindigkeit, mit der diese Aufgaben erledigt.
+Ein hoher Durchsatz verlangt, dass der Kollektor das eigentliche Programm möglichst wenig ausbremst und dem Mutator möglichst viel Prozessorzeit überlässt.
+Die Responsivität beschreibt hingegen die Antwortzeit, mit der eine Anwendung auf eingehende Anfragen reagiert.
+Wir haben gesehen, dass markierende Algorithmen häufig die Arbeit des Mutators unterbrechen, um fehlerhafte Markierungen zu vermeiden.
+In dieser Zeit können eingehende Anfragen nicht verarbeitet werden, da sie durch den Kollektor blockiert werden -- die Responsivität sinkt.
+Referenzzählende Algorithmen verteilen ihre Arbeit hingegen auf die einzelnen Schreibzugriffe des Mutators, sodass hier Performanceeinbußen zu erwarten sind, während die Responsivität weitgehend erhalten bleibt.
+In ihrer naivsten Form scheint daher die Wahl klar zu sein:
+Strebt man eine Optimierung des Durchsatzes an, fällt die Entscheidung auf den Mark-Sweep-Algorithmus, da dieser außerhalb eines Kollektionszyklus keine zusätzliche Arbeit verursacht.
+Soll hingegen die Responsivität optimiert werden, führt kein Weg an der Referenzzählung vorbei, da sie keine Unterbrechungen verursacht.
+Allerdings haben wir auch gesehen, dass die fortgeschritteneren Varianten der beiden Algorithmen diese Klarheit relativieren.
+So kann die Drei-Farben-Abstraktion die Responsivität erhöhen, indem teilweise die Nebenläufigkeit von Mutator und Kollektor ermöglicht wird.
+Allerdings sind dazu -- wie bei der Referenzzählung -- Schreibbarrieren nötig, die sich negativ auf den Durchsatz auswirken können.
+Soll die Referenzzählung auch zyklische Strukturen zuverlässig freigeben oder aus Durchsatzgründen auf einige Schreibbarrieren verzichten, sind wiederum separate Bereinigungsphasen notwendig, die den Mutator anhalten und die Referenzzähler korrigieren.
+
