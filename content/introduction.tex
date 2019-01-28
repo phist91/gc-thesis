@@ -25,10 +25,12 @@ Wie jede Programmanweisung besitzt auch eine Garbage Collection einen gewissen B
 Vor allem in Anwendungen, die einen hohen Durchsatz erreichen sollen oder in denen Deadlines und maximale Laufzeiten (\textit{worst case execution times}) um jeden Preis eingehalten werden müssen, spielt die Auswahl eines geeigneten Garbage-Collection-Algorithmus eine signifikante Rolle.
 
 In dieser Arbeit werden wir gängige Ansätze zur Garbage Collection vorstellen und miteinander vergleichen.
-Dabei soll auch ein Augenmerk auf Performance und Ressourcenbedarf gelegt sowie die Eignung in verschiedenen Anwendungsfällen beurteilt werden.
+Wir fokussieren dabei zunächst drei Klassen von Algorithmen, die als Grundlage aller fortgeschrittenen Konzepte betrachtet werden können: markierende Algorithmen, referenzzählende Algorithmen und objektkopierende Algorithmen zur Kompaktierung des Heaps (vgl. \cite[S. 25]{blackburn2004}).
+Dazu wird aus jeder Klasse zunächst ein elementarer Algorithmus betrachtet, an dem das Prinzip der Algorithmen nachvollzogen werden kann.
+Durch einen Blick auf Performance und Ressourcenbedarf im Kontext verschiedener Anwendungsfälle ergeben sich dann Ansätze, die zu einer Auseinandersetzung mit elaborierteren Varianten motivieren.
 Im zweiten Teil der Arbeit wird der Entwurf und die Implementation einer Anwendung beschrieben, die die diskutierten Garbage-Collection-Algorithmen grafisch visualisiert und in einem vereinfachten Speichermodell simuliert.
-Anhand dieser Anwendung soll die Arbeitsweise der Algorithmen veranschaulicht werden.
-\todo[inline]{Konkretisieren}
+Anhand dieser Anwendung soll die Arbeitsweise der Algorithmen zusätzlich veranschaulicht werden.
+\todo[inline]{ggfs. noch überarbeiten}
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
  % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
