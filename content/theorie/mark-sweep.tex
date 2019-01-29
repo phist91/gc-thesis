@@ -1,10 +1,10 @@
 %!TEX root = ../../thesis.tex
 \chapter{Mark-Sweep-Algorithmen}
 \label{cha:mark-sweep}
-Wir beginnen mit einer Vorstellung des ersten Garbage-Collection-Algorithmus, der auf \textsc{McCarthy} zurückgeht \cite[191--193]{mccarthy1960}.
+Dieses Kapitel beginnt mit einer Vorstellung des ersten Garbage-Collection-Algorithmus, der auf \textsc{McCarthy} zurückgeht \cite[191--193]{mccarthy1960}.
 Im Rahmen eines im Jahr 1960 veröffentlichten Artikels über die Berechnung rekursiver Funktionen auf dem \textit{IBM 704} mithilfe des \textit{LISP Programming Systems} erläutert \textsc{McCarthy} die Speicherung von Daten in einer Listenstruktur.
 Diese besteht aus Paaren, deren erster Eintrag \texttt{car} die zu speichernde Information enthält\footnote{Genauer: Die Adresse des Registers, in dem die zu speichernde Information gelagert wird.}, während im zweiten Eintrag \texttt{cdr} die Registeradresse des nachfolgenden Paares zu finden ist.
-Diese Struktur hat den Vorteil, dass ein Datum, das in mehreren Listen vorkommt, nur ein einziges Register belegt.
+Diese Struktur hat den Vorteil, dass ein in mehreren Listen vorkommendes Datum nur ein einziges Register belegt.
 Register, die aktuell nicht zur Speicherung von Daten genutzt werden, befinden sich in einer \textit{free storage list}.
 Bei der Anforderung von Speicher für ein zu speicherndes Datum werden Register aus dieser Liste entfernt.
 Durch die Manipulation der Registeradressen können Paare verwaisen, was zu Speicherlecks führt.
@@ -26,7 +26,7 @@ Diese zweischrittige Vorgehensweise -- das Erkennen nicht mehr benötigter Speic
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 
-\section{Naives Mark and Sweep}
+\section{Naiver Mark-Sweep-Algorithmus}
 \label{sec:naive-mark-sweep}
 Der naive Mark-Sweep-Algorithmus arbeitet in zwei Schritten:
 Zunächst wird bestimmt, welche Objekte im Speicher unerreichbar sind, weil sie von keinem anderen erreichbaren Objekt referenziert werden.
@@ -61,7 +61,7 @@ Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekt
 \label{algo:naive-mark}
 \end{algorithm}
 
-Die Markierungsphase (engl. \textit{mark}) funktioniert wie folgt:
+Die Markierungsphase (engl. \textit{mark}) startet mit Auslösung der Garbage Collection durch den Allokator und funktioniert wie folgt:
 Ein Objekt zu markieren bedeutet, es als erreichbar zu kennzeichnen, indem in seinem Header ein entsprechender Wert -- etwa ein Bit -- gesetzt wird.
 Zunächst wird mittels der Prozedur \Method{markStart} eine Menge \Var{toDo} erzeugt, die diejenigen Objekte enthält, die bereits als erreichbar erkannt, aber selbst noch nicht verarbeitet wurden (Zeile 5 in Algorithmus~\ref{algo:naive-mark}).
 In diese werden alle bislang unmarkierten Basisobjekte der Menge \Roots eingefügt und markiert, da sie in jedem Fall erreichbar sind (Zeile 6 bis 9).
@@ -110,9 +110,9 @@ Abbildung~\ref{fig:mark-example} zeigt die Arbeitsweise des Algorithmus an einem
 
 Es ist wesentlich, dass Objekte bereits markiert werden, wenn sie der Menge \Var{toDo} hinzugefügt werden, und nicht etwa, nachdem sie abgearbeitet wurden (Zeile 8 und 9 bzw. 16 und 17).
 Andernfalls besteht bei zyklischen Referenzen die Gefahr einer Endlosschleife, da unmarkierte Objekte mehrfach hinzugefügt würden.
-Präziser können wir festhalten, dass \Var{toDo} zu jedem Zeitpunkt ausschließlich bereits markierte Objekte enthält.
-Da keine Objekte hinzugefügt werden, die bereits markiert wurden (Zeile 7 und 16), wird kein Objekt mehrfach verarbeitet.
-Da zudem mit jeder Iteration der \WHILE-Schleife mindestens ein Objekt aus \Var{toDo} entfernt wird (Zeile 13), die Anzahl aller Objekte endlich ist und wir voraussetzen, dass während der Ausführung des Garbage Collectors keine neuen Objekte entstehen, wird sowohl die \WHILE-Schleife, als auch die \FOREACH-Schleife nach endlich vielen Schritten terminieren.
+Präziser lässt sich festhalten, dass \Var{toDo} zu jedem Zeitpunkt ausschließlich bereits markierte Objekte enthält.
+Da keine Objekte hinzugefügt werden, die bereits markiert wurden (Zeile 7 und 15), wird kein Objekt mehrfach verarbeitet.
+Da zudem mit jeder Iteration der \WHILE-Schleife mindestens ein Objekt aus \Var{toDo} entfernt wird (Zeile 13), die Anzahl aller Objekte endlich ist und vorausgesetzt, dass während der Ausführung des Kollektors keine neuen Objekte entstehen, wird sowohl die \WHILE-Schleife, als auch die \FOREACH-Schleife nach endlich vielen Schritten terminieren.
 
 \begin{algorithm}
 \begin{algorithmic}[1]
@@ -130,13 +130,13 @@ Da zudem mit jeder Iteration der \WHILE-Schleife mindestens ein Objekt aus \Var{
 
 Die Bereinigungsphase (engl. \textit{sweep}) beginnt unmittelbar nach der Markierungsphase durch Aufruf der Prozedur \Method{sweep}.
 Die Variable \Var{pos} wird mit der Speicheradresse initialisiert, an der sich das erste Objekt im Heap befindet.
-Wir gehen davon aus, dass eine Prozedur \Method{nextObject} des Allokators zu Verfügung steht, die anhand einer übergebenen Speicheradresse die Adresse des nachfolgenden Objektes oder \Null zurückgibt, wenn dieses nicht existiert.
+Hier wird davon ausgegangen, dass eine Prozedur \Method{nextObject} des Allokators zu Verfügung steht, die anhand einer übergebenen Speicheradresse die Adresse des nachfolgenden Objektes oder \Null zurückgibt, wenn dieses nicht existiert.
 Dadurch wird der Heap linear traversiert; nicht markierte Objekte werden freigegeben, während die Markierung erreichbarer Objekte zurückgesetzt wird.
 
 Wir halten zunächst fest, dass der Mark-Sweep-Algorithmus in seiner Gänze terminiert und korrekt ist, sofern während der Garbage Collection das laufende Programm angehalten wird:
 
 \begin{mybox}
-\begin{satz}
+\begin{satz}[Korrektheit des naiven Mark-Sweep-Algorithmus]
 	\label{satz:mark-sweep-correctness}
 	Der Mark-Sweep-Algorithmus terminiert und ist korrekt, wenn der Mutator während der Arbeit des Kollektors angehalten wird.
 \end{satz}
@@ -147,7 +147,7 @@ Wir halten zunächst fest, dass der Mark-Sweep-Algorithmus in seiner Gänze term
 	Gleiches gilt für die Bereinigungsphase, in der alle Objekte des Heaps in endlicher Zeit besucht werden.
 	Somit terminiert der gesamte Algorithmus.
 	
-	Weiter werden lediglich nicht markierte Objekte freigegeben (Zeile 4--6 in Algorithmus~\ref{algo:naive-sweep}).
+	Weiter werden lediglich nicht markierte Objekte freigegeben (Zeile~4 bis~6 in Algorithmus~\ref{algo:naive-sweep}).
 	Bleibt ein Objekt \Var{obj} unmarkiert, so ist \Var{obj} kein Basisobjekt, da \Method{markStart} alle Basisobjekte markiert.
 	Somit wird kein Basisobjekt freigegeben.
 	Wir zeigen, dass es nach der Markierungsphase zudem keine zwei Objekte $\Var{a}$, $\Var{b}$ mit $\Var{a} \rightarrow \Var{b}$ gibt, sodass $\Var{a}$ markiert und $\Var{b}$ unmarkiert ist:
@@ -159,7 +159,7 @@ Wir halten zunächst fest, dass der Mark-Sweep-Algorithmus in seiner Gänze term
 \end{proof}
 
 Die Bedingung, dass der Mutator während des Markierens pausiert wird, ist tatsächlich notwendig, um zu vermeiden, dass fälschlicherweise erreichbaren Objekte entfernt werden, wie folgendes Beispiel zeigt (vgl. \cite[969]{dijkstra1978}):
-Betrachten wir etwa die Situation, dass zwei Basisobjekte $\Var{a}$ und $\Var{b}$ alternierend auf ein Objekt $\Var{c}$ verweisen, das ausschließlich über $\Var{a}$ oder $\Var{b}$ erreichbar ist.
+Betrachtet man etwa die Situation, dass zwei Basisobjekte $\Var{a}$ und $\Var{b}$ alternierend auf ein Objekt $\Var{c}$ verweisen, das ausschließlich über $\Var{a}$ oder $\Var{b}$ erreichbar ist.
 Während der Kollektor aktiv ist, führe der Mutator folgenden Code aus:
 
 \begin{center}
@@ -186,7 +186,7 @@ Es könnte passieren, dass der Kollektor gerade Objekt $\Var{a}$ abarbeitet, unm
 Es wird dann keine Referenz auf Objekt $\Var{c}$ vorgefunden.
 Wenn der Kollektor nun Objekt $\Var{b}$ betrachtet, nachdem bereits Zeile~4 abgearbeitet wurde, wird Objekt $\Var{c}$ weiterhin nicht entdeckt.
 Insgesamt wird Objekt $\Var{c}$ somit nicht markiert, obwohl es erreichbar ist.
-In der Folge würde $\Var{c}$ irrtümlich freigegeben werden, sodass im schlimmsten Fall ein hängender Zeiger entsteht oder sogar Datenverlust verursacht wird -- der Algorithmus arbeitet also nicht korrekt.
+In der Folge würde $\Var{c}$ irrtümlich freigegeben werden, sodass ein hängender Zeiger entsteht oder sogar Datenverlust verursacht wird -- der Algorithmus arbeitet also nicht korrekt.
 
 Situationen, in denen die nebenläufige Ausführung von Programmsegmenten zu unvorhersehbarem Verhalten führt, werden als \textit{race conditions} bezeichnet.
 Algorithmen, die zur Vermeidung von \textit{race conditions} zwischen Kollektor und Mutator die Arbeit des letzteren unterbrechen, werden auch als \textit{Stop-the-World-Algorithmen} (vgl. \cite[S. 2]{levanoni2006}) bezeichnet.
@@ -217,7 +217,7 @@ Dazu werden Objekte mit drei verschiedenen Farben markiert:
 \end{description}
 
 Zu Beginn des Algorithmus sind alle existierenden Objekte weiß.
-Wir modifizieren den ursprünglichen Mark-Sweep-Algorithmus~\ref{algo:naive-mark} so, dass Objekte bei ihrer Entdeckung grau und nach Abarbeitung ihrer Felder schwarz markiert werden.
+Der ursprüngliche Mark-Sweep-Algorithmus~\ref{algo:naive-mark} wird nun so modifiziert, dass Objekte bei ihrer Entdeckung grau und nach Abarbeitung ihrer Felder schwarz markiert werden.
 Hierfür existiert eine atomare Prozedur \Method{setColor}, die die Markierung eines Objekts auf eine bestimmte Farbe \Var{WHITE}, \Var{GRAY} oder \Var{BLACK}\footnote{Die Farbinformation kann dadurch realisiert werden, dass jede Farbe mit einer eindeutigen Konstante identifiziert wird. Entsprechend ist darauf zu achten, dass dies mehr Speicherplatz zur Verwaltung der Markierungsinformationen benötigt.} setzt.
 Auf diese Art bleiben nicht mehr erreichbare Objekte weiß und können anschließend als löschbar identifiziert werden.
 Analog wird die \Method{sweep}-Prozedur in Algorithmus~\ref{algo:naive-sweep} so abgeändert, dass Objekte gelöscht werden, wenn sie weiß markiert sind.
@@ -225,7 +225,6 @@ Andernfalls wird ihre Markierung zurück auf weiß gesetzt.
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
-	\Pre Alle Objekte sind weiß markiert.
 	\State \MethodHead{markStart}():
 	\State \quad \Var{graySet} $\gets$ $\emptyset$				\Comment{Grau markierte Objekte}
 	\State \quad \FOREACH \Var{obj} $\in \Roots$
@@ -255,18 +254,18 @@ Andernfalls wird ihre Markierung zurück auf weiß gesetzt.
 \label{algo:tricolor}
 \end{algorithm}
 
-Mithilfe dieser \textbf{Drei-Farben-Abstraktion} (engl. \textit{tri-color abstraction}) können wir nun Referenzmanipulationen zulassen, die parallel zur Markierungsphase der Garbage Collection stattfinden:
+Mithilfe dieser \textbf{Drei-Farben-Abstraktion} (engl. \textit{tri-color abstraction}) können nun Referenzmanipulationen zugelassen werden, die parallel zur Markierungsphase der Garbage Collection stattfinden:
 Wird in einem Objekt \Var{a} eine Referenz auf ein Objekt \Var{b} hinterlegt, so kann dies dazu führen, dass \Var{b} erreichbar wird.
 Infolgedessen müssen auch alle von \Var{b} referenzierten Objekte als erreichbar identifiziert werden.
-Somit ist es zielführend, \Var{b} beim Setzen der Referenz grau zu markieren und zu \Var{graySet} hinzuzufügen, sofern dies noch nicht der Fall ist oder die Felder von \Var{b} bereits verfolgt wurden.
-Dies kann etwa mit einer \textit{Schreibbarriere} (engl. \textit{write barrier}) realisiert werden, die genau dann zum Einsatz kommt, wenn eine Referenz in ein Feld eines Objektes geschrieben wird (siehe Algorithmus~\ref{algo:tricolor-barrier}).
+Somit ist es zielführend, \Var{b} beim Setzen der Referenz grau zu markieren und zu \Var{graySet} hinzuzufügen, sofern dies noch nicht der Fall ist oder die Felder von \Var{b} nicht bereits verfolgt wurden.
+Dies kann etwa mit einer \textit{Schreibbarriere} (engl. \textit{write barrier}) realisiert werden, die genau dann zum Einsatz kommt, wenn während eines Kollektionszyklus eine Referenz in ein Feld eines Objektes geschrieben wird (siehe Algorithmus~\ref{algo:tricolor-barrier}).
 Auf diese Art kann es jedoch vorkommen, dass Objekte unerreichbar werden, nachdem sie bereits grau oder schwarz markiert wurden.
 Entsprechend verbleiben sie zunächst im Speicher und werden erst im nächsten Garbage-Collection-Zyklus entfernt.
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
 	\State \Atomic \MethodHead{writeRef}(\Var{obj}, \Var{i}, \Var{ref}):
-	\State \quad \IF \Method{isWhite}(\Var{*ref}))
+	\State \quad \IF \Method{isWhite}(\Var{*ref})
 	\State \quad \quad \Method{setColor}(\Var{*ref}, \Var{GRAY})
 	\State \quad \quad \Method{add}(\Var{grayList}, \Var{*ref})
 	\State \quad \Var{obj[i]} $\gets$ \Var{ref}
@@ -278,14 +277,14 @@ Entsprechend verbleiben sie zunächst im Speicher und werden erst im nächsten G
 An dieser Stelle gehen wir auf die Terminierung und Korrektheit des modifizierten Mark-Sweep-Algorithmus ein.
 
 \begin{mybox}
-\begin{satz}
+\begin{satz}[Korrektheit der Drei-Farben-Abstraktion]
 	\label{satz:tricolor-correctness}
 	Der Mark-Sweep-Algorithmus mit Drei-Farben-Abstraktion terminiert und ist korrekt, sofern während der Arbeit des Kollektors keine neuen Objekte erzeugt werden.
 \end{satz}
 \end{mybox}
 
 \begin{proof}[Beweis der Terminierung:]
-	Wir halten zunächst fest, dass Objekte während der Markierungsphase ausschließlich \textit{dunkler} gefärbt werden:
+	Zunächst ist festzuhalten, dass Objekte während der Markierungsphase ausschließlich \textit{dunkler} gefärbt werden:
 	In Algorithmus~\ref{algo:tricolor} werden lediglich weiß markierte Objekte grau gefärbt (Zeile~5 und 14); eine Weißfärbung geschieht in dieser Phase grundsätzlich nicht.
 	Analog zum ursprünglichen Algorithmus~\ref{algo:naive-mark} enthält \Var{graySet} nur grau markierte Objekte.
 	Jedes Objekt befindet sich dadurch höchstens einmal in dieser Menge.
@@ -294,11 +293,11 @@ An dieser Stelle gehen wir auf die Terminierung und Korrektheit des modifizierte
 	
 	\textit{Zur Korrektheit:} Erneut ist zu zeigen, dass keine Objekte unmarkiert bleiben, die erreichbar sind.
 	Dies wäre genau dann der Fall, wenn nach der Markierungsphase ein schwarz markiertes Objekt eine Referenz auf ein weiß markiertes Objekt besitzt.
-	Wir zeigen daher die Gültigkeit folgender Schleifeninvariante für die \WHILE-Schleife:
+	Daher ist die Gültigkeit folgender Schleifeninvariante für die \WHILE-Schleife zu zeigen:
 	\begin{description}
 		\item[(A)] Es existieren keine zwei Objekte \Var{a} und \Var{b} mit \Var{a} $\rightarrow$ \Var{b}, sodass \Var{a} schwarz markiert und \Var{b} weiß markiert ist.
 	\end{description}
-	Da zu Beginn laut Vorbedingung alle Objekte weiß markiert sind und bis zum Eintritt in die \WHILE-Schleife Objekte nur grau markiert werden, gilt (A) trivialerweise, da keine schwarz markierten Objekte existieren.
+	Da zu Beginn alle Objekte weiß markiert sind und bis zum Eintritt in die \WHILE-Schleife Objekte nur grau markiert werden, gilt (A) trivialerweise, da keine schwarz markierten Objekte existieren.
 	Gelte nun (A) zu Beginn einer Schleifeniteration und sei $\Var{obj} = \Var{a}$ dasjenige Objekt, das der Menge \Var{graySet} entnommen und schwarz gefärbt wird (Zeile~10f).
 	Existiert nun ein weiteres Objekt \Var{b} mit \Var{a} $\rightarrow$ \Var{b}, so ist \Var{\&b} $\in \Pointers(\Var{a})$.
 	Ist \Var{b} bereits grau oder schwarz markiert, so geschieht nichts.
@@ -311,9 +310,9 @@ An dieser Stelle gehen wir auf die Terminierung und Korrektheit des modifizierte
 Die Atomizität der Schreibbarriere \Method{writeRef} in Algorithmus~\ref{algo:tricolor-barrier} ist in der Tat notwendig, um die Korrektheit zu gewährleisten.
 Käme es unmittelbar nach der Markierung des Referenzziels, aber vor dem eigentlichen Setzen der Referenz in Zeile 5, zu einen kompletten Garbage-Collection-Zyklus, so würde die Markierung durch den Kollektor wieder aufgehoben.
 Damit bestünde im Anschluss die Möglichkeit, dass die Invariante (A) verletzt wird.
-Allerdings besteht die Möglichkeit, die Invariante (A) abzuschwächen und damit eine \textit{feingranularere} Lösung zu ermöglichen.
-Für Details hierzu verweisen wir auf die Publikation von \textsc{Dijkstra} et al \cite[S. 972ff]{dijkstra1978}.
-\textsc{Pirinen} liefert darüber hinaus einen Überblick über verschiedene Möglichkeiten von Lese- und Schreibbarrieren im Kontext der Drei-Farben-Abstraktion \cite{pirinen}.
+Allerdings kann die Invariante (A) abgeschwächt und damit eine \textit{feingranularere} Lösung ermöglicht werden.
+Für Details hierzu sei auf die Publikation von \textsc{Dijkstra} et al. verwiesen \cite[S. 972ff]{dijkstra1978}.
+\textsc{Pirinen} liefert darüber hinaus einen Überblick über Vor- und Nachteile verschiedener Lese- und Schreibbarrieren im Kontext der Drei-Farben-Abstraktion \cite{pirinen}.
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -369,7 +368,7 @@ Die Bereinigung beschränkt sich dadurch auf einen Bruchteil des Heaps.
 	\State \MethodHead{lazySweep}(\Var{size})
 	\State \quad \Do
 	\State \quad \quad \Var{blk} $\gets$ \Method{remove}(\Var{toSweep}, \Var{size})
-	\State \quad \quad \IF (\Var{blk} $\neq$ \Null $\wedge$ \Method{sweep}(\Method{start}(\Var{blk}), \Method{end}(\Var{blk})))
+	\State \quad \quad \IF \Method{sweep}(\Method{start}(\Var{blk}), \Method{end}(\Var{blk}))
 	\State \quad \quad \quad \Return	\Comment{Beende, sobald Speicher gewonnen wurde}
 	\State \quad \WHILE \Var{blk} $\neq$ \Var{null}
 	\State \quad \Method{createBlock}(\Var{size})	\Comment{Initialisiere neuen Block, wenn nichts freigegeben}
@@ -378,15 +377,15 @@ Die Bereinigung beschränkt sich dadurch auf einen Bruchteil des Heaps.
 \label{algo:lazy-sweep}
 \end{algorithm}
 
-Dieser Ansatz geht mit einigen marginale Änderungen an unseren bisher verwendeten Algorithmen einher.
-Zum einen setzen wir voraus, dass beim Markieren eines Objekts auch der entsprechende Block markiert wird, in dem sich das Objekt befindet.
+Dieser Ansatz geht mit einigen marginalen Änderungen an den bisher betrachteten Algorithmen einher.
+Zum einen wird vorausgesetzt, dass beim Markieren eines Objekts auch der entsprechende Block markiert wird, in dem sich das Objekt befindet.
 Dies kann recht einfach realisiert werden, indem bei der Initialisierung eines Blocks durch den Allokator zusätzlich Platz für einen Header reserviert wird, welcher Metadaten wie die Größenordnung der enthaltenen Objekte aufnimmt.
-Weiter verlangen wir, dass der Allokator zusätzlich Informationen über Anzahl, Lage und Größenordnung der existierenden Blöcke besitzt.
-Zuletzt wandeln wir die Prozedur \Method{sweep} aus den Algorithmen~\ref{algo:naive-sweep} und \ref{algo:tricolor} dahingehend ab, dass sie nur einen eingeschränkten Teil des Heaps traversiert -- etwa, indem zwei Parameter für Start- und Endadresse übergeben werden.
+Weiter wird verlangt, dass der Allokator zusätzlich Informationen über Anzahl, Lage und Größenordnung der existierenden Blöcke besitzt.
+Zuletzt wird die Prozedur \Method{sweep} aus den Algorithmen~\ref{algo:naive-sweep} und \ref{algo:tricolor} dahingehend abgewandelt, dass sie nur einen eingeschränkten Teil des Heaps traversiert -- etwa, indem zwei Parameter für Start- und Endadresse übergeben werden.
 Zudem soll \Method{sweep} den Wahrheitswert \Var{true} zurückgeben, wenn zumindest ein Objekt entfernt wurde, und andernfalls \Var{false}.
 
 Nach Abschluss der Markierungsphase kann anhand der zusätzlichen Markierung der Blöcke festgestellt werden, welche nur verwaiste Objekte enthalten.
-In diesem Fall kann der Allokator einen ganzen Block ad hoc freigeben (Zeile~17 von Algorithmus~\ref{algo:lazy-sweep}).
+In diesem Fall kann der Allokator einen Teilbereich des Heaps en bloc freigeben (Zeile~17 von Algorithmus~\ref{algo:lazy-sweep}).
 Hingegen werden Blöcke, die mindestens ein erreichbares Objekt enthalten und somit markiert sind, nach Abschluss der Markierungsphase einer Menge \Var{toSweep} zugefügt (Zeile~18).
 In dieser wird Buch geführt, welche Blöcke differenzierter bereinigt werden müssen, da sie sowohl erreichbare als auch unerreichbare Objekte enthalten können.
 
@@ -398,14 +397,14 @@ Falls aus keinem Block ein Objekt freigegeben werden konnte, bedeutet dies, dass
 In diesem Fall muss der Allokator einen neuen Block initialisieren, der neue Objekte aufnehmen kann (Zeile~25).
 
 Was geschieht nun, wenn nicht genügend freier Speicher zu Verfügung steht, um einen weiteren Block zu erzeugen?
-In diesem Fall schlägt auch der zweite Allokationsversuch fehl (Zeile~5f).
+In diesem Fall schlägt auch der zweite Al"-lo"-ka"-tions"-versuch fehl (Zeile~5f).
 Der letzte Versuch besteht nun darin, die Markierungen der Objekte zu aktualisieren, indem eine Markierungsphase gestartet wird (Zeile~7).
 Da die letzte Markierungsphase nicht unmittelbar vor der Speicheranforderung, sondern möglicherweise wesentlich früher stattgefunden hat, könnten in der Zwischenzeit weitere Objekte verwaist sein.
 Diese werden nachfolgend in einem zweiten Lazy-Sweep-Zyklus freigegeben, sodass zuletzt Platz innerhalb eines Blocks bzw. für einen neuen Block geschaffen werden kann (Zeile~8).
 
 Während die Einschränkung der Bereinigung auf einzelne Blöcke zwar einen Performancevorteil mit sich bringt, besitzt diese Variante des Mark-Sweep-Algorithmus auch einige Nachteile:
 Eine ungünstige Kombination von Speicheranforderungen und Sweep-Zyklen könnte dazu führen, dass viele Blöcke einer Größenordnung angelegt werden, die jeweils nur wenige Objekte enthalten und größtenteils ungenutzt sind.
-Wenn jeder Block allerdings mindestens ein erreichbares Objekt enthält, können sie nicht in Gänze freigegeben werden.
+Wenn jeder Block allerdings mindestens ein erreichbares Objekt enthält, kann er nicht in Gänze freigegeben werden.
 Eine hohe Zahl dieser ineffizient genutzter Blöcke führt dazu, dass möglicherweise nicht mehr genügend freier Speicher zu Verfügung steht, um Blöcke anderer Größenordnung zu initialisieren, obwohl ausreichend Speicher vorhanden wäre, der nicht durch Objekte belegt wird.
 Eine Lösung dieses Problems wäre eine zusätzliche Konsolidierungsphase, bei der Blöcke gleicher Größenordnung zusammengelegt werden.
 Dies bedeutet jedoch zusätzlicher Aufwand für die Verschiebung von Objekten (siehe Kapitel~\ref{cha:compacting}).
@@ -439,12 +438,12 @@ Dies vermeidet schreibende Zugriffe auf Objekte während der Markierungsphase, s
 Im Falle eines in Blöcken eingeteilten Heaps bietet es sich beispielsweise an, pro Block eine Bitmap anzulegen.
 Somit kann während der Bereinigung schnell erkannt werden, ob größere Teile eines Blocks freigegeben werden können, ohne ihn komplett traversieren zu müssen.
 
-Wir beenden dieses Kapitel mit einer Betrachtung der Komplexität der vorgestellten Mark-Sweep-Varianten.
+Dieses Kapitel schließt mit einer Betrachtung der Komplexität der vorgestellten Mark-Sweep-Varianten ab.
 In seiner einfachsten Form erweist sich der Mark-Sweep-Algorithmus als vergleichsweise platzsparend:
 Werden Markierungsinformationen unmittelbar in den Objekten gespeichert, wird pro Objekt lediglich ein einzelnes Bit oder Byte beansprucht.
 Zwischen verschiedenen Mark-Sweep-Zyklen müssen ferner keinerlei zusätzliche Informationen bereitgehalten werden.
-Während eines Mark-Sweep-Zyklus muss jedoch die Menge \Var{toDo} der noch zu untersuchenden Objekte verwaltet werden.
-Da wir bereits festgestellt haben, dass keine Objekte mehrfach zu \Var{toDo} hinzugefügt werden, ist ihre Mächtigkeit durch die Anzahl $|\Reach|$ der erreichbare Objekte beschränkt.
+Während eines yklus muss jedoch die Menge \Var{toDo} der noch zu untersuchenden Objekte verwaltet werden.
+Da bereits festgestellt wurde, dass keine Objekte mehrfach zu \Var{toDo} hinzugefügt werden, ist ihre Mächtigkeit durch die Anzahl $|\Reach|$ der erreichbare Objekte beschränkt.
 Davon ausgehend, dass in \Var{toDo} ausschließlich Referenzen konstanter Größe gespeichert werden müssen, ergibt sich insgesamt ein Platzbedarf von $\oh(|\Reach|)$.
 
 Während der Speicherbedarf der Markierungsphase also linear mit der Anzahl der erreichbaren Objekte wächst, spielt für die Laufzeit auch die Anzahl der Referenzen eine Rolle.
@@ -464,6 +463,6 @@ Die Komplexität dieser Operation ist analog zur vollständigen Traversierung ei
 \end{mybox}
 
 Für die Drei-Farben-Abstraktion ergeben sich identische asymptotische Laufzeiten; in der Praxis ermöglicht die Nebenläufigkeit von Kollektor und Mutator jedoch geringere Verzögerungen im Programmablauf.
-Die Kosten der Bereinigungsphase des Lazy Sweeping nach Hughes sind nur schwer abschätzbar, da sie unter anderem von der Strukturierung des Heaps in Blöcken abhängen, welche wiederum je nach Anwendungsfall einen starken Einfluss auf die Ausführungshäufigkeit der Garbage Collection haben kann.
+Die Kosten der Bereinigungsphase des Lazy Sweeping nach \textsc{Hughes} sind nur schwer abschätzbar, da sie unter anderem von der Strukturierung des Heaps in Blöcken abhängen, welche wiederum je nach Anwendungsfall einen starken Einfluss auf die Ausführungshäufigkeit der Garbage Collection haben kann.
 Grundsätzlich ist es für Mark-Sweep-Ansätze empfehlenswert, einen größeren Puffer für die Arbeit des Kollektors zu reservieren, um eine hohe Zahl an Speicheranforderungen seitens des Allokators bewältigen zu können.
 Andernfalls besteht die Gefahr, dass die Garbage Collection zu häufig ausgelöst wird und den Mutator nach und nach verdrängt (vgl. \cite[S. 70]{jones-lins}).
