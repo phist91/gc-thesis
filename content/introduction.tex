@@ -2,10 +2,10 @@
 \chapter{Einleitung}
 \label{cha:intro}
 
-Die Möglichkeiten einer dynamischen Speicherverwaltung haben sich in den meisten modernen Programmiersprachen etabliert\todo{JV: In welchen Sprachen nicht?}.
-Die Vorteile, einen Teil des dynamischen Speichers -- oft auch als \textit{Heap} bezeichnet -- zur Laufzeit eines Programms anfordern zu können, sind unbestreitbar:
+Die Möglichkeiten einer dynamischen Speicherverwaltung sind in den meisten modernen und höheren Programmiersprachen ein unverzichtbarer Bestandteil.
+Die Vorteile, einen Teil des dynamischen Speichers, der oft auch als \textit{Heap} bezeichnet wird, zur Laufzeit eines Programms anfordern zu können, sind unbestreitbar:
 Speicherbereiche des Heaps dienen für Unterprogramme als Ablagemöglichkeit jenseits ihrer eigenen \textit{Stacks}, sodass abgelegte Inhalte nach Terminierung erhalten und für weitere Unterprogramme zugänglich bleiben.
-Die Größe des angeforderten Speichers muss dabei nicht zur Übersetzungszeit bekannt sein, was die Realisierung dynamischer Datenstrukturen ermöglicht und die Gefahr zu klein konzipierter Speicherbereiche reduziert.
+Die Größe des angeforderten Speichers muss dabei nicht zur Übersetzungszeit bekannt sein, was die Realisierung dynamischer Datenstrukturen ermöglicht und die Gefahr zu klein oder zu groß gewählter fester Speicherbereiche reduziert.
 
 Für die konkrete Verwendung einer dynamischen Speicherverwaltung sind grundsätzlich zwei diametrale Ansätze denkbar:
 Zum einen kann die Verantwortung für den korrekten Umgang mit dynamisch angefordertem Speicher gänzlich der Entwicklerin übertragen werden.
@@ -24,9 +24,9 @@ Nichtsdestoweniger wird dieser Komfortgewinn nicht ohne Nachteile erworben:
 Wie jede Programmanweisung besitzt auch eine Garbage Collection einen gewissen Bedarf an Rechenzeit und Ressourcen, der sich negativ auf die Performance der eigentlichen Anwendung auswirken kann.
 Vor allem in Anwendungen, die einen hohen Durchsatz erreichen sollen oder in denen Deadlines und maximale Laufzeiten (\textit{worst case execution times}) um jeden Preis eingehalten werden müssen, spielt die Auswahl eines geeigneten Garbage-Collection-Algorithmus eine signifikante Rolle.
 
-In dieser Arbeit werden wir gängige Ansätze zur Garbage Collection vorstellen und miteinander vergleichen.
-Wir fokussieren dabei zunächst drei Klassen von Algorithmen, die als Grundlage aller fortgeschrittenen Konzepte betrachtet werden können: markierende Algorithmen, referenzzählende Algorithmen und objektkopierende Algorithmen zur Kompaktierung des Heaps (vgl. \cite[S. 25]{blackburn2004}).
-Dazu wird aus jeder Klasse zunächst ein elementarer Algorithmus betrachtet, an dem das Prinzip der Algorithmen nachvollzogen werden kann.
+In dieser Arbeit werden gängige Ansätze zur Garbage Collection vorgestellt und miteinander verglichen.
+Dabei werden zunächst drei Klassen von Algorithmen fokussiert, die als Grundlage aller fortgeschrittenen Konzepte betrachtet werden können: markierende Algorithmen, referenzzählende Algorithmen und objektkopierende Algorithmen zur Kompaktierung des Heaps (vgl. \cite[S. 25]{blackburn2004}).
+Dazu wird aus jeder Klasse ein elementarer Algorithmus betrachtet, an dem das Grundprinzip der zugehörigen Algorithmen nachvollzogen werden kann.
 Durch einen Blick auf Performance und Ressourcenbedarf im Kontext verschiedener Anwendungsfälle ergeben sich dann Ansätze, die zu einer Auseinandersetzung mit elaborierteren Varianten motivieren.
 Im zweiten Teil der Arbeit wird der Entwurf und die Implementation einer Anwendung beschrieben, die die diskutierten Garbage-Collection-Algorithmen grafisch visualisiert und in einem vereinfachten Speichermodell simuliert.
 Anhand dieser Anwendung soll die Arbeitsweise der Algorithmen zusätzlich veranschaulicht werden.
@@ -39,33 +39,31 @@ Anhand dieser Anwendung soll die Arbeitsweise der Algorithmen zusätzlich verans
 
 \section{Terminologie}
 \label{sec:intro:terminologie}
-Bevor wir genauer darauf eingehen, was unter einer Garbage Collection konkret verstanden wird, sollen zunächst die nötige Terminologie sowie ein Speichermodell eingeführt werden, das im Fortgang dieser Arbeit benutzt wird.
+Bevor genauer darauf eingangen wird, was man unter einer Garbage Collection konkret versteht, sollen zunächst die nötige Terminologie sowie ein Speichermodell eingeführt werden, das im Fortgang dieser Arbeit benutzt wird.
 Dieses Speichermodell ist bewusst so abstrakt gehalten, dass es möglichst allgemeine Betrachtungen lösgelöst von gängigen Programmiersprachen, Laufzeitumgebungen und Betriebssystemen ermöglicht, auch wenn an einigen Stellen exemplarisch Bezüge zu diesen hergestellt werden.
 Die eingeführten Begrifflichkeiten orientieren sich stark an der Terminologie aus der Fachliteratur (vgl. \cite[Kap. 1]{jones-lins}).
 
 \subsubsection*{Objekt}
-Unter einem \textbf{Objekt} verstehen wir stets eine konkrete Instanz eines definierten Datentyps, beispielsweise eines \code{struct} in C oder einer Java-Klasse.
+Der Begriff \textbf{Objekt} bezeichnet stets eine konkrete Instanz eines definierten Datentyps, beispielsweise eines \code{struct} in C oder einer Java-Klasse.
 Ein Objekt besitzt eine festgelegte Anzahl von \textbf{Feldern}, die jeweils einen Wert eines festgelegten Datentyps -- etwa ein Integer oder eine Referenz auf ein anderes Objekt im hier definierten Sinne -- enthalten.
 Der in dieser Arbeit verwendete Objektbegriff ist wesentlich allgemeiner gehalten als in der Objektorientierung üblich:
 Auch einzelne Werte eines Basisdatentyps oder Arrays werden als Objekt aufgefasst, selbst wenn diese nicht Bestandteil eines im Programm definierten Datentyps sind.
 
-Wir setzen ferner voraus, dass Objekte und ihre Felder \textit{typisiert} sind.
+Ferner wird vorausgesetzt, dass Objekte und ihre Felder \textit{typisiert} sind.
 Das bedeutet, dass stets nachvollziehbar ist, aus welchen Feldern ein Objekt besteht und von welchem Datentyp diese sind.
 Insbesondere ist unterscheidbar, ob ein Feld eines Objekts eine Referenz enthält oder nicht.
-Weiter nehmen wir an, dass jedes Objekt einen so genannten \textit{Header} besitzt.
-Dies sind separate Felder, die Metainformationen aufnehmen, die für den Compiler und die Laufzeitumgebung, nicht aber aus Sicht des Entwicklers, zugänglich sind.\footnote{Technisch kann dies etwa dadurch realisiert werden, dass die angeforderte Speichermenge für ein Objekt vergrößert wird, sodass die Informationen des Headers im Anfang des Objekts aufgenommen werden können. Als Ergbenis der Speicheranforderung wird dann die Speicheradresse zurückgegeben, die auf den Bereich hinter dem Header verweist.}
-Diverse vorgestellte Algorithmen werden diesen Bereich nutzen, um für die Speicherverwaltung relevante Informationen zu hinterlegen.
-
-Den Zugriff auf das \Var{i}-te Feld eines Objekts \Var{a} notieren wir -- analog zur Syntax der Programmierspache C -- mit \Var{a[i]}.
-Ebenso bezeichnen wir mit \Var{\&a} die Adresse eines Objekts und mit \Var{*p} die Dereferenzierung eines Zeigers \Var{p}.
-Mit $\Pointers(\Var{a})$ bezeichnen wir zudem die Menge aller von \Var{a} ausgehenden Referenzen und mit $\Fields(\Var{a})$ die Menge aller Felder von \Var{a}, die eine Referenz enthalten.
-Ist also $\Var{x} \in \Fields(\Var{a})$ ein Feld eines Objekts \Var{a}, so bezeichnet \Var{*x} entsprechend die im Feld gespeicherte Referenz und \Var{**x} das Ziel dieser Referenz.\footnote{In vielen Algorithmen, die in dieser Arbeit vorgestellt werden, werden Objekte als Parameter an Hilfsprozeduren übergeben. Ob es an der Stelle sinnvoll ist, Objekte \textit{by value} oder \textit{by reference} zu übergeben, sind Implementationsdetails, die die Entwicklerin im Anbetracht der verwendeten Programmiersprache festlegt. In dieser Arbeit soll die Übergabe eines Objekts die Intention erzeugen, dass wir die Informationen relevant sind, die in einem Objekt gespeichert sind, während die Übergabe einer Objektadresse dessen Position im Speicher in den Fokus rückt. Ähnliches gilt für Mengen von Objekten, die in manchen Algorithmen auftauchen.}
-Wir verzichten in den Algorithmen in der Regel auf eine Überprüfung von Referenzen auf \Null, bevor sie derefenziert werden.
+Weiter wird angenommen, dass jedes Objekt einen so genannten \textit{Header} besitzt.
+Dies sind separate Felder, die Metainformationen aufnehmen, die für den Compiler und die Laufzeitumgebung, nicht aber aus Sicht der Entwicklerin, zugänglich sind.
+Diverse vorgestellte Algorithmen werden diesen Bereich nutzen, um für die Speicherverwaltung relevante Informationen zu hinterlegen.\footnote{Technisch kann dies etwa dadurch realisiert werden, dass die angeforderte Speichermenge für ein Objekt vergrößert wird, sodass die Informationen des Headers am Anfang des Objekts aufgenommen werden können.
+Als Ergebnis der Speicheranforderung wird dann die Speicheradresse zurückgegeben, die auf den Bereich hinter dem Header verweist.}
 
 \subsubsection*{Heap}
-Als \textbf{Heap} bezeichnen wir denjenigen Speicherbereich, in dem zur Laufzeit eines Programms Objekte in beliebiger Reihenfolge erzeugt und freigegeben werden können.
+Der \textbf{Heap} ist derjenigen Speicherbereich, in dem zur Laufzeit eines Programms Objekte in beliebiger Reihenfolge erzeugt und freigegeben werden können.
 Der Heap besteht aus \textit{Wörtern} einer festen Größe, auf die über eine Speicheradresse zugegriffen werden kann; ein \textit{Wort} ist dabei die kleinste zuweisbare Speichermenge und kann die Zustände \textit{belegt} (bzw. \textit{zugewiesen}) oder \textit{frei} annehmen.
-Sofern nichts anderes vereinbart ist, gehen wir davon aus, dass der Heap ein zusammenhängender linearer Speicherbereich ist.\footnote{Tatsächlich ist dies eine starke Vereinfachung. In der Praxis ist der Bereich des physikalischen Speichers, der von einer Anwendung verwendet wird, häufig fragmentiert und inhomogen. Die Speicherverwaltung eines Betriebssystems bildet diesen Bereich auf einen \textit{virtuellen Speicher} ab, der der Anwendung zu Verfügung gestellt wird und aus ihrer Sicht linear zusammenhängend ist. Für einen Überblick hierzu siehe etwa \cite[Kap. 3.3]{tanenbaum}.}
+Sofern nichts anderes vereinbart ist, wird davon ausgegangen, dass der Heap ein zusammenhängender linearer Speicherbereich ist.\footnote{Tatsächlich ist dies eine starke Vereinfachung.
+In der Praxis ist der Bereich des physikalischen Speichers, der von einer Anwendung verwendet wird, häufig fragmentiert und inhomogen.
+Die Speicherverwaltung eines Betriebssystems bildet diesen Bereich auf einen \textit{virtuellen Speicher} ab, der der Anwendung zu Verfügung gestellt wird und aus ihrer Sicht linear zusammenhängend ist.
+Für einen Überblick hierzu siehe etwa \cite[Kap. 3.3]{tanenbaum}.}
 
 \begin{figure}[h]
 	\centering
@@ -74,11 +72,20 @@ Sofern nichts anderes vereinbart ist, gehen wir davon aus, dass der Heap ein zus
 	\label{fig:heap}
 \end{figure}
 
+Den Zugriff auf das \Var{i}-te Feld eines Objekts \Var{a} wird -- analog zur Syntax der Programmierspache C -- mit \Var{a[i]} notiert.
+Ebenso bezeichnet \Var{\&a} die Adresse eines Objekts und mit \Var{*p} die Dereferenzierung eines Zeigers \Var{p}.
+Mit $\Pointers(\Var{a})$ wird zudem die Menge aller von \Var{a} ausgehenden Referenzen auf andere Objekte des Heaps und mit $\Fields(\Var{a})$ die Menge aller Felder von \Var{a}, die eine solche Referenz enthalten, bezeichnet.
+Ist also $\Var{x} \in \Fields(\Var{a})$, so bezeichnet \Var{*x} entsprechend die im Feld gespeicherte Referenz und \Var{**x} das Ziel dieser Referenz.
+In den Algorithmen wird in der Regel auf eine Überprüfung von Referenzen auf \Null verzichtet, bevor sie derefenziert werden.\footnote{In vielen Algorithmen, die in dieser Arbeit vorgestellt werden, werden Objekte als Parameter an Hilfsprozeduren übergeben.
+Ob es an der Stelle sinnvoll ist, Objekte \textit{by value} oder \textit{by reference} zu übergeben, sind Implementationsdetails, die die Entwicklerin im Anbetracht der verwendeten Programmiersprache festlegt.
+In dieser Arbeit soll die Übergabe eines Objekts die Intention erzeugen, dass die im Objekt gespeicherten Informationen relevant sind, während die Übergabe einer Objektadresse dessen Position im Speicher in den Fokus rückt.
+Ähnliches gilt für Mengen von Objekten, die in manchen Algorithmen auftauchen.}
+
 \subsubsection*{Allokator, Mutator und Kollektor}
-Aufgabe des \textbf{Allokators}, der zur Laufzeitumgebung eines Programms gehört, ist zum einen die Zuweisung von Heapspeicher bei dynmaischer Instanziierung eines neuen Objektes und zum anderen die Freigabe von Objekten.
+Aufgabe des \textbf{Allokators}, der zur Laufzeitumgebung eines Programms gehört, ist zum einen die Zuweisung von Heapspeicher bei dynamischer Instanziierung eines neuen Objekts und zum anderen die Freigabe von Objekten.
 Der Allokator führt somit Buch über die belegten und freien Wörter des Heaps.
-Die genaue Realisierung dieser Mechanismen werden in dieser Arbeit weitestgehend außen vor gelassen, jedoch setzen wir in gewissen Situationen das Vorhandensein bestimmter Funktionalitäten voraus.
-Beispielsweise verlangen wir, dass eine Prozedur \Method{new} zu Verfügung steht, die bei der Erzeugung eines neuen Objekts Speicher reserviert und die entsprechende Speicheradresse zurückgibt.
+Die genaue Realisierung dieser Mechanismen werden in dieser Arbeit weitestgehend außen vor gelassen, jedoch wird in gewissen Situationen das Vorhandensein bestimmter Funktionalitäten vorausgesetzt.
+Beispielsweise wird verlangt, dass eine Prozedur \Method{new} zu Verfügung steht, die bei der Erzeugung eines neuen Objekts Speicher reserviert und die entsprechende Speicheradresse zurückgibt.
 Die Funktionsweise von \Method{new} kann dabei vom verwendeten Garbage-Collection-Algorithmus abhängen (siehe Algorithmus~\ref{algo:new}).
 
 \begin{algorithm}
@@ -98,8 +105,8 @@ Die Funktionsweise von \Method{new} kann dabei vom verwendeten Garbage-Collectio
 
 Nach \textsc{Dijkstra} et al. besteht ein Programm zudem aus zwei funktional unterscheidbaren Bestandteilen \cite[S. 967]{dijkstra1978}:
 Der \textbf{Mutator} ist derjenige Thread (bzw. eine Menge von Threads), die den eigentlichen Programmcode ausführen.
-Für uns sind dabei vor allem Programmanweisungen von Bedeutung, die in Feldern von Objekten vorhandene Referenzen manipulieren und somit ursächlich für die Entstehung von nicht mehr benötigten Objekten sind.
-Im Gegensatz dazu ist es die Aufgabe des \textbf{Kollektors}, die nicht mehr benötigten Objekte zu identifizieren und ihre Freigabe zu veranlassen.
+Bedeutsam sind dabei vor allem Programmanweisungen , die in Feldern von Objekten vorhandene Referenzen manipulieren und somit ursächlich für die Entstehung nicht mehr benötigter Objekte sind.
+Im Gegensatz dazu ist die Aufgabe des \textbf{Kollektors}, die nicht mehr benötigten Objekte zu identifizieren und ihre Freigabe zu veranlassen.
 Der Kollektor ist demnach derjenige Thread (bzw. eine Menge von Threads), die einen Garbage-Collection-Algorithmus ausführen.
 
 
@@ -110,14 +117,14 @@ Der Kollektor ist demnach derjenige Thread (bzw. eine Menge von Threads), die ei
 
 \section{Problemstellung}
 \label{sec:intro:problem}
-Nachdem die nötigen Grundbegriffe eingeführt wurden, können wir nun definieren, was wir unter einer Garbage Collection verstehen.
-Anschließend folgt eine Spezifikation von Eigenschaften, die wir von einem Garbage-Collection-Algorithmus fordern.
+Nachdem die nötigen Grundbegriffe eingeführt wurden, kann nun definiert werden, was unter einer Garbage Collection verstanden wird.
+Anschließend folgt eine Spezifikation von Eigenschaften, die im Kontext dieser Arbeit von einem Garbage-Collection-Algorithmus gefordert werden.
 
 \begin{mybox}
 \begin{defn}[Lebendigkeit]
 	\label{def:liveness}
 	Ein Objekt heißt zu einem bestimmten Zeitpunkt im Programmablauf \textbf{lebendig}, wenn der Mutator im weiteren Programmablauf lesend oder schreibend auf dieses zugreift.
-	Andernfalls bezeichnen wir das Objekt als \textbf{nicht mehr benötigt}.
+	Andernfalls wird das Objekt als \textbf{nicht mehr benötigt} bezeichnet.
 \end{defn}
 \end{mybox}
 
@@ -142,16 +149,16 @@ Allerdings ist die Frage, ob dies der Fall ist oder nicht, nicht beantwortbar:
 	Dies ist ein Korollar aus der Unentscheidbarkeit des Halteproblems:
 	Angenommen, es gäbe einen Algorithmus, der für ein beliebiges Programm entscheidet, ob Objekte zu einem bestimmten Zeitpunkt lebendig sind.
 	Dieser müsste insbesondere entscheiden, dass der Teil eines Programms, in dem ein Objekt lebendig ist, terminiert.
-	Ein solcher Algorithmus existiert jedoch nicht (vgl. \cite[Kap. 4.2]{sipser}).
+	Ein solcher Algorithmus existiert jedoch im Allgemeinen nicht (vgl. \cite[Kap. 4.2]{sipser}).
 \end{proof}
 
-Aus diesem Grund betrachten wir eine schwächere Eigenschaft von Objekten: die Erreichbarkeit über Referenzen.
-Dafür gehen wir von einer Menge \Roots von \textbf{Basisobjekten} (engl. \textit{root objects}) aus.
+Aus diesem Grund wird nachfolgend eine schwächere Eigenschaft von Objekten: die Erreichbarkeit über Referenzen.
+Dafür wird von einer Menge \Roots von \textbf{Basisobjekten} (engl. \textit{root objects}) ausgegangen, die nicht zum Heap gehören.
 Diese sind dadurch gekennzeichnet, dass der Mutator unmittelbaren Zugriff auf sie hat, ohne dafür zunächst ihre Adresse aus den Feldern anderer Objekte beschaffen zu müssen.
-Hierzu zählen zum Beispiel statische Objekte, deren Position im Speicher bereits zur Compilezeit bekannt ist, oder Objekte, die sich in \textit{stack frames}\todo{definieren} befinden.
+Hierzu zählen zum Beispiel statische Objekte, deren Positionen im Speicher bereits zur Übersetzungszeit bekannt sind, oder Objekte, die sich in Aufrufstapeln von Unterprogrammen befinden.
 Alle weiteren Objekte, die zur Laufzeit dynamisch erzeugt werden, gelten als erreichbar, wenn auf sie über eine Folge von Referenzen zugegriffen werden kann, wobei diese in den Feldern von Objekten gespeichert sind und die erste Referenz von einem Basisobjekt ausgeht.
 Einfacher ausgedrückt: Ein Objekt ist erreichbar, wenn der Mutator die Möglichkeit hat, mittelbar oder unmittelbar über Referenzen auf das Objekt zugreifen zu können.
-Formal definieren wir diese Eigenschaft wie folgt:
+Formal wird diese Eigenschaft wie folgt definiert:
 
 \begin{mybox}
 \begin{defn}[Erreichbarkeit]
@@ -161,16 +168,16 @@ Formal definieren wir diese Eigenschaft wie folgt:
 		\item Ist $\Var{a} \in \Roots$, so folgt $\Var{a} \in \Reach$.
 		\item Ist $\Var{a} \in \Reach$, $\Var{b}$ ein weiteres Objekt und existiert ein $\Var{i} \in \NN$ mit $\Var{*a[i]} = \Var{b}$, so folgt $\Var{b} \in \Reach$.
 	\end{enumerate}
-	Gilt $\Var{*a[i]} = \Var{b}$, so schreiben wir auch $\Var{a} \rightarrow \Var{b}$.
-	Existiert für zwei Objekte $\Var{a}, \Var{b}$ eine endliche Folge von Objekten $\Var{a}_1, \dots, \Var{a}_n$ mit $\Var{a} \rightarrow \Var{a}_1 \rightarrow \dots \rightarrow \Var{a}_n \rightarrow \Var{b}$, so notieren wir dies zudem mit $\Var{a} \transreach \Var{b}$.
+	Gilt $\Var{*a[i]} = \Var{b}$, so schreibt man auch $\Var{a} \rightarrow \Var{b}$.
+	Existiert für zwei Objekte $\Var{a}, \Var{b}$ eine endliche Folge von Objekten $\Var{a}_1, \dots, \Var{a}_n$ mit $\Var{a} \rightarrow \Var{a}_1 \rightarrow \dots \rightarrow \Var{a}_n \rightarrow \Var{b}$, so wird dies zudem mit $\Var{a} \transreach \Var{b}$ notiert.
 \end{defn}
 \end{mybox}
 
 Diese Definition garantiert zwar nicht, dass jedes erreichbare Objekt auch lebendig ist.
-Davon ausgehend, dass unerreichbare Objekte auch nicht \textit{wiedergefunden} werden können, können wir jedoch mit Sicherheit sagen, dass unerreichbare Objekte nicht mehr verwendet werden und gefahrlos durch den Kollektor freigegeben werden dürfen.
+Davon ausgehend, dass unerreichbare Objekte auch nicht \textit{wiedergefunden} werden können und verwaist bleiben, lässt sich jedoch mit Sicherheit sagen, dass unerreichbare Objekte nicht mehr verwendet werden und gefahrlos durch den Kollektor freigegeben werden dürfen.
 
 Die Erreichbarkeit von Objekten lässt sich mithilfe eines sogenannten \textbf{Objektgraphen} visualisieren.
-Jedes existierende Objekt korrespondiert dabei zu einem Knoten des Graphen, sodass wir das Objekt mit seinem Knoten identifizieren können (und umgekehrt).
+Jedes existierende Objekt korrespondiert dabei zu einem Knoten des Graphen, sodass das Objekt mit seinem Knoten identifizieren werden kann (und umgekehrt).
 Besitzt ein Objekt \Var{a} in mindestens einem seiner Felder eine Referenz auf ein weiteres Objekt \Var{b}, so wird dies durch eine gerichtete Kante zwischen den ensprechenden Knoten dargestellt.
 Ein Objekt ist somit nicht erreichbar, wenn es im Objektgraphen keinen Pfad zu ihm gibt, der in einem Basisobjekt startet.
 Objektgraphen werden uns im Rahmen dieser Arbeit bei der Veranschaulichng der vorgestellten Algorithmen dienlich sein.
@@ -192,7 +199,7 @@ Objektgraphen werden uns im Rahmen dieser Arbeit bei der Veranschaulichng der vo
 	\caption[Beispiel für einen Objektgraphen]{Beispiel für einen Objektgraphen. Die Objekte \Var{a}, \Var{b} und \Var{c} sind Basisobjekte. Die Objekte \Var{h}, \Var{i}, \Var{l} und \Var{m} sind in dieser Konstellation nicht erreichbar.}
 \end{figure}
 
-An dieser Stelle formulieren wir ein Korrektheitskriterium für Garbage-Collection-Algorithmen.
+An dieser Stelle folgt die Formulierung eines Korrektheitskriteriums für Garbage-Collection-Algorithmen.
 Dieses besteht aus der Anforderung, dass keine noch benötigten Daten zerstört werden.
 
 \begin{mybox}
@@ -203,6 +210,6 @@ Dieses besteht aus der Anforderung, dass keine noch benötigten Daten zerstört 
 
 Gemäß Definition~\ref{def:erreichbar} ist es folglich hinreichend zu zeigen, dass nur nicht erreichbare Objekte freigegeben werden, um Korrektheit nachzuweisen.
 
-Man kann an dieser Stelle fragen, warum wir nicht voraussetzen, dass die Ausführung eines Garbage-Collection-Algorithmus die Freigabe \textit{sämtlicher} nicht erreichbaren Objekte anfordert.
-Tatsächlich werden wir sehen, dass es aus Performancegründen vorteilhaft sein kann, nur einen Teil des nicht mehr benötigten zugewiesenen Speichers zu bereinigen, um längere Wartezeiten zu vermeiden.
+Man mag sich an dieser Stelle fragen, warum nicht vorausgesetzt wird, dass die Ausführung eines Garbage-Collection-Algorithmus die Freigabe \textit{sämtlicher} nicht erreichbaren Objekte anfordert.
+Tatsächlich wird zu sehen sein, dass es aus Performancegründen vorteilhaft sein kann, nur einen Teil des nicht mehr benötigten zugewiesenen Speichers zu bereinigen, um längere Wartezeiten zu vermeiden.
 Ein solches Kriterium wäre daher zu restriktiv.
