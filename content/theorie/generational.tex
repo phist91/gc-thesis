@@ -13,7 +13,7 @@ Die verschiedenen Bereiche können unterschiedlich häufig, durch passend abgest
 Im Folgenden werden exemplarisch zwei Algorithmen vorgestellt, die diese Idee aufgreifen.
 Der erste unterscheidet Objekte nach ihrer Lebensdauer, was eine feine Abstimmung der Kollektionshäufigkeit ermöglicht.
 Der zweite Algorithmus verwendet für unterschiedlich alte Objekte verschiedene Ansätze, die in den vorigen Kapiteln dieser Arbeit behandelt wurden.
-Abschließend betrachten wir überblicksartig weitere Möglichkeiten zur Partitionierung des Heaps.
+Abschließend werden überblicksartig weitere Möglichkeiten zur Partitionierung des Heaps betrachtet.
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -23,7 +23,7 @@ Abschließend betrachten wir überblicksartig weitere Möglichkeiten zur Partiti
 
 \section{Algorithmus von Lieberman und Hewitt}
 \label{sec:lieberman}
-Eines der ersten Verfahren, der die Lebensdauer der Objekte als Kriterium für einen Kollektionszyklus nutzt, stammt von \textsc{Lieberman} und \textsc{Hewitt} \cite{lieberman1983}.
+Eines der ersten Verfahren, die die Lebensdauer der Objekte als Kriterium für einen Kollektionszyklus nutzt, stammt von \textsc{Lieberman} und \textsc{Hewitt} \cite{lieberman1983}.
 Der Heap wird dazu ebenfalls in Blöcke eingeteilt, die durch zwei Zahlen charakterisiert werden:
 Die \textit{Generation} eines Blocks ist ein Indikator für die Lebensdauer der enthaltenen Objekte und wird regelmäßig inkrementiert, sodass zu jeder Generation genau ein Block gehört.
 Blöcke, die jünger sind, besitzen somit eine höhere Generationenzahl und neue Objekte werden immer in der zuletzt erzeugten Generation gespeichert.
@@ -35,7 +35,7 @@ Eine Referenz $\Var{a} \rightarrow \Var{b}$ eines älteren Objekts \Var{a} auf e
 
 \begin{figure}[h]
 	\centering
-	\includestandalone[scale=1]{img/tikz/ch5-lieberman1}
+	\includestandalone[scale=0.8]{img/tikz/ch5-lieberman1}
 	\caption[Beispielhafte Objektkonstellation zwischen drei Generationen]{Beispielhafte Objektkonstellation zwischen drei Generationen. Der Zähler unten rechts gibt die akuelle Version einer Generation an. Neben Referenzen von jüngeren auf ältere Objekten existieren auch interne Referenzen zwischen gleich alten Objekten (\textcolor{ctcolormain}{blau}) und indirekte Referenzen von älteren auf jüngere Objekte über Handles (\textcolor{ctcoloraccessory}{purpur}).}
 	\label{fig:lieberman-generations}
 \end{figure}
@@ -143,16 +143,16 @@ Sehr junge Generationen niedriger Version enthalten nach der Hypothese von \text
 Entsprechend ist es attraktiv, diese zu bereinigen, da sie eine vielversprechende Ausbeute bieten.
 Die erwartete Laufzeit des Kollektors hält sich dabei gleichzeitig in Grenzen, da nur wenige Nachfolgegenerationen existieren, die Referenzen auf die zu reinigende Generation besitzen könnten.
 Ältere Generationen, die schon häufig bereinigt wurden, enthalten wiederum tendenziell weniger verwaiste Objekte.
-Da bei ihrer Bereinigung viele jüngere Generationen betrachtet werden müssen, sollte diese eher selten stattfinden (vgl. \cite[S. 423]{lieberman1983}).
+Da bei ihrer Bereinigung viele jüngere Generationen betrachtet werden müssen, sollten diese eher selten stattfinden (vgl. \cite[S. 423]{lieberman1983}).
 
 Abgesehen von Generation und Versionszahl gibt es noch weitere Stellschrauben zur Optimierung des Algorithmus.
 Eine periodische Erhöhung der Generationenzahl hat den Vorteil, dass Objekte, die fast zeitgleich erzeugt werden, in derselben Generation gespeichert werden, was sich für einige Datenstrukturen positiv auf die räumliche Lokalität auswirken dürfte.
 Alternativ kann jedoch auch eine neue Generation erst dann angelegt werden, wenn die aktuelle nicht mehr genügend freien Speicher besitzt, um eine Speicheranforderung zu erfüllen.
 Das verringert den möglichen Speicherverschnitt durch nur teilweise belegte Blöcke.
 Da neue Objekte stets in der jüngsten Generation angelegt werden, tendieren ältere Generationen dazu, mit jedem Kollektionszyklus zu schrumpfen.
-Aus demselben Grund bietet es sich daher an, die Größe jeder neuen Version einer Generation auf die Größe aktuell erhaltenen Objekte zu setzen.
+Aus demselben Grund bietet es sich daher an, die Größe jeder neuen Version einer Generation auf die Größe aktuell enthaltenen Objekte zu setzen.
 Eine andere Möglichkeit wäre, zusätzliche Konsolidierungsphasen einzubauen, in welchen Generationen verschmolzen werden.
-Eine weitere, nicht zu verachtende Maßnahme ist die Parallelisierung des Algorithmus, indem mehrere Generationen gleichzeitig gepflegt werden (vgl. \cite[S. 426]{lieberman1983}.
+Eine weitere, nicht zu verachtende Maßnahme ist die Parallelisierung des Algorithmus, indem mehrere Generationen gleichzeitig gepflegt werden (vgl. \cite[S. 426]{lieberman1983}).
 
 Zuletzt sollte beachtet werden, dass die eingangs erwähnte Hypothese über die Lebensdauer von Objekten in der Praxis nicht zutreffen muss, wenngleich sie auch in neueren Programmiersprachen empirisch bestätigt wurde (vgl. \cite{jones2008}).
 Ebenso mag die Annahme, dass nur wenige Referenzen von älteren auf jüngere Objekte zu Stande kommen und sich die Zahl der benötigten Handles damit in Grenzen hält, auf die von \textsc{Lieberman} und \textsc{Hewitt} betrachteten LISP-Systeme zutreffen, da die Komponenten eines Objekts in den meisten Fällen unveränderlich sind und bereits vor Erzeugung des Objekts existieren (vgl. \cite[S. 422]{lieberman1983}).
@@ -184,7 +184,7 @@ In \Mature befinden sich alle Objekte, die mindestens einen Kollektionszyklus ü
 \end{figure}
 
 Ob und in welcher Form die Referenzzählung zum Einsatz kommt, richtet sich nun danach, ob sich Quelle oder Ziel in \Roots, \Nursery oder \Mature befinden (siehe Abbildung~\ref{fig:ulterior-principle}).
-Bereits in Abschnitt~\ref{sec:naive-rc} haben wir festgestellt, dass Referenzzählungen -- bedingt durch nötige Schreibbarrieren -- die Performance einer Anwendung beeinträchtigt, wenn viele Manipulationen von Referenzen stattfinden.
+Bereits in Abschnitt~\ref{sec:naive-rc} wurde festgestellt, dass Referenzzählungen -- bedingt durch nötige Schreibbarrieren -- die Performance einer Anwendung beeinträchtigt, wenn viele Manipulationen von Referenzen stattfinden.
 Da junge Objekte in \Nursery tendenziell häufiger Manipulationen von eingehenden wie ausgehenden Referenzen unterworfen sind, bietet es sich an, diese von der Referenzzählung auszusparen.
 Referenzen von \Roots nach \Nursery sowie innerhalb von \Nursery sind von der Schreibbarriere nicht betroffen; Referenzen von \Mature nach \Nursery werden zunächst protokolliert und während des nächsten Kollektionszyklus behandelt.
 Objekte in \Mature verändern sich tendenziell seltener, weshalb Markierungs- und Kompaktierungsalgorithmen keine hohe Ausbeute versprechen, aber dennoch aufwendig sind.
@@ -259,7 +259,7 @@ Folglich kann der gesamte Bereich freigegeben werden (Zeile~17).
 Zuletzt müssen die Korrekturen der Referenzzähler rückgängig gemacht werden.
 Dazu genügt es, nochmals alle von \Roots ausgehenden Referenzen zu betrachten, da diese nun lediglich auf Objekte aus \Mature verweisen.
 
-Ein ausführliches Beispiel zum Ablauf des Algorithmus, das sämtliche Arten von Referenzen zwischen den einzelnen Heapbereichen berücksichtigt, befindet sich im Anhang dieser Arbeit (siehe Anhang~\ref{cha:ulterior-example}), weswegen wir an dieser Stelle abschließend auf die Vor- und Nachteile eingehen.
+Ein ausführliches Beispiel zum Ablauf des Algorithmus, das sämtliche Arten von Referenzen zwischen den einzelnen Heapbereichen berücksichtigt, befindet sich im Anhang dieser Arbeit (siehe Anhang~\ref{cha:ulterior-example}), weswegen an dieser Stelle abschließend auf die Vor- und Nachteile eingegangen wird.
 Ist die Aufteilung des Heaps in \Nursery und \Mature geschickt gewählt, vermag der vorgestellte Algorithmus die Schwächen der in den vorigen Kapiteln vorgestellten Algorithmen zu reduzieren.
 Wie bereits erläutert, wird durch die Aussparung jüngerer Objekte der Performanceverlust durch Zählermanipulationen teilweise vermieden.
 Die Integration der verzögerten Referenzzählung nach \textsc{Deutsch} und \textsc{Bobrow} verhindert zudem Löschkaskaden und die unmittelbare Nachverfolgung von Referenzmanipulationen in Basisobjekten, etwa bei lokalen Variablen einer Prozedur.
@@ -268,7 +268,7 @@ Hier wirkt sich auch die Protokollierung derjenigen Felder in \Mature aus, die R
 Die Unterbrechungen im Programmablauf werden damit deutlich verringert.
 Beachtet werden muss jedoch die Schwierigkeit, das richtige Verhältnis von \Nursery und \Mature zu finden:
 Ist \Nursery zu klein angelegt, verursacht dies häufigere -- wenn auch kürzere -- Kollektionszyklen.
-Zudem besteht die Gefahr, dass Objekte frühzeitig nach \Mature verschoben werden, obwohl sie in naher Zukunft noch häufig manipuliert werden.
+Zudem besteht die Gefahr, dass Objekte frühzeitig nach \Mature verschoben werden, obwohl sie in naher Zukunft noch häufig manipuliert werden oder verwaisen.
 Ist \Nursery jedoch zu groß, verlängern sich potenziell die Kollektionsphasen, da mehr Referenzen verfolgt werden müssen.
 Zwei weitere Probleme bereffen vor allem die \Mature-Region:
 Zum einen vermag der Speicher in diesem Bereich nach und nach zu fragmentieren, was jedoch durch geschicktes Kopieren an geeignete Positionen in Grenzen gehalten werden kann.
@@ -289,8 +289,8 @@ Alternativ bietet es sich an, Objekte unterschiedlicher Größe mit verschiedene
 Große Objekte zu verschieben ist eventuell so zeitaufwendig, dass eine Defragmentierung nicht lohnenswert ist.
 Deswegen kann es ratsam sein, entsprechende Bereiche von einer Kompaktierung auszuschließen.
 Dieser Gedanke führt zum Ansatz, Objekte nach Verschiebbarkeit anzuordnen.
-Hier hatten wir etwa bereits in Abschnitt~\ref{sec:handle} vorgeschlagen, nicht verschiebbare Handles in einer eigens reservierten Region zu lagern.
-Wenn keine Handles verwendet werden, können etwa häufig referenzierte Objekte als nicht verschiebbar deklariert werden, da ein Anpassung der betroffenen Referenzen zu kostspielig wäre.
+Diesbezüglich wurde bereits in Abschnitt~\ref{sec:handle} der Vorschlag geäußert, nicht verschiebbare Handles in einer eigens reservierten Region zu lagern.
+Auch wenn keine Handles verwendet werden, können etwa häufig referenzierte Objekte als nicht verschiebbar deklariert werden, da ein Anpassung der betroffenen Referenzen zu kostspielig wäre.
 Entsprechend können auch diese Bereiche von Kompaktierungsalgorithmen ausgespart werden.
 
 In eine ähnliche Richtung geht der Ansatz, Objekte nach Typ zu sortieren.
