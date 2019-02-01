@@ -3,8 +3,8 @@
 \label{cha:comparision}
 
 In den vorigen Kapiteln wurde eine Reihe sowohl grundlegender als auch elaborierter Algorithmen diskutiert, deren Vor- und Nachteile erläutert sowie Einsatzfälle genannt, in denen sie potenziell ihre Stärken ausspielen können.
-Zum Abschluss des ersten Teils sollen daher nochmals die Algorithmen vergleichend gegenübergestellt werden.
-% Dieser Vergleich ist an Kriterien orientiert, deren Optimierung 
+Zum Abschluss des ersten Teils sollen daher nochmals die Algorithmen bezüglich ausgewählter qualitativer Kriterien vergleichend gegenübergestellt werden.
+Diese Kriterien können je nach Anwendungsfall für eine erste Auswahl potenziell infrage kommender Garbage-Collection-Algorithmen herangezogen werden.
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -19,10 +19,10 @@ In dieser Zeit können eingehende Anfragen nicht verarbeitet werden, da sie durc
 Referenzzählende Algorithmen verteilen ihre Arbeit hingegen auf die einzelnen Schreibzugriffe des Mutators, sodass hier Performanceeinbußen zu erwarten sind, während die Responsivität weitgehend erhalten bleibt.
 In ihrer naivsten Form scheint daher die Wahl klar zu sein:
 Strebt man eine Optimierung des Durchsatzes an, fällt die Entscheidung auf den Mark-Sweep-Algorithmus, da dieser außerhalb eines Kollektionszyklus keine zusätzliche Arbeit verursacht.
-Soll hingegen die Responsivität optimiert werden, führt kein Weg an der Referenzzählung vorbei, da sie keine Unterbrechungen verursacht.
-Allerdings haben wir auch gesehen, dass die fortgeschritteneren Varianten der beiden Algorithmen diese Klarheit relativieren.
+Soll hingegen die Responsivität optimiert werden, führt kein Weg an der Referenzzählung vorbei, da sie keine längerfristigen Unterbrechungen verursacht.
+Allerdings war auch zu sehen, dass die fortgeschritteneren Varianten der beiden Algorithmen diese Klarheit relativieren.
 So kann die Drei-Farben-Abstraktion die Responsivität erhöhen, indem teilweise die Nebenläufigkeit von Mutator und Kollektor ermöglicht wird.
-Allerdings sind dazu -- wie bei der Referenzzählung -- Schreibbarrieren nötig, die sich negativ auf den Durchsatz auswirken können.
+Hierzu sind jedoch -- wie bei der Referenzzählung -- Schreibbarrieren nötig, die sich negativ auf den Durchsatz auswirken können.
 Soll die Referenzzählung auch zyklische Strukturen zuverlässig freigeben oder aus Durchsatzgründen auf einige Schreibbarrieren verzichten, sind wiederum separate Bereinigungsphasen notwendig, die den Mutator anhalten und die Referenzzähler korrigieren.
 
 
@@ -31,15 +31,14 @@ Soll die Referenzzählung auch zyklische Strukturen zuverlässig freigeben oder 
 
 \subsubsection*{Speicherbedarf}
 Da eine Garbage Collection häufig ausgelöst wird, wenn der freie Heapspeicher zu neige geht, ist der Speicherbedarf der verschiedenen Konzepte ein weiterer Aspekt, der bei der Wahl des passenden Algorithmus beachtet werden sollte.
-Alle vorgestellten Algorithmen benötigen zusätzlichen Speicher pro Objekt, sei es, um Markierungsinformationen oder Referenzzähler innerhalb oder außerhalb von Objektheadern zu speichern.
+Alle vorgestellten Algorithmen benötigen zusätzlichen Speicher pro Objekt, sei es, um Markierungsinformationen oder Referenzzähler innerhalb oder außerhalb von Objekt"-headern zu speichern.
 Einzelne Bits, die von markierenden Algorithmen verwendet werden, können gegebenenfalls in bereits vorhandene Header integriert werden, Referenzzähler können jedoch prinzipiell unbeschränkt groß werden.
-Für diese muss dann während der gesamten Laufzeit des Algorithmus Speicher bereitgehalten werden.
+Für diese muss dann während der gesamten Laufzeit der Anwendung Speicher bereitgehalten werden.
 Der dadurch verursachte Overhead hängt vor allem von der Anzahl der Objekte und deren Größe ab.
 Auch die Aufteilung des Heaps in Blöcke macht die Speicherung zusätzlicher Informationen zur Verwaltung selbiger notwendig.
-
 Die Algorithmen selbst benötigen meist Hilfsdatenstrukturen wie Warteschlangen, um Adressen noch zu untersuchender Objekte zwischenzuspeichern sowie Änderungen von Speicheradressen nachzuverfolgen.
 Entsprechend viel Speicher muss ebenfalls reserviert werden, damit die Algorithmen ordnungsgemäß arbeiten können.
-Als besonders speicherhungrig erweisen zeigen sich hier der Compressor-Algorithmus (siehe Tabelle~\ref{tab:compressor} auf Seite~\pageref{tab:compressor}) sowie das Halbraumverfahren aus Abschnitt~\ref{sec:copying}, welches die Heapgröße praktisch halbiert.
+Als besonders speicherhungrig erweisen sich hier der Compressor-Algorithmus (siehe Tabelle~\ref{tab:compressor} auf Seite~\pageref{tab:compressor}) sowie das Halbraumverfahren aus Abschnitt~\ref{sec:copying}, welches die Heapgröße praktisch halbiert.
 Für Anwendungen, in denen wenig Speicher zu Verfügung steht, kann dies ein Ausschlusskriterium sein, da häufige Ausführungen der Garbage Collection den Mutator verdrängen könnten.
 
 
@@ -62,4 +61,4 @@ Neben dieser qualitativen Gegenüberstellung ist es durchaus möglich, auch die 
 Vor allem neuere Algorithmen werden dazu für die \textit{Jikes Research Virtual Machine}\footnote{\url{https://www.jikesrvm.org/}} implementiert oder Benchmark-Frameworks wie \textit{SPECjvm}\footnote{\url{https://www.spec.org/jvm2008/}} ausgesetzt, um Performanceunterschiede messbar zu machen und dabei verschiedene Ausprägungen von Objekten und Objektkonstellationen zu betrachten (siehe etwa \cite{blackburn2003}, \cite{blackburn2004}, \cite{kermany2006}, \cite{levanoni2006}, \cite{garner2007}).
 Diese belegen durchaus, dass zum einen deutliche Performanceunterschiede zwischen verschiedenen Ansätzen in gewissen Anwendungsfällen existieren und zum anderen vermutlich kein Algorithmus existiert, der in jeder Situation perfekt ist (vgl. \cite{fitzgerald2000}).
 Dennoch sollte beachtet werden, dass derartige Untersuchungen unter gewissen \textit{Laborbedingungen} stattfinden, da sie Anwendungsfälle lediglich simulieren.
-Somit lassen sich die Resultate nur eingeschränkt auf die Praxis übertragen, weswegen hier abschließend nur einer Empfehlung zugestimmt werden kann: \enquote{Know your application.} \cite[S. 80]{handbook}.
+Somit lassen sich die Resultate nur eingeschränkt auf die Praxis übertragen, weswegen hier abschließend nur einer Empfehlung zugestimmt werden kann: \enquote{Know your application} \cite[S. 80]{handbook}.
