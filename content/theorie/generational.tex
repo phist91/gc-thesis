@@ -25,9 +25,9 @@ Abschließend werden überblicksartig weitere Möglichkeiten zur Partitionierung
 \label{sec:lieberman}
 Eines der ersten Verfahren, die die Lebensdauer der Objekte als Kriterium für einen Kollektionszyklus nutzt, stammt von \textsc{Lieberman} und \textsc{Hewitt} \cite{lieberman1983}.
 Der Heap wird dazu ebenfalls in Blöcke eingeteilt, die durch zwei Zahlen charakterisiert werden:
-Die \textit{Generation} eines Blocks ist ein Indikator für die Lebensdauer der enthaltenen Objekte und wird regelmäßig inkrementiert, sodass zu jeder Generation genau ein Block gehört.
+Die \textbf{Generation} eines Blocks ist ein Indikator für die Lebensdauer der enthaltenen Objekte und wird regelmäßig inkrementiert, sodass zu jeder Generation genau ein Block gehört.
 Blöcke, die jünger sind, besitzen somit eine höhere Generationenzahl und neue Objekte werden immer in der zuletzt erzeugten Generation gespeichert.
-Die \textit{Version} eines Blocks gibt an, wie oft er durch die Garbage Collection bereinigt wurde.
+Die \textbf{Version} eines Blocks gibt an, wie oft er durch die Garbage Collection bereinigt wurde.
 Die Idee ist nun (analog zu Abschnitt~\ref{sec:lazy-sweep}), die Garbage Collection generationenweise arbeiten zu lassen und die Laufzeit des Algorithmus für jüngere Generationen möglichst kurz zu halten.
 Dies geht zurück auf eine Hypothese von \textsc{Deutsch} und \textsc{Bobrow}, wonach ein Großteil der Objekte entweder frühzeitig verwaist oder langfristig erreichbar bleibt (vgl. \cite[S. 523]{deutsch1976}).
 Um dies zu erreichen, wird die Konvention eingeführt, dass nur direkte Referenzen innerhalb einer Generation oder von Objekten einer jüngeren Generation auf solche einer älteren erlaubt sind.
@@ -171,7 +171,7 @@ Die Anzahl der Handles liegt dann viel höher, womit die in Abschnitt~\ref{sec:h
 Eine periodische Erzeugung neuer Heapbschnitte hat zwar den Vorteil, eine feingranularere Abstimmung der Garbage Collection angepasst an die Lebensdauer der Objekte zu ermöglichen, aber auch den Nachteil, zusätzliche Metainformationen über jede Generation verwalten zu müssen (siehe dazu auch die in Abschnitt~\ref{sec:lazy-sweep} genannten Nachteile).
 Als Kompromiss kann es zielführend sein, gröber zwischen jüngeren und älteren Objekten zu entscheiden und sich somit auf zwei Altersklassen zu beschränken:
 Jüngere Objekte tendieren nicht nur zu einer hohen Verwaisungswahrscheinlichkeit, sondern auch zu einer höheren Veränderungsrate, während ältere Objekte eher seltener manipuliert werden.
-Diese Feststellung nutzen \textsc{Blackburn} und \textsc{McKinley} in ihrem Konzept der \textit{verborgenen Referenzzählung} (engl. \textit{ulterior reference counting}), um die Vorteile markierender und referenzzählender Algorithmen zu vereinigen \cite{blackburn2003}.
+Diese Feststellung nutzen \textsc{Blackburn} und \textsc{McKinley} in ihrem Konzept der \textbf{verborgenen Referenzzählung} (engl. \textit{ulterior reference counting}), um die Vorteile markierender und referenzzählender Algorithmen zu vereinigen \cite{blackburn2003}.
 Der Heap wird dazu aufgeteilt in zwei (nicht notwendigerweise gleich große) Teile \Nursery (dt. etwa \textit{Kinderzimmer}) und \Mature (dt. \textit{erwachsen}, \textit{ausgewachsen}).
 Neu erzeugte Objekte werden zunächst in \Nursery angelegt und verbleiben dort bis zum nächsten Kollektionszyklus.
 In \Mature befinden sich alle Objekte, die mindestens einen Kollektionszyklus überlebt haben.
@@ -283,17 +283,17 @@ Zum anderen besitzt der vorgestellte Algorithmus keine Möglichkeit, verwaiste z
 
 \section{Weitere Partitionierungsmöglichkeiten}
 \label{sec:partitioning}
-Neben dem Ansatz, Objekte nach Lebensdauer bzw. Mutationsrate zu partitionieren, sind auch andere Aufteilungen des Heaps denkbar (vgl. \cite[Kap. 8]{handbook}).
+Neben dem Ansatz, Objekte nach \textit{Lebensdauer} bzw. \textit{Mutationsrate} zu partitionieren, sind auch andere Aufteilungen des Heaps denkbar (vgl. \cite[Kap. 8]{handbook}).
 In Abschnitt~\ref{sec:lazy-sweep} wurde der Heap in Blöcke eingeteilt, um die Bereinigungsphase zu beschleunigen.
-Alternativ bietet es sich an, Objekte unterschiedlicher Größe mit verschiedenen Techniken zu bereinigen.
+Alternativ bietet es sich an, Objekte unterschiedlicher \textit{Größe} mit verschiedenen Techniken zu bereinigen.
 Große Objekte zu verschieben ist eventuell so zeitaufwendig, dass eine Defragmentierung nicht lohnenswert ist.
 Deswegen kann es ratsam sein, entsprechende Bereiche von einer Kompaktierung auszuschließen.
-Dieser Gedanke führt zum Ansatz, Objekte nach Verschiebbarkeit anzuordnen.
+Dieser Gedanke führt zum Ansatz, Objekte nach \textit{Verschiebbarkeit} anzuordnen.
 Diesbezüglich wurde bereits in Abschnitt~\ref{sec:handle} der Vorschlag geäußert, nicht verschiebbare Handles in einer eigens reservierten Region zu lagern.
 Auch wenn keine Handles verwendet werden, können etwa häufig referenzierte Objekte als nicht verschiebbar deklariert werden, da ein Anpassung der betroffenen Referenzen zu kostspielig wäre.
 Entsprechend können auch diese Bereiche von Kompaktierungsalgorithmen ausgespart werden.
 
-In eine ähnliche Richtung geht der Ansatz, Objekte nach Typ zu sortieren.
+In eine ähnliche Richtung geht der Ansatz, Objekte nach \textit{Typ} zu sortieren.
 Zum Beispiel können Objekte, die keine ausgehenden Referenzen besitzen können, in eigene Bereiche gespeichert werden.
 Markierungsalgorithmen, die Referenzen verfolgen, profitieren gegebenenfalls davon, dies anhand der Speicheradresse zu erkennen und diese Objekte von einer weiteren Untersuchung auszuschließen.
 Ebenso können Objekte separiert werden, die dazu neigen, zyklische Referenzen zu bilden.

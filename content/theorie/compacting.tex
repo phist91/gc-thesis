@@ -26,9 +26,9 @@ Allerdings existieren akzeptable Lösungen, die die Fragmentierung des Heaps dur
 Nichtsdestoweniger werden in diesem Kapitel ausschließlich Algorithmen betrachtet, die den Heap im Rahmen einer Garbage Collection \textbf{kompaktieren}, da die Durchführung eines Kollektionszyklus ursächlich für die Entstehung von Fragmentierung ist.
 
 Algorithmen, die im Rahmen der Garbge Collection die Fragmentierung des Heaps beseitigen oder verhindern, lassen sich grob in zwei Kategorien einteilen:
-Die erste Kategorie der \textit{Mark-Compact-Algorithmen} baut auf der Markierungsphase eines Mark-Sweep-Kollektors auf und können die Bereinigungsphase ersetzen, indem aus den Markierungsinformationen die zukünftigen Positionen der Objekte generiert werden.
+Die erste Kategorie der \textbf{Mark-Compact-Algorithmen} baut auf der Markierungsphase eines Mark-Sweep-Kollektors auf und können die Bereinigungsphase ersetzen, indem aus den Markierungsinformationen die zukünftigen Positionen der Objekte generiert werden.
 Im Folgenden werden mit dem \textit{LISP-2-Algorithmus} und \textit{The Compressor} zwei Exemplare dieser Gattung vorgestellt.
-Die zweite Kategorie der \textit{kopierenden} Algorithmen -- gelegentlich auch \textit{Mark-Copy-Algorithmen} genannt -- vereinen Markierungs- und Kompaktierungsphase, indem als erreichbar identifizierte Objekte unmittelbar an eine neue Position kopiert werden.
+Die zweite Kategorie der \textbf{kopierenden} Algorithmen -- gelegentlich auch \textit{Mark-Copy-Algorithmen} genannt -- vereinen Markierungs- und Kompaktierungsphase, indem als erreichbar identifizierte Objekte unmittelbar an eine neue Position kopiert werden.
 Hier wird exemplarisch ein Algorithmus betrachtet, der den Heap in zwei Halbräume aufteilt.
 
 
@@ -39,7 +39,7 @@ Hier wird exemplarisch ein Algorithmus betrachtet, der den Heap in zwei Halbräu
 
 \section{LISP-2-Kompaktierung}
 \label{sec:lisp2-compact}
-Zunächst wird ein Algorithmus behandelt, der auf dem Mark-Sweep-Ansatz aufbaut und in seiner ursprünglichen Form für \textit{LISP 2}\footnote{LISP 2 war als Nachfolger von LISP gedacht und sollte einige Einschränkungen beheben, die bereits von \textsc{McCarthy} aufgeführt wurden. Aus Kostengründen wurde die Entwicklung von LISP 2 letztlich eingestellt (vgl. \cite{lisp-history}).} konzipiert wurde, weswegen er in der Literatur häufig als \textit{LISP-2-Algorithmus} bezeichnet wird (vgl. \cite[Kap. 3.2]{handbook} und \cite{lisp2gc}).
+Zunächst wird ein Algorithmus behandelt, der auf dem Mark-Sweep-Ansatz aufbaut und in seiner ursprünglichen Form für \textit{LISP 2}\footnote{LISP 2 war als Nachfolger von LISP gedacht und sollte einige Einschränkungen beheben, die bereits von \textsc{McCarthy} aufgeführt wurden. Aus Kostengründen wurde die Entwicklung von LISP 2 letztlich eingestellt (vgl. \cite{lisp-history}).} konzipiert wurde, weswegen er in der Literatur häufig als \textbf{LISP-2-Algorithmus} bezeichnet wird (vgl. \cite[Kap. 3.2]{handbook} und \cite{lisp2gc}).
 Die grundlegende Idee ist, die Bereinigungsphase nach der Markierung erreichbarer Objekte durch eine Kompaktierungsphase zu ersetzen, die alle markierten Objekte an den Beginn des Heaps verschiebt.
 Dabei werden verwaiste Objekte entweder überschrieben oder befinden sich anschließend außerhalb des kompaktierten Bereichs, sodass sie durch zukünftige Allokationen überschrieben werden können.
 
@@ -142,7 +142,7 @@ Damit wird die Arbeit von Allokatoren, die verwandte Objekte zur Optimierung der
 \section{Compressor-Algorithmus}
 \label{sec:compressor}
 
-Der von \textsc{Kermany} und \textsc{Petrank} vorgestellte \textit{Compressor}-Algorithmus zielt darauf ab, die durch die Kompaktierung entstehenden Verzögerungen vor allem für größere Heaps zu minimieren, indem in einem einzigen Durchlauf Objekte an ihre neue Speicheradresse verschoben werden und sämtliche Referenzen angepasst werden \cite{kermany2006}.
+Der von \textsc{Kermany} und \textsc{Petrank} vorgestellte \textbf{Compressor-Algorithmus} zielt darauf ab, die durch die Kompaktierung entstehenden Verzögerungen vor allem für größere Heaps zu minimieren, indem in einem einzigen Durchlauf Objekte an ihre neue Speicheradresse verschoben werden und sämtliche Referenzen angepasst werden \cite{kermany2006}.
 Dazu wird davon ausgegangen, dass der Heapspeicher in gleich große Blöcke eingeteilt ist und Objekte an \textit{Wörtern} ausgerichtet angelegt werden.\footnote{\textsc{Kermany} und \textsc{Petrank} gehen exemplarisch von einer Wortbreite von 4 Bytes (32 Bit) und einer Blockgröße von 512 Bytes aus.}
 Während der Markierungsphase kann dann ein Bitvektor erzeugt werden, der angibt, ob ein Wort durch ein erreichbares Objekt belegt ist (siehe Abbildung~\ref{fig:bitvector}).
 Alle weiteren Berechnungen können dann mithilfe des Bitvektors realisiert werden, anstelle auf den Heap zuzugreifen.
@@ -245,7 +245,7 @@ Mit gleichem Argument sind auch die berechneten Speicheradressen im Compressor-A
 
 \section{Kopierende Garbage Collection}
 \label{sec:copying}
-Die zweite Kategorie der Algorithmen, die eine Kompaktierung des Heaps erreichen, bilden die \textit{kopierenden} Algorithmen.
+Die zweite Kategorie der Algorithmen, die eine Kompaktierung des Heaps erreichen, bilden die \textbf{kopierenden} Algorithmen.
 Hier werden Markierungs- und Kompaktierungsphase vereint:
 Analog zu Mark-Sweep-Ansätzen werden Referenzen verfolgt, um erreichbare Objekte zu identifizieren.
 Im Gegensatz zu den in den vorigen beiden Abschnitten vorgestellten Mark-Compact-Algorithmen werden Objekte jedoch nicht durch eine zusätzliche lineare Traversierung des Heaps zusammengefasst, sondern unmittelbar bei Entdeckung an eine neue Position kopiert.

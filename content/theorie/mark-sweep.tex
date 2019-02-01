@@ -11,7 +11,7 @@ Durch die Manipulation der Registeradressen können Paare verwaisen, was zu Spei
 Zur Auflösung dieser Problematik bietet LISP als erste Programmiersprache ihrer Zeit eine automatische Speicherverwaltung, die von \textsc{McCarthy} wie folgt grob umschrieben wird:
 Im Falle von Speicherknappheit wird -- ausgehend von einer Menge von Basisregistern -- ermittelt, welche Register über eine Folge von \texttt{cdr}-Einträgen erreichbar sind.
 Nicht erreichbare Register enthalten überschreibbare Inhalte, sodass diese zurück in die \textit{free storage list} eingefügt werden können und wieder als freie Speicherplätze zu Verfügung stehen.
-Diese zweischrittige Vorgehensweise -- das Erkennen nicht mehr benötigter Speicherbereiche und die anschließende Freigabe eben jener -- bildet die Grundlage des \textit{Mark-Sweep-Algorithmus}.
+Diese zweischrittige Vorgehensweise -- das Erkennen nicht mehr benötigter Speicherbereiche und die anschließende Freigabe eben jener -- bildet die Grundlage des \textbf{Mark-Sweep-Algorithmus}.
 
 \begin{figure}[h]
 	\centering
@@ -28,7 +28,7 @@ Diese zweischrittige Vorgehensweise -- das Erkennen nicht mehr benötigter Speic
 
 \section{Naiver Mark-Sweep-Algorithmus}
 \label{sec:naive-mark-sweep}
-Der naive Mark-Sweep-Algorithmus arbeitet in zwei Schritten:
+Der \textbf{naive Mark-Sweep-Algorithmus} arbeitet in zwei Schritten:
 Zunächst wird bestimmt, welche Objekte im Speicher unerreichbar sind, weil sie von keinem anderen erreichbaren Objekt referenziert werden.
 Diese Objekte können gefahrlos freigegeben werden, da auf ihre Informationen nicht mehr zugegriffen werden kann.
 Der zweite Schritt besteht aus einer Traversierung des gesamten Heaps.
@@ -337,7 +337,7 @@ Für Systeme ohne hardware- oder softwareseitige Unterstützung für Multithread
 	\label{fig:heap-region}
 \end{figure}
 
-Bei der verzögerten Bereinigung ist der Heapspeicher in \textit{Blöcken} eingeteilt.
+Bei der verzögerten Bereinigung ist der Heapspeicher in \textbf{Blöcken} eingeteilt.
 Jeder Block enthält Objekte einer festgelegten Größenordnung; zu jeder Größenordnung können mehrere Blöcke existieren (Abbildung~\ref{fig:heap-region}).
 Die Idee ist nun, das Sweeping durch den Allokator ausführen zu lassen, wenn Speicher angefordert wird.
 Dabei werden die zuvor markierten Objekte freigegeben, allerdings nur in denjenigen Blöcken, die der angeforderten Speichermenge zugeordnet sind.
@@ -431,7 +431,7 @@ Caching- und Prefetch-Mechanismen, die durch vorweggenommenes Bereitstellen von 
 In der Markierungsphase können sie daher Speicherzugriffe nicht so effektiv beschleunigen wie in der Bereinigungsphase \cite[S. 21f]{handbook}.
 Um diesen Makel zu beheben, kann die Zugriffsreihenfolge auf Objekte variiert werden.
 Anstatt etwa im naiven Algorithmus~\ref{algo:naive-mark} die Abarbeitung der \Var{toDo}-Menge zu beginnen, sobald das erste Basisobjekt erfasst wurde, können stattdessen auch zunächst alle Basisobjekte zu \Var{toDo} hinzugefügt und die Prozedur \Method{mark} im Anschluss aufgerufen werden.
-Je nachdem, wie \Var{toDo} in der Praxis realisiert wird -- zum Beispiel in Form eines Stacks -- kann die Traversierung der Objekte -- und damit die Performanz des Kollektors in der Markierungsphase -- signifikant beeinflusst werden (vgl. \cite[S. 19]{handbook}).
+Je nachdem, wie \Var{toDo} in der Praxis realisiert wird -- zum Beispiel in Form eines Stacks -- kann die Traversierung der Objekte -- und damit die Performanz des Kollektors in der Markierungsphase -- signifikant beeinflusst werden (vgl. \cite{garner2007}).
 
 Statt Markierungsinformationen im Header zu speichern, können diese auch in Bitmaps oder tabellenähnlichen Strukturen außerhalb eines Objekts verwaltet werden.
 Dies vermeidet schreibende Zugriffe auf Objekte während der Markierungsphase, sodass Objekte ohne Referenzfelder übersprungen werden können und die Garbage Collection das Caching weniger stark beeinträchtigt.

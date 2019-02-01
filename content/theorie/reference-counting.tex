@@ -6,7 +6,7 @@ Der zweite Garbage-Collection-Algorithmus, der in dieser Arbeit vorgestellt wird
 \textsc{McCarthys} Ansatz bezeichnet er jedoch als \enquote{elegant but inefficient} \cite[S. 655]{collins1960}, da dieser sowohl zeitaufwändig sei als auch den Speicherplatz für Nutzdaten einschränke.
 Stattdessen schlägt \textsc{Collins} vor, zusätzlich zu einem Datum die Anzahl der Referenzen auf dieses zu speichern.
 Anhand dieses Zählers, der bei der Manipulation von Referenzen aktualisiert wird, kann unmittelbar festgestellt werden, ob ein Datum verwaist ist und der entsprechende Speicherplatz freigegeben werden kann \cite[S. 656f]{collins1960}.
-Diesen Ansatz -- die \textit{Referenzzählung} (engl. \textit{reference counting}) -- wird in diesem Kapitel ausführlich betrachtet.
+Dieser Ansatz -- die \textbf{Referenzzählung} (engl. \textit{reference counting}) -- wird in diesem Kapitel ausführlich betrachtet.
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -16,7 +16,7 @@ Diesen Ansatz -- die \textit{Referenzzählung} (engl. \textit{reference counting
 
 \section{Naive Referenzzählung}
 \label{sec:naive-rc}
-Zur Realisierung des Ansatzes von \textsc{Collins} im betrachteten Speichermodell wird erneut der Header eines Objekts \Var{a} genutzt, um einen ganzzahligen, nicht negativen Wert \Var{rc}(\Var{a}) zu hinterlegen, der als \textit{Referenzzähler} von \Var{a} bezeichnet wird.
+Zur Realisierung des Ansatzes von \textsc{Collins} im betrachteten Speichermodell wird erneut der Header eines Objekts \Var{a} genutzt, um einen ganzzahligen, nicht negativen Wert \Var{rc}(\Var{a}) zu hinterlegen, der als \textbf{Referenzzähler} von \Var{a} bezeichnet wird.
 Dieser gibt an, wie viele Referenzen von anderen Objekten auf \Var{a} existieren und wird bei der Erzeugung von \Var{a} mit dem Wert $0$ initialisiert.
 Auf diese Art erhält man unmittelbar eine notwendige Bedingung für die Erreichbarkeit eines Heapobjekts:
 Ist $\Var{a} \in \Reach$, so existiert mindestens ein Objekt $\Var{b} \neq \Var{a}$ mit $\Var{b} \rightarrow \Var{a}$ und somit gilt $\Var{rc}(\Var{a}) \geq 1$.
@@ -170,7 +170,7 @@ Im Anschluss daran werden weitere Ansätze vorgestellt, die eine Effizienzsteige
 Die fehlende Möglichkeit zur Erkennung und Freigabe zyklischer Strukturen kann -- bei entsprechend häufiger Verwendung -- große Teile des Heaps brachliegen lassen.
 Ein gelegentlich zusätzlich ausgeführter Mark-Sweep-Zyklus mag diese Problematik zwar beheben, macht allerdings die oben genannten Vorteile der Referenzzählung zunichte.
 Nachfolgend wird ein Algorithmus von \textsc{Martínez}, \textsc{Wachenchauzer} und \textsc{Lins} vorgestellt, der die naive Referenzählung um ein Verfahren ergänzt, mit welchem zyklische Strukturen zuverlässig erkannt werden können \cite{martinez1990}.
-Dieses basiert darauf, dass ein Zyklus von Objekten als \textit{starke Zusammenhangskomponente} im Objektgraphen aufgefasst werden kann (vgl. \cite[S. 348]{linhou2006}).
+Dieses basiert darauf, dass ein Zyklus von Objekten als \textbf{starke Zusammenhangskomponente} im Objektgraphen aufgefasst werden kann (vgl. \cite[S. 348]{linhou2006}).
 Das bedeutet, dass von jedem Objekt aus jedes andere Objekt innerhalb des Zyklus erreicht werden kann.
 
 \begin{mybox}
@@ -415,7 +415,7 @@ Mittels einer einzigen Traversierung kann dann die Zahl der externen Referenzen 
 \label{sec:rc-optimizing}
 Abschließend werden zwei Ansätze betrachtet, die eine Effizienzsteigerung der Referenzzählung bezwecken sollen.
 In Abschnitt~\ref{sec:naive-rc} wurde bereits konstatiert, dass Löschkaskaden, die durch freigegebene Objekte entstehen, zu unerwarteten Programmunterbrechungen führen können und die Buchhaltung jeder einzelnen Referenzmanipulation enormen Overhead erzeugt.
-Von \textsc{Deutsch} und \textsc{Bobrow} stammt der Ansatz der \textit{verzögerten Referenzzählung} (engl. \textit{deferred reference counting}), der die Freigabe verwaister Objekte verzögert und auf eine Verfolgung von Referenzmanipulationen verzichtet, die in Feldern von Basisobjekten stattfinden \cite{deutsch1976}.
+Von \textsc{Deutsch} und \textsc{Bobrow} stammt der Ansatz der \textbf{verzögerten Referenzzählung} (engl. \textit{deferred reference counting}), der die Freigabe verwaister Objekte verzögert und auf eine Verfolgung von Referenzmanipulationen verzichtet, die in Feldern von Basisobjekten stattfinden \cite{deutsch1976}.
 Der Referenzzähler eines Objekts wird dazu nicht im Header gespeichert.
 Stattdessen werden zwei Tabellen -- die \textit{zero count table} \Var{ZCT} und die \textit{multi reference table} \Var{MRT} -- angelegt.
 Erstere enthält alle Objekte, deren Referenzzähler $0$ ist.
@@ -518,7 +518,7 @@ Betrachte etwa einen Mutator, der folgenden Code ausführt, und die dadurch ausg
 \end{center}
 
 Offensichtlich wird die Erhöhung der Referenzzähler von $\Var{a}_1$ bis $\Var{a}_{n-1}$ durch die jeweils nächste Anweisung des Mutators rückgängig gemacht, sodass es sinnvoll ist, diese Manipulationen zu aggregieren und lediglich die Zähler von $\Var{a}_0$ und $\Var{a}_n$ anzupassen.
-Die \textit{aggregierte Referenzzählung} (engl. \textit{coalesced reference counting}) realisiert dies, indem in regelmäßigen Abständen überprüft wird, welche Referenzfelder von Objekten seit der letzten Überprüfung verändert wurden.
+Die \textbf{aggregierte Referenzzählung} (engl. \textit{coalesced reference counting}) realisiert dies, indem in regelmäßigen Abständen überprüft wird, welche Referenzfelder von Objekten seit der letzten Überprüfung verändert wurden.
 Dazu wird im Rahmen einer Schreibbarriere ein Objektfeld als modifiziert gekennzeichnet -- etwa durch Setzen eines Bits im Header des Objekts -- und die Adresse des Objektfeldes zusammen mit dem alten Inhalt vor der ersten Modifikation in einer Tabelle \Var{log} hinterlegt (Zeile 3f in Algorithmus~\ref{algo:coalesced-rc}).
 Wird nun über die in \Var{log} eingetragenen Felder iteriert, so wird geprüft, ob sich die neue im Feld gespeicherte Referenz \Var{*field} von der zwischengespeicherten Referenz \Var{log}(\Var{field}) unterscheidet (Zeile~8).
 Nur dann sind Anpassungen der jeweiligen Referenzzähler nötig.

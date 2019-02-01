@@ -30,7 +30,7 @@ Dazu wird aus jeder Klasse ein elementarer Algorithmus betrachtet, an dem das Gr
 Durch einen Blick auf Performance und Ressourcenbedarf im Kontext verschiedener Anwendungsfälle ergeben sich dann Ansätze, die zu einer Auseinandersetzung mit elaborierteren Varianten motivieren.
 Im zweiten Teil der Arbeit wird der Entwurf und die Implementation einer Anwendung beschrieben, die die diskutierten Garbage-Collection-Algorithmen grafisch visualisiert und in einem vereinfachten Speichermodell simuliert.
 Anhand dieser Anwendung soll die Arbeitsweise der Algorithmen zusätzlich veranschaulicht werden.
-\todo[inline]{ggfs. noch überarbeiten}
+\todo[inline]{ggfs. noch überarbeiten bzw. ergänzen}
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
  % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -163,7 +163,7 @@ Formal wird diese Eigenschaft wie folgt definiert:
 \begin{mybox}
 \begin{defn}[Erreichbarkeit]
 	\label{def:erreichbar}
-	Jedes Element der Menge $\Reach$ der erreichbaren Objekte ist durch endlich häufige Anwendung der folgenden beiden Regeln konstruiert:
+	Jedes Element der Menge $\Reach$ der \textbf{erreichbaren Objekte} ist durch endlich häufige Anwendung der folgenden beiden Regeln konstruiert:
 	\begin{enumerate}[(1)]
 		\item Ist $\Var{a} \in \Roots$, so folgt $\Var{a} \in \Reach$.
 		\item Ist $\Var{a} \in \Reach$, $\Var{b}$ ein weiteres Objekt und existiert ein $\Var{i} \in \NN$ mit $\Var{*a[i]} = \Var{b}$, so folgt $\Var{b} \in \Reach$.
