@@ -53,3 +53,31 @@ Letzterer bekommt dabei den zuvor erzeugten Allokator übergeben, sodass Kollekt
 
 \section{Implementation}
 \label{sec:implementation}
+Im nun folgenden Abschnitt wird vorgestellt, wie die obige Modellierung unter Beachtung der spezifizierten Anforderungen realisiert werden.
+Im Sinne der Plattformunabhängigkeit wurde dazu die Programmiersprache \textit{Java} gewählt, wobei auf die \textit{Java Language Specification 9}\footnote{\url{https://docs.oracle.com/javase/specs/jls/se9/html/index.html}} zurückgegriffen wird.
+Der gesamte Programmcode wurde über das Versionskontrollsystem \textit{Git}\footnote{\url{https://git-scm.com/}} verwaltet.
+Um eine plattformunabhängige Entwicklung zu gewährleisten, wurde zudem das Build-Management-Tool \textit{Apache Maven}\footnote{\url{https://maven.apache.org/}} verwendet.
+Dieses bildet die verschiedenen Arbeitsschritte der Entwicklung, wie etwa Kompilieren, Testen und Erzeugen von \code{JAR}-Dateien, auf automatisiert durchführbare Phasen ab und kümmert sich dabei eigenständig um Abhängigkeiten von externen Bibliotheken.
+Zur Weiterentwicklung des Systems genügt somit ein Klonen des Git-Repositorys und eine Ausführung von Maven, um alle benötigten Abhängigkeiten beschaffen zu lassen.
+\todo[inline]{ggfs. Referenz auf nächstes Kapitel}
+
+Bei der Entwicklung der einzelnen Komponenten wurde grundsätzlich \textit{testgetrieben} vorgegangen.
+Das bedeutet, dass zu jeder zu implementierenden Methode zunächst mehrere Testfälle erstellt werden, die das erwartete Verhalten des Programms beschreiben.
+Einzige Ausnahme bilden hier Methoden, die mit GUI-Komponenten interagieren, da diese nur schwer automatisiert testbar sind.
+Als Testframework wurde auf \textit{JUnit 5}\footnote{\url{https://junit.org/junit5/}} zurückgegriffen.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.6]{img/uml/ch7-klassen.pdf}
+	\caption[Klassendiagramm des realisierten Modells (Auszug)]{Klassendiagramm (Auszug) des realisierten Modells aus Abbildung~\ref{fig:model}.}
+	\label{fig:implementation}
+\end{figure}
+
+\subsection{Allokator}
+\label{sub:allocator}
+Der Allokator verwaltet die Information, welche Wörter des simulierten Heaps belegt sind.
+Aus diesem Grund wurde zunächst eine Klasse \code{AllocationBitmap} entworfen, die diese Information in einem \mintinline{java}{boolean}-Array speichert (siehe Abbildung~\ref{fig:implementation}).
+Der $i$-te Eintrag dieses Arrays gibt an, ob das $i$-te Wort des Heaps durch ein Wort belegt (\mintinline{java}{true}) oder frei (\mintinline{java}{false}) ist.
+Weiter stellt \code{AllocationBitmap} zwei Methoden \code{nextFree} und \code{nextUsed} zur Verfügung, welche ausgehend von einer übergebenen Speicheradresse die nächste freie bzw. belegte Stelle des Heaps liefern.
+Diese Methoden sind essentiell, um für eine angeforderte Speichermenge eine hinreichend große freie Stelle zu finden.
+
