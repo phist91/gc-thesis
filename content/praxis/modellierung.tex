@@ -28,16 +28,16 @@ Insofern ist es sinnvoll, diese Einteilung möglichst auch in die Modellierung e
 \begin{figure}[h]
 	\centering
 	\includegraphics[scale=0.6]{img/uml/ch7-model.pdf}
-	\caption[Klassendiagramm zur Modellierung von Mutator, Allokator und Kollektor]{Klassendiagramm zur Modellierung von Mutator, Allokator und Kollektor.}
+	\caption[Klassendiagramm zur Modellierung von Mutator, Allokator und Kollektor]{Klassendiagramm zur Modellierung der Beziehung zwischen Mutator, Allokator und Kollektor. Im Rahmen der Implementation wurde dieses Modell um weitere Klassen, Methoden und Attribute ergänzt.}
 	\label{fig:model}
 \end{figure}
 
-Heapobjekte werden als Instanzen einer Klasse \code{Object} modelliert und beinhalten Speicheradresse (\code{address}), Größe (\code{size}), Markierungsinformation (\code{mark}) und eine Menge \code{pointers} an Referenzen auf weitere Instanzen von \code{Object}, um die Menge \Pointers zu realisieren.
+Heapobjekte werden als Instanzen einer Klasse \code{HeapObject} modelliert und beinhalten Speicheradresse (\code{address}), Größe (\code{size}), Markierungsinformation (\code{mark}) und eine Menge \code{pointers} an Referenzen auf weitere Instanzen von \code{HeapObject}, um die Menge \Pointers zu realisieren.
 Ansonsten bieten sie keinerlei Funktionalität an.
 
 Eine Instanz der Schnittstelle \code{Allocator} stellt die wesentlichen Dienste eines Allokators zu Verfügung.
 Dazu zählt die Anforderung einer Speichermenge durch den Mutator mittels \code{new}, die Freigabe von Objekten und des durch sie belegten Speicherbereichs sowie das Verschieben eines Objekts.
-Ersteres geschieht durch Übergabe der gewünschten Speichermenge und Rückgabe eines neu erzeugten Instanz von \code{Object}, die die entsprechende Speicheradresse enthält.
+Ersteres geschieht durch Übergabe der gewünschten Speichermenge und Rückgabe eines neu erzeugten Instanz von \code{HeapObject}, die die entsprechende Speicheradresse enthält.
 Der Allokator ist diejenige Instanz, die Informationen über den Füllstand des Heaps und insbesondere über die Belegung einzelner Wörter besitzt.
 Die Schnittstelle \code{GarbageCollector} beschreibt die Funktionalität eines Kollektors, welche im Wesentlichen aus der Durchführung eines Garbage-Collection-Zyklus (Methode \code{collect}) besteht.
 Da eine Garbage Collection die Freigabe und Verschiebung von Objekten auslösen kann, verwaltet sie genau eine Instanz von \code{Allocator}.
@@ -59,16 +59,17 @@ Der gesamte Programmcode wurde über das Versionskontrollsystem \textit{Git}\foo
 Um eine plattformunabhängige Entwicklung zu gewährleisten, wurde zudem das Build-Management-Tool \textit{Apache Maven}\footnote{\url{https://maven.apache.org/}} verwendet.
 Dieses bildet die verschiedenen Arbeitsschritte der Entwicklung, wie etwa Kompilieren, Testen und Erzeugen von \code{JAR}-Dateien, auf automatisiert durchführbare Phasen ab und kümmert sich dabei eigenständig um Abhängigkeiten von externen Bibliotheken.
 Zur Weiterentwicklung des Systems genügt somit ein Klonen des Git-Repositorys und eine Ausführung von Maven, um alle benötigten Abhängigkeiten beschaffen zu lassen.
-\todo[inline]{ggfs. Referenz auf nächstes Kapitel}
 
 Bei der Entwicklung der einzelnen Komponenten wurde grundsätzlich \textit{testgetrieben} vorgegangen.
 Das bedeutet, dass zu jeder zu implementierenden Methode zunächst mehrere Testfälle erstellt werden, die das erwartete Verhalten des Programms beschreiben.
 Einzige Ausnahme bilden hier Methoden, die mit GUI-Komponenten interagieren, da diese nur schwer automatisiert testbar sind.
 Als Testframework wurde auf \textit{JUnit 5}\footnote{\url{https://junit.org/junit5/}} zurückgegriffen.
 
-\begin{figure}[h]
+\newpage
+
+\begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.6]{img/uml/ch7-klassen.pdf}
+	\includegraphics[scale=0.65]{img/uml/ch7-klassen.pdf}
 	\caption[Klassendiagramm des realisierten Modells (Auszug)]{Klassendiagramm (Auszug) des realisierten Modells aus Abbildung~\ref{fig:model}.}
 	\label{fig:implementation}
 \end{figure}
@@ -78,6 +79,17 @@ Als Testframework wurde auf \textit{JUnit 5}\footnote{\url{https://junit.org/jun
 Der Allokator verwaltet die Information, welche Wörter des simulierten Heaps belegt sind.
 Aus diesem Grund wurde zunächst eine Klasse \code{AllocationBitmap} entworfen, die diese Information in einem \mintinline{java}{boolean}-Array speichert (siehe Abbildung~\ref{fig:implementation}).
 Der $i$-te Eintrag dieses Arrays gibt an, ob das $i$-te Wort des Heaps durch ein Wort belegt (\mintinline{java}{true}) oder frei (\mintinline{java}{false}) ist.
-Weiter stellt \code{AllocationBitmap} zwei Methoden \code{nextFree} und \code{nextUsed} zur Verfügung, welche ausgehend von einer übergebenen Speicheradresse die nächste freie bzw. belegte Stelle des Heaps liefern.
-Diese Methoden sind essentiell, um für eine angeforderte Speichermenge eine hinreichend große freie Stelle zu finden.
+Weiter stellt \code{AllocationBitmap} zwei Methoden \code{nextFree} und \code{nextUsed} zur Verfügung, welche ausgehend von einer übergebenen Speicheradresse die nächste freie bzw. belegte Stelle des Heaps liefern, indem das Array linear durchsucht wird.
+Diese Methoden sind essenziell, um für eine angeforderte Speichermenge eine hinreichend große freie Stelle zu finden.
 
+Als Konkretisierung der Schnittstelle \code{Allocator} wurde zunächst ein naiver Allokator entwickelt.
+Dieser zeichnet sich dadurch aus, dass er -- ausgehend von einer Startposition -- mittels linearer Traversierung die nächstbeste freie Stelle findet, die die angeforderte Speichermenge aufnehmen kann.
+Die Startposition ist dabei gegeben durch das Attribut \code{position}, welches stets die Adresse des ersten Worts hinter dem zuletzt angelegten Objekt enthält.
+
+Das Herzstück der Klasse \code{NaiveAllocator} ist die Methode \code{allocate}, die intern durch \code{newObject} aufgerufen wird (siehe Listing~\ref{java:naive-alloc}).
+
+\begin{listing}[h]
+\inputminted[]{java}{code/NaiveAlloc-allocate.java}
+\caption[Methode \code{allocate} der Klasse \code{NaiveAllocator}]{Auszug aus der Methode \code{allocate} der Klasse \code{NaiveAllocator}.}
+\label{java:naive-alloc}
+\end{listing}

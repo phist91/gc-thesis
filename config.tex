@@ -189,16 +189,17 @@
 % ===========================================================
 \usepackage{minted}
 \setminted{%
-	style=bw,
-	fontsize=\normalsize,
+	style=friendly,
+	fontsize=\small,
 	breaklines,
 	breakanywhere=false,
 	breakbytoken=false,
 	breakbytokenanywhere=false,
 	breakafter={.,},
 	autogobble,
+	numbers=left,
 	numbersep=3mm,
-	tabsize=4,
+	tabsize=2,
 	frame=lines
 }
 \setmintedinline{%
@@ -207,6 +208,7 @@
 	numbersep=12pt,
 	tabsize=4,
 }
+\numberwithin{listing}{chapter}
 
 % ===========================================================
 
