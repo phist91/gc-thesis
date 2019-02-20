@@ -86,10 +86,19 @@ Als Konkretisierung der Schnittstelle \code{Allocator} wurde zunächst ein naive
 Dieser zeichnet sich dadurch aus, dass er -- ausgehend von einer Startposition -- mittels linearer Traversierung die nächstbeste freie Stelle findet, die die angeforderte Speichermenge aufnehmen kann.
 Die Startposition ist dabei gegeben durch das Attribut \code{position}, welches stets die Adresse des ersten Worts hinter dem zuletzt angelegten Objekt enthält.
 
-Das Herzstück der Klasse \code{NaiveAllocator} ist die Methode \code{allocate}, die intern durch \code{newObject} aufgerufen wird (siehe Listing~\ref{java:naive-alloc}).
+Das Herzstück der Klasse \code{NaiveAllocator} ist die Methode \code{allocate}, die intern durch \code{newObject} aufgerufen wird und das Auffinden einer geeigneten Position für ein neues Heapobjekt übernimmt (siehe Listing~\ref{java:naive-alloc}).
+Diese Methode sucht zunächst unter Zuhilfenahme von \code{nextFree} und \code{nextUsed} der Reihe nach alle freien Stellen hinter \code{position} ab, bis eine genügend große gefunden oder das Ende des Heaps erreicht wurde (Zeile~7 bis~14).
+Dabei wird auch berücksichtigt, dass sich hinter \code{position} eventuell kein freier Speicher befindet (Zeile~9f) oder ein freie Speicherbereich sich bis ans Heapende erstreckt (Zeile 12f).
+Wird so ein hinreichend großer Bereich freien Speichers gefunden, wird dieser entsprechend der angeforderten Speichermenge als belegt markiert und die Anfangsadresse des Bereichs zurückgegeben (Zeile~18 bis 22).
+Andernfalls wird auf analoge Weise der Bereich vor \code{position} durchsucht.
+Sollte auch hierbei kein geeigneter Speicherbereich gefunden werden können, wird als Ergebnis \code{-1} zurückgegeben, was \code{newObject} dazu veranlasst, kein neues Objekt zu erzeugen.
 
 \begin{listing}[h]
 \inputminted[]{java}{code/NaiveAlloc-allocate.java}
 \caption[Methode \code{allocate} der Klasse \code{NaiveAllocator}]{Auszug aus der Methode \code{allocate} der Klasse \code{NaiveAllocator}.}
 \label{java:naive-alloc}
 \end{listing}
+
+Der \code{SemispaceAllocator} wurde zur Realisierung des Halbraumverfahrens nach \textsc{Fenichel}, \textsc{Yochelson} und \textsc{Cheney} (siehe Abschnitt~\ref{sec:copying}) entwickelt.
+Die Allokation läuft hier weitestgehend analog zum \code{NaiveAllocator} ab, allerdings wird der Allokationsversuch auf den aktuellen Zielhalbraum beschränkt, dessen Beginn im Attribut \code{target} notiert ist.
+Zusätzlich steht eine Methode \code{swapSemispaces} zur Verfügung, die die Rolle der beiden Halbräume tauscht, sowie eine Methode \code{clearSource}, die einen Halbraum in Gänze als unbelegt markiert.
