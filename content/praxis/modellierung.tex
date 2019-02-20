@@ -32,6 +32,8 @@ Insofern ist es sinnvoll, diese Einteilung möglichst auch in die Modellierung e
 	\label{fig:model}
 \end{figure}
 
+\todo[inline]{aktualisieren}
+
 Heapobjekte werden als Instanzen einer Klasse \code{HeapObject} modelliert und beinhalten Speicheradresse (\code{address}), Größe (\code{size}), Markierungsinformation (\code{mark}) und eine Menge \code{pointers} an Referenzen auf weitere Instanzen von \code{HeapObject}, um die Menge \Pointers zu realisieren.
 Ansonsten bieten sie keinerlei Funktionalität an.
 
@@ -39,21 +41,25 @@ Eine Instanz der Schnittstelle \code{Allocator} stellt die wesentlichen Dienste 
 Dazu zählt die Anforderung einer Speichermenge durch den Mutator mittels \code{new}, die Freigabe von Objekten und des durch sie belegten Speicherbereichs sowie das Verschieben eines Objekts.
 Ersteres geschieht durch Übergabe der gewünschten Speichermenge und Rückgabe eines neu erzeugten Instanz von \code{HeapObject}, die die entsprechende Speicheradresse enthält.
 Der Allokator ist diejenige Instanz, die Informationen über den Füllstand des Heaps und insbesondere über die Belegung einzelner Wörter besitzt.
-Die Schnittstelle \code{GarbageCollector} beschreibt die Funktionalität eines Kollektors, welche im Wesentlichen aus der Durchführung eines Garbage-Collection-Zyklus (Methode \code{collect}) besteht.
-Da eine Garbage Collection die Freigabe und Verschiebung von Objekten auslösen kann, verwaltet sie genau eine Instanz von \code{Allocator}.
+Die abstrakte Klasse \code{GarbageCollector} beschreibt die Funktionalität eines Kollektors, welche im Wesentlichen aus der Durchführung eines Garbage-Collection-Zyklus (Methode \code{collect}) besteht.
+Da eine Garbage Collection die Freigabe und Verschiebung von Objekten auslösen kann, benötigt sie die entsprechende Funktionalität von \code{Allocator}.
 Die Klasse \code{CollectionController} realisiert einerseits die Aufgabe des Mutators, das heißt die Anforderung von Speicher für neue Objekte sowie die (Simulation von) Referenzmanipulationen, die zur Verwaisung von Objekten führen.
 Daher besitzt sie zwei Mengen von Heapobjekten \code{objects} und \code{roots}.
 \code{objects} enthält dabei sämtliche Objekte des Heaps und \code{roots}\ -- entsprechend der Menge \Roots -- alle Basisobjekte.
 Zudem verwaltet sie eine \code{Allocator}-Instanz, um Speicher anfordern zu können, sowie eine \code{GarbageCollector}-Instanz zur Auslösung der Garbage Collection.
-Andererseits fungiert \code{CollectionController} als Steuerklasse, um über die GUI eingehende Benutzerinteraktionen umsetzen und delegieren zu können.
+Letztere ist zudem in der Lage, über den \code{CollectionController} auf die beiden Objektmengen sowie den eingesetzten Allokator zuzugreifen.
+Andererseits fungiert \code{CollectionController} als Steuerklasse, um über die GUI eingehende Benutzerinteraktionen umsetzen und delegieren zu können (siehe Abschnitt~\ref{sec:gui}).
 
 Die Idee ist nun, beim Start des Simulators zunächst eine Instanz der Klasse \code{CollectionController} erzeugen.
-Diese legt wiederum -- je nach ausgewählter Garbage Collection -- eine geeignete \code{Allocator}-Instanz sowie einen \code{GarbageCollector} an.
-Letzterer bekommt dabei den zuvor erzeugten Allokator übergeben, sodass Kollektor und Steuerklasse auf denselben simulierten Heap zugreifen.
+Diese legt wiederum -- je nach ausgewählter Garbage Collection -- eine geeignete \code{Allocator}-Instanz sowie einen \code{GarbageCollector} an und trägt sich beim Garbage Collector als Steuerinstanz ein.
+Dadurch greifen Kollektor und Steuerklasse auf denselben simulierten Heap zu.
 
-\section{Implementation}
+\section{Implementation zentraler Komponenten}
 \label{sec:implementation}
 Im nun folgenden Abschnitt wird vorgestellt, wie die obige Modellierung unter Beachtung der spezifizierten Anforderungen realisiert werden.
+Dabei wird zunächst die Umsetzung des Speichermodells und der Programmlogik fokussiert.
+Abschnitt~\ref{sec:gui} widmet sich anschließend der Anbindung an die grafische Benutzeroberfläche.
+
 Im Sinne der Plattformunabhängigkeit wurde dazu die Programmiersprache \textit{Java} gewählt, wobei auf die \textit{Java Language Specification 9}\footnote{\url{https://docs.oracle.com/javase/specs/jls/se9/html/index.html}} zurückgegriffen wird.
 Der gesamte Programmcode wurde über das Versionskontrollsystem \textit{Git}\footnote{\url{https://git-scm.com/}} verwaltet.
 Um eine plattformunabhängige Entwicklung zu gewährleisten, wurde zudem das Build-Management-Tool \textit{Apache Maven}\footnote{\url{https://maven.apache.org/}} verwendet.
@@ -74,7 +80,9 @@ Als Testframework wurde auf \textit{JUnit 5}\footnote{\url{https://junit.org/jun
 	\label{fig:implementation}
 \end{figure}
 
-\subsection{Allokator}
+\todo[inline]{aktualisieren}
+
+\subsection{Allokatorklassen}
 \label{sub:allocator}
 Der Allokator verwaltet die Information, welche Wörter des simulierten Heaps belegt sind.
 Aus diesem Grund wurde zunächst eine Klasse \code{AllocationBitmap} entworfen, die diese Information in einem \mintinline{java}{boolean}-Array speichert (siehe Abbildung~\ref{fig:implementation}).
@@ -94,11 +102,49 @@ Andernfalls wird auf analoge Weise der Bereich vor \code{position} durchsucht.
 Sollte auch hierbei kein geeigneter Speicherbereich gefunden werden können, wird als Ergebnis \code{-1} zurückgegeben, was \code{newObject} dazu veranlasst, kein neues Objekt zu erzeugen.
 
 \begin{listing}[h]
-\inputminted[]{java}{code/NaiveAlloc-allocate.java}
-\caption[Methode \code{allocate} der Klasse \code{NaiveAllocator}]{Auszug aus der Methode \code{allocate} der Klasse \code{NaiveAllocator}.}
-\label{java:naive-alloc}
+	\inputminted[]{java}{code/NaiveAlloc-allocate.java}
+	\caption[Methode \code{allocate} der Klasse \code{NaiveAllocator}]{Auszug aus der Methode \code{allocate} der Klasse \code{NaiveAllocator}.}
+	\label{java:naive-alloc}
 \end{listing}
 
-Der \code{SemispaceAllocator} wurde zur Realisierung des Halbraumverfahrens nach \textsc{Fenichel}, \textsc{Yochelson} und \textsc{Cheney} (siehe Abschnitt~\ref{sec:copying}) entwickelt.
-Die Allokation läuft hier weitestgehend analog zum \code{NaiveAllocator} ab, allerdings wird der Allokationsversuch auf den aktuellen Zielhalbraum beschränkt, dessen Beginn im Attribut \code{target} notiert ist.
+Der \code{SemispaceAllocator} wurde zur Realisierung des Halbraumverfahrens nach \textsc{Fenichel}, \textsc{Yochelson} und \textsc{Cheney} (siehe Abschnitt~\ref{sec:copying}) als Spezialisierung des naiven Allokators entwickelt.
+Die Allokation läuft hier weitestgehend analog ab, allerdings wird der Allokationsversuch auf den aktuellen Zielhalbraum beschränkt, dessen Beginn im Attribut \code{target} notiert ist.
 Zusätzlich steht eine Methode \code{swapSemispaces} zur Verfügung, die die Rolle der beiden Halbräume tauscht, sowie eine Methode \code{clearSource}, die einen Halbraum in Gänze als unbelegt markiert.
+
+\subsection{Zentrale Steuerklasse}
+\label{sub:controller}
+Die Klasse \code{CollectionController} verwaltet als zentrale Steuerklasse zum einen die beiden Objektmengen \code{objects} und \code{roots}, auf die von den implementierten Garbage-Collection-Algorithmen per Getter-Methoden zugegriffen werden kann.
+Zum anderen bietet sie Methoden, um neue Objekte im Heap anzulegen bzw. bereits vorhandene Objekte verwaisen zu lassen.
+Die Entscheidung, ob zwischen zwei Objekten eine Referenz erzeugt wird oder ein Objekt zur Menge der Basisobjekte gehört, wird dabei zufällig entschieden.
+Die Wahrscheinlichkeit hierfür ist in der zentralen Konfigurationsklasse \code{Settings} (siehe Abschnitt~\ref{sub:settings}) hinterlegt und kann zur Laufzeit verändert werden.
+Ebenso wird auch die Verwaisung eines Objekts simuliert (siehe Listing~\ref{java:controller-collect}):
+Vor Auslösung der Garbage Collection wird zunächst über die Menge der Basisobjekte iteriert und bei jeder Iteration eine zufällige Zahl im Intervall $[0,1)$ bestimmt (Zeile~11).
+Liegt diese unterhalb einer eingestellten Wahrscheinlichkeit, wird das Objekt aus der Menge der Basisobjekte entfernt.
+Zur Vermeidung von Nebenläufigkeitskonflikten (\code{ConcurrentModificationException}), die beim Manipulieren einer Datenstruktur auftreten, über die gleichzeitig iteriert wird, werden Löschkandidaten dabei zunächst zu einer separaten Liste hinzugefügt (Zeile~12).
+Gleiches geschieht für jedes Objekt mit der Menge \code{pointers} der ausgehenden Referenzen.
+Somit ist sichergestellt, dass jedes Objekt tatsächlich nach genügend Kollektionszyklen durch die Garbage Collection entsorgt wird, sofern die Verwaisungswahrscheinlichkeit größer als $0$ ist.
+
+\begin{listing}[h]
+	\inputminted[]{java}{code/Controller-collect.java}
+	\caption[Methode \code{collectGarbage} der Klasse \code{CollectionController}]{Methode \code{collectGarbage} der Klasse \code{CollectionController}.}
+	\label{java:controller-collect}
+\end{listing}
+
+Da die Steuerklasse den Garbage-Collection-Algorithmen den verwendeten Allokator zur Verfügung stellt, wurde \code{CollectionController} als \textit{generische Klasse} konzipiert.
+Der Typparameter \code{T} muss dabei die Schnittstelle \code{Allocator} implementieren.
+Würde das Attribut \code{alloc} stattdessen lediglich als Instanz von \code{Allocator} deklariert werden, gäbe es für die implementierten Garbage-Collection-Algorithmen keine Möglichkeit, speziellere Allokatoren anzufordern, da sie lediglich Zugriff auf die durch die Schnittstelle definierten Methoden hätten.
+Aus dem gleichen Grund sind auch alle Kollektorklassen generisch.
+
+\subsection{Kollektorklassen}
+\label{sub:impl-gc}
+Die abstrakte Klasse \code{GarbageCollector} besitzt sämtliche Attribute und Methoden, die von allen konkret implementierten Garbage-Collection-Algorithmen verwendet werden.
+Neben der Anbindung an den \code{CollectionController} gehört dazu auch ein Attribut \code{initialized}, das angibt, ob eine Verbindung zur Steuerinstanz besteht.
+Erst dann ist eine Auslösung der Garbage Collection möglich.
+
+Konkret wurden im Rahmen dieser Arbeit der Mark-Sweep-Algorithmus, die Lisp-2-Kompaktierung und die kopierende Garbage Collection implementiert.
+
+\subsection{Konfigurationsklasse}
+\label{sub:settings}
+
+\section{Grafische Benutzeroberfläche}
+\label{sec:gui}
