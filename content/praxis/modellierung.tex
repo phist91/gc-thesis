@@ -45,8 +45,10 @@ Die abstrakte Klasse \code{GarbageCollector} beschreibt die Funktionalität eine
 Da eine Garbage Collection die Freigabe und Verschiebung von Objekten auslösen kann, benötigt sie die entsprechende Funktionalität von \code{Allocator}.
 Die Klasse \code{CollectionController} realisiert einerseits die Aufgabe des Mutators, das heißt die Anforderung von Speicher für neue Objekte sowie die (Simulation von) Referenzmanipulationen, die zur Verwaisung von Objekten führen.
 Daher besitzt sie zwei Mengen von Heapobjekten \code{objects} und \code{roots}.
-\code{objects} enthält dabei sämtliche Objekte des Heaps und \code{roots}\ -- entsprechend der Menge \Roots -- alle Basisobjekte.
-Zudem verwaltet sie eine \code{Allocator}-Instanz, um Speicher anfordern zu können, sowie eine \code{GarbageCollector}-Instanz zur Auslösung der Garbage Collection.
+\code{objects} enthält dabei sämtliche Objekte des Heaps.
+\code{roots} enthält jedoch -- im Gegensatz zur Menge \Roots\ -- keine Basisobjekte, sondern diejenigen Heapobjekte, die von Basisobjekten referenziert werden.
+Basisobjekte selbst werden somit aus der Simulation fortgelassen.
+Zudem verwaltet \code{CollectionController} eine \code{Allocator}-Instanz, um Speicher anfordern zu können, sowie eine \code{GarbageCollector}-Instanz zur Auslösung der Garbage Collection.
 Letztere ist zudem in der Lage, über den \code{CollectionController} auf die beiden Objektmengen sowie den eingesetzten Allokator zuzugreifen.
 Andererseits fungiert \code{CollectionController} als Steuerklasse, um über die GUI eingehende Benutzerinteraktionen umsetzen und delegieren zu können (siehe Abschnitt~\ref{sec:gui}).
 
@@ -92,7 +94,7 @@ Diese ist ein zusätzliches Attribut, das beim Erstellen eines \code{HeapObject}
 	\label{fig:implementation}
 \end{figure}
 
-\todo[inline]{aktualisieren}
+\todo[inline]{UML aktualisieren}
 
 \subsection{Allokatorklassen}
 \label{sub:allocator}
@@ -144,7 +146,7 @@ Somit ist sichergestellt, dass jedes Objekt tatsächlich nach genügend Kollekti
 
 Da die Steuerklasse den Garbage-Collection-Algorithmen den verwendeten Allokator zur Verfügung stellt, ist \code{CollectionController} als \textit{generische Klasse} konzipiert.
 Der Typparameter \code{T} muss dabei die Schnittstelle \code{Allocator} implementieren.
-Würde das Attribut \code{alloc} stattdessen lediglich als Instanz von \code{Allocator} deklariert werden, gäbe es für die implementierten Garbage-Collection-Algorithmen keine Möglichkeit, speziellere Allokatoren anzufordern, da sie lediglich Zugriff auf die durch die Schnittstelle definierten Methoden hätten.
+Würde das Attribut \code{alloc} stattdessen lediglich als Instanz von \code{Allocator} deklariert werden, gäbe es für die implementierten Garbage-Collection-Algorithmen keine Möglichkeit, speziellere Allokatoren mit zusätzlichen Methoden anzufordern, da sie lediglich Zugriff auf die durch die Schnittstelle definierten Methoden hätten.
 Aus gleichem Grund sind auch alle Kollektorklassen generisch, wobei jeder Kollektor zusätzliche Anforderungen an den Typparameter stellen kann.
 
 \subsection{Kollektorklassen}
@@ -153,20 +155,47 @@ Die abstrakte Klasse \code{GarbageCollector} besitzt sämtliche Attribute und Me
 Neben der Anbindung an den \code{CollectionController} gehört dazu auch ein Attribut \code{initialized}, das angibt, ob eine Verbindung zur Steuerinstanz besteht.
 Erst dann ist eine Auslösung der Garbage Collection möglich.
 
-Konkret wurden im Rahmen dieser Arbeit der Mark-Sweep-Algorithmus mit Drei-Farben-Abstraktion, die Lisp-2-Kompaktierung und die kopierende Garbage Collection implementiert.
-Zunächst wurden die Algorithmen unabhängig von der geplanten grafischen Ausgabe umgesetzt.
-Dieses Vorgehen hat den Vorteil, dass sich die vorgestellten Algorithmen auf kanonische Weise anhand ihrer Pseudocode-Beschreibung implementieren und anschließend testen lassen.
-So weist etwa der Java-Code der \code{MarkSweep}-Klasse starke Ähnlichkeiten zum Pseudocode in Algorithmus~\ref{algo:tricolor} auf (siehe Listing~\ref{java:tricolor-naive}).
-Der einzige nennenswerte Unterschied ist die Umsetzung der linearen Heaptraversierung in der Bereinigungsphase:
-Die implementierten Allokatoren besitzen zwar die Information, welche Bereiche des Heaps belegt sind, nicht aber, an welcher Adresse ein Objekt beginnt.
-Daher wird die Treaversierung simuliert, indem die Menge \code{objects} aller Heapobjekte nach ihrer Adresse sortiert wird.
-
-\begin{listing}[h]
-	\inputminted[firstline=6]{java}{code/MarkSweep-naive.java}
+\begin{listing}[t!]
+	\inputminted[]{java}{code/MarkSweep-core.java}
 	\caption[Implementation der Drei-Farben-Abstraktion]{Implementation der Drei-Farben-Abstraktion in der Klasse \code{MarkSweep} (vgl. auch Algorithmus~\ref{algo:tricolor}).}
-	\label{java:tricolor-naive}
+	\label{java:tricolor-core}
 \end{listing}
 
+Konkret wurden im Rahmen dieser Arbeit der Mark-Sweep-Algorithmus mit Drei-Farben-Abstraktion, die Lisp-2-Kompaktierung und die kopierende Garbage Collection implementiert.
+Zunächst wurden die Algorithmen unabhängig von der geplanten grafischen Ausgabe umgesetzt.
+Dieses Vorgehen hat den Vorteil, dass sich die vorgestellten Algorithmen auf recht kanonische Weise anhand ihrer Pseudocode-Beschreibung implementieren und anschließend testen lassen.
+So weist etwa der Java-Code der \code{MarkSweep}-Klasse starke Ähnlichkeiten zum Pseudocode in Algorithmus~\ref{algo:tricolor} auf (siehe Listing~\ref{java:tricolor-mark}).
+Der einzige nennenswerte Unterschied ist die Umsetzung der linearen Heaptraversierung in der Bereinigungsphase:
+Die implementierten Allokatoren besitzen zwar die Information, welche Bereiche des Heaps belegt sind, nicht aber, an welcher Adresse ein Objekt beginnt.
+Daher wird die Traversierung simuliert, indem die Menge \code{objects} aller Heapobjekte vermöge des \code{AddressComparator}s nach den Adressen der Objekte sortiert und anschließend iteriert wird.
+Auch hier landen Löschkandidaten zunächst in einer Liste \code{toRemove}, um \code{ConcurrentModificationException}s zu vermeiden.
+
+\begin{listing}[t!]
+	\inputminted[]{java}{code/Lisp2-core.java}
+	\caption[Auszug der Klasse \code{Lisp2}]{Auszug der Klasse \code{Lisp2}, die als Spezialisierung von \code{MarkSweep} die \code{sweep}-Methode überschreibt.}
+	\label{java:lisp2-core}
+\end{listing}
+
+Da sich die Markierungsphase des LISP-2-Algorithmus nicht von der des Mark-Sweep-Algorithmus unterscheidet (siehe Abschnitt~\ref{sec:lisp2-compact}, ist eine Spezialisierung der Klasse \code{MarkSweep} zur Umsetzung naheliegend.
+In der Tat genügt es, in der Klasse lediglich die \code{sweep}-Methode zu überschreiben (siehe Listing~\ref{java:lisp2-core}).
+Der große Unterschied zum Pseudocode-Algorithmus~\ref{algo:lisp2gc} ist allerdings -- neben der Simulation der linearen Traversierung -- der weitestgehende Verzicht auf die \code{update}-Methode:
+Da die Verschiebung eines Objekts durch Manipulation des Attributs \code{address} bewerkstelligt wird, anstatt die Objekte tatsächlich im Speicher zu verschieben, ist hier eine Anpassung von Referenzen obsolet.
+Das bedeutet gleichzeitig, dass dieser Schritt im Kollektionszyklus nicht mithilfe der entworfenen Modellierung dargestellt werden kann.
+Die Kompaktierungsphase wird schließlich mit einer Freigabe des Heaps hinter den kompaktierten Bereich und einer Verschiebung der Allokatorposition ans Ende dieses Bereichs abgeschlossen (Zeile~17 bis 19), wodurch erneut zu sehen ist, dass beim Lisp-2-Algorithmus auf explizite Freigabe von Objekten verzichtet werden kann.
+Allerdings muss jedes verwaiste Objekt mit Blick auf eine grafische Ausgabe aus \code{objects} entfernt werden, um auch aus der Menge aller Heapobjekte zu weichen.
+
+Zuletzt sei ein Blick auf die Implementation des Halbraumverfahrens in der Klasse \code{SemispaceCollector} geworfen.
+Auch hier zeigt sich zunächst eine deutliche Ähnlichkeit der Methode \code{collect} zum Pseudocode-Algorithmus~\ref{algo:copying-gc}, allerdings wird in der Methode \code{update} ebenfalls auf eine Anpassung von Referenzen verzichtet.
+In Erinnerung daran, dass der ursprüngliche Algorithmus keine Objekte markiert, sondern unmittelbar bei Entdeckung in den anderen Halbraum verschiebt, fehlt somit zunächst die Möglichkeit zu erkennen, ob ein Objekt bereits kopiert wurde.
+Zur Kompensation werden daher zusätzlich Markierungsinformationen genutzt, um zwischen unentdeckten, entdeckten (d.h. bereits kopierten) und fertig abgearbeiteten Objekten zu unterscheiden.
+Dies hat den zusätzlichen Vorteil, diese drei Status in der grafischen Ausgabe optisch unterscheidbar machen zu können.
+Auch beim Halbraumverfahren ist zuletzt eine Entfernung der verwaisten Objekte aus \code{objects} nötig, obschon der Quellhalbraum en bloc freigegeben werden kann.
+
+\begin{listing}[h]
+	\inputminted[]{java}{code/Semispace-core.java}
+	\caption[Auszug der Klasse \code{SemispaceCollector}]{Auszug der Klasse \code{SemispaceCollector}. Im Gegensatz zum ursprünglichen Algorithmus~\ref{algo:copying-gc} wird zusätzlich die Markierungsinformation der Objekte genutzt.}
+	\label{java:semispace-core}
+\end{listing}
 
 \subsection{Konfigurationsklasse}
 \label{sub:settings}

@@ -1,8 +1,3 @@
-	public void collect() {
-		markStart();
-		sweep();
-	}
-	
 	void markStart() {
 		toScan.clear();
 		for (HeapObject obj : controller.getRoots())
