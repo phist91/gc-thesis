@@ -71,11 +71,23 @@ Das bedeutet, dass zu jeder zu implementierenden Methode zunächst mehrere Testf
 Einzige Ausnahme bilden hier Methoden, die mit GUI-Komponenten interagieren, da diese nur schwer automatisiert testbar sind.
 Als Testframework wurde auf \textit{JUnit 5}\footnote{\url{https://junit.org/junit5/}} zurückgegriffen.
 
-\newpage
+\subsection{Heapobjekte}
+\label{sub:heapobject}
+Die Implementation der Klasse \code{HeapObject} unterscheidet sich nur unwesentlich von der in Abschnitt~\ref{sec:model} aufgeführten Modellierung.
+Erwähnenswert ist jedoch die zusätzlich implementierte Klasse \code{AddressComparator} (siehe \ref{java:comparator}):
+Da es in manchen Zusammenhängen sinnvoll ist, Objektmengen sortieren zu können (siehe etwa Abschnitt~\ref{sub:impl-gc}), vergleicht diese \code{Comparator}-Implementation Objekte anhand ihrer Speicheradresse.
+Damit zwei verschiedene Objekte mit gleicher Speicheradresse nicht fälschlicherweise als identisch eingestuft werden, werden sie im Zweifelsfall zusätzlich nach einer internen ID verglichen.\footnote{Die Java 9 API-Spezifikation der Klasse \code{Comparator} empfiehlt, dass für zwei Objekte \code{a} und \code{b} der Ausdruck \mintinline[fontsize=\footnotesize]{java}{compare(a,b)} genau dann zu \code{0} auswertet, wenn \mintinline[fontsize=\footnotesize]{java}{a.equals(b)} zu \mintinline[fontsize=\footnotesize]{java}{true} auswertet. Diese Bedingung ist etwa für sortierte Datenstrukturen wie \code{TreeSet} wichtig, die keine Duplikate zulassen und \code{compare} zur Überprüfung auf Gleichheit heranziehen.}
+Diese ist ein zusätzliches Attribut, das beim Erstellen eines \code{HeapObject} vergeben wird.
 
-\begin{figure}[H]
+\begin{listing}[h]
+	\inputminted[]{java}{code/AddressComparator.java}
+	\caption[Klasse \code{AddressComparator} zum Vergleich von Objekten]{Die Methode \code{compare} der Klasse \code{AddressComparator} vergleicht zwei Objekte anhand ihrer Speicheradresse.}
+	\label{java:comparator}
+\end{listing}
+
+\begin{figure}[t!]
 	\centering
-	\includegraphics[scale=0.65]{img/uml/ch7-klassen.pdf}
+	\includegraphics[scale=0.6]{img/uml/ch7-klassen.pdf}
 	\caption[Klassendiagramm des realisierten Modells (Auszug)]{Klassendiagramm (Auszug) des realisierten Modells aus Abbildung~\ref{fig:model}.}
 	\label{fig:implementation}
 \end{figure}
@@ -130,10 +142,10 @@ Somit ist sichergestellt, dass jedes Objekt tatsächlich nach genügend Kollekti
 	\label{java:controller-collect}
 \end{listing}
 
-Da die Steuerklasse den Garbage-Collection-Algorithmen den verwendeten Allokator zur Verfügung stellt, wurde \code{CollectionController} als \textit{generische Klasse} konzipiert.
+Da die Steuerklasse den Garbage-Collection-Algorithmen den verwendeten Allokator zur Verfügung stellt, ist \code{CollectionController} als \textit{generische Klasse} konzipiert.
 Der Typparameter \code{T} muss dabei die Schnittstelle \code{Allocator} implementieren.
 Würde das Attribut \code{alloc} stattdessen lediglich als Instanz von \code{Allocator} deklariert werden, gäbe es für die implementierten Garbage-Collection-Algorithmen keine Möglichkeit, speziellere Allokatoren anzufordern, da sie lediglich Zugriff auf die durch die Schnittstelle definierten Methoden hätten.
-Aus dem gleichen Grund sind auch alle Kollektorklassen generisch.
+Aus gleichem Grund sind auch alle Kollektorklassen generisch, wobei jeder Kollektor zusätzliche Anforderungen an den Typparameter stellen kann.
 
 \subsection{Kollektorklassen}
 \label{sub:impl-gc}
@@ -141,7 +153,20 @@ Die abstrakte Klasse \code{GarbageCollector} besitzt sämtliche Attribute und Me
 Neben der Anbindung an den \code{CollectionController} gehört dazu auch ein Attribut \code{initialized}, das angibt, ob eine Verbindung zur Steuerinstanz besteht.
 Erst dann ist eine Auslösung der Garbage Collection möglich.
 
-Konkret wurden im Rahmen dieser Arbeit der Mark-Sweep-Algorithmus, die Lisp-2-Kompaktierung und die kopierende Garbage Collection implementiert.
+Konkret wurden im Rahmen dieser Arbeit der Mark-Sweep-Algorithmus mit Drei-Farben-Abstraktion, die Lisp-2-Kompaktierung und die kopierende Garbage Collection implementiert.
+Zunächst wurden die Algorithmen unabhängig von der geplanten grafischen Ausgabe umgesetzt.
+Dieses Vorgehen hat den Vorteil, dass sich die vorgestellten Algorithmen auf kanonische Weise anhand ihrer Pseudocode-Beschreibung implementieren und anschließend testen lassen.
+So weist etwa der Java-Code der \code{MarkSweep}-Klasse starke Ähnlichkeiten zum Pseudocode in Algorithmus~\ref{algo:tricolor} auf (siehe Listing~\ref{java:tricolor-naive}).
+Der einzige nennenswerte Unterschied ist die Umsetzung der linearen Heaptraversierung in der Bereinigungsphase:
+Die implementierten Allokatoren besitzen zwar die Information, welche Bereiche des Heaps belegt sind, nicht aber, an welcher Adresse ein Objekt beginnt.
+Daher wird die Treaversierung simuliert, indem die Menge \code{objects} aller Heapobjekte nach ihrer Adresse sortiert wird.
+
+\begin{listing}[h]
+	\inputminted[firstline=6]{java}{code/MarkSweep-naive.java}
+	\caption[Implementation der Drei-Farben-Abstraktion]{Implementation der Drei-Farben-Abstraktion in der Klasse \code{MarkSweep} (vgl. auch Algorithmus~\ref{algo:tricolor}).}
+	\label{java:tricolor-naive}
+\end{listing}
+
 
 \subsection{Konfigurationsklasse}
 \label{sub:settings}
