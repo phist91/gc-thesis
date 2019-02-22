@@ -239,3 +239,36 @@ Anschließend wird durch die \mintinline{java}{while}-Schleife das Objekt Zeile 
 Dadurch wird berücksichtigt, dass sich das Objekt gegebenenfalls über mehrere Zeilen erstreckt.
 Zuletzt werden Linien gezeichnet, die Beginn und Ende des Objekts markieren.
 Ein Objekt erscheint somit als farbiges, geschlossenes Rechteck mit eventuellen Zeilenumbrüchen.
+
+Zum Schluss gehen wir darauf ein, wie im entworfenen Simulator die Ausführung der Garbage-Collection-Algorithmen umgesetzt wird.
+Als nützliches Hilfsmittel hat sich hierfür die \code{Timer}-Komponente von Swing erwiesen.
+Mittels eines Swing-Timers kann eine Reihe von Anweisungen periodisch in einem eigenen Thread ausführt werden, wobei der zeitliche Abstand zwischen zwei Ausführungen definiert werden kann.
+Die Syntax dafür lautet wie folgt:
+
+\vspace*{-0.5cm}
+\begin{center}
+	\mintinline{java}{new Timer(<Verzögerung>, <Parametername> -> <Anweisungsblock>);}
+\end{center}
+
+\vspace*{-0.5cm}
+Dabei gibt der erste Parameter \code{<Verzögerung>} die Zeitspanne an, nach der die nächste Ausführung von \code{<Anweisungsblock>} ausgelöst wird.\footnote{Standardmäßig findet jedoch die nächste Ausführung nicht vor Beendigung der vorigen statt, sodass sich zwei Ausführungszyklen nicht überlappen. Für Details sei hier auf die API-Spezifikation von \code{javax.swing.Timer} verwiesen.}
+Durch den Lambda-Ausdruck \code{<Parametername> -> <Anweisungsblock>} wird hier ad hoc ein \code{ActionListener} definiert.
+Am Beispiel der Klasse \code{MarkSweep} lässt sich exemplarisch betrachten, wie ein derartiger Timer als Attribut in die Garbage-Collection-Algorithmen integriert werden kann (siehe Listing~\ref{java:mark-timed}):
+Hier bietet es sich etwa an, mit jeder Timer-Auslösung das nächste Objekt aus \code{roots} zu markieren, sodass die Anwenderin sieht, wie nacheinander alle Basisobjekte markiert werden.
+Demzufolge wird die ursprüngliche \mintinline{java}{for}-Schleife der Methode \code{markStart} unter Zuhilfenahme eines Iterators der Menge \code{roots} in den Anweisungsblock von \code{gcTimer} integriert (Zeile~7 bis~13).
+Zusätzlich wird dabei die grafische Ausgabe des Heaps aktualisiert, um die erfolgte Markierung sichtbar zu machen (Zeile~12).
+Nachdem der Timer definiert wurde, wird er gestartet (Zeile~19).
+Sobald alle Basisobjekte abgearbeitet wurden, ist die Bedingung in Zeile~7 nicht mehr erfüllt, sodass sich der Timer im \mintinline{java}{else}-Block selbst anhält und die Methode \code{markTimed} aufruft.
+In dieser wird \code{gcTimer} analog so definiert, dass mit jeder Iteration ein Objekt der Menge \code{toScan} abgearbeitet wird, sodass auch hier die Behandlung jedes einzelnen Objekts beobachtet werden kann.
+
+\begin{listing}[h]
+	\inputminted[lastline=20]{java}{code/MarkSweep-timed.java}
+	\caption[Ausführung des Mark-Sweep-Algorithmus mithilfe eines Swing-Timers]{Ausführung des Mark-Sweep-Algorithmus mithilfe eines Swing-Timers. Mit jeder Auslösung des Timers wird ein weiteres Basisobjekt abgearbeitet. Im Anschluss an diese Phase wird der Timer angehalten und die Methode \code{markTimed} ausgeführt, in der \code{gcTimer} neu definiert und wieder gestartet wird.}
+	\label{java:mark-timed}
+\end{listing}
+
+Der Vorteil von Swing-Timern ist die nebenläufige Ausführung des Anweisungsblocks in einem eigenen Thread:
+Während ein Timer aktiv ist, wird dadurch der Rest der Anwendung nicht blockiert, sodass weiterhin Benutzereingaben möglich sind und die Animation der grafischen Ausgabe überhaupt sichtbar ist.
+Dies ermöglicht zudem, den Timer anzuhalten und einen Algorithmus zu unterbrechen.
+Offensichtlicher Nachteil ist die Integration in bereits implementierte Algorithmen, die im Zweifelsfall wenig intuitiv und fehlerträchtig ist.
+Zwar lassen sich die mit Timern versehenen Algorithmen ebenfalls mit JUnit testen, allerdings müssen die Tests künstlich verzögert werden, da andernfalls Ergebnisse überprüft werden, bevor die nebenläufige Ausführung beendet wurde.
