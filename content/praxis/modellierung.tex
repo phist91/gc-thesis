@@ -32,8 +32,6 @@ Insofern ist es sinnvoll, diese Einteilung möglichst auch in die Modellierung e
 	\label{fig:model}
 \end{figure}
 
-\todo[inline]{aktualisieren}
-
 Heapobjekte werden als Instanzen einer Klasse \code{HeapObject} modelliert und beinhalten Speicheradresse (\code{address}), Größe (\code{size}), Markierungsinformation (\code{mark}) und eine Menge \code{pointers} an Referenzen auf weitere Instanzen von \code{HeapObject}, um die Menge \Pointers zu realisieren.
 Ansonsten bieten sie keinerlei Funktionalität an.
 
@@ -93,8 +91,6 @@ Diese ist ein zusätzliches Attribut, das beim Erstellen eines \code{HeapObject}
 	\caption[Klassendiagramm des realisierten Modells (Auszug)]{Klassendiagramm (Auszug) des realisierten Modells aus Abbildung~\ref{fig:model}.}
 	\label{fig:implementation}
 \end{figure}
-
-\todo[inline]{UML aktualisieren}
 
 \subsection{Allokatorklassen}
 \label{sub:allocator}
@@ -164,7 +160,7 @@ Erst dann ist eine Auslösung der Garbage Collection möglich.
 Konkret wurden im Rahmen dieser Arbeit der Mark-Sweep-Algorithmus mit Drei-Farben-Abstraktion, die Lisp-2-Kompaktierung und die kopierende Garbage Collection implementiert.
 Zunächst wurden die Algorithmen unabhängig von der geplanten grafischen Ausgabe umgesetzt.
 Dieses Vorgehen hat den Vorteil, dass sich die vorgestellten Algorithmen auf recht kanonische Weise anhand ihrer Pseudocode-Beschreibung implementieren und anschließend testen lassen.
-So weist etwa der Java-Code der \code{MarkSweep}-Klasse starke Ähnlichkeiten zum Pseudocode in Algorithmus~\ref{algo:tricolor} auf (siehe Listing~\ref{java:tricolor-mark}).
+So weist etwa der Java-Code der \code{MarkSweep}-Klasse starke Ähnlichkeiten zum Pseudocode in Algorithmus~\ref{algo:tricolor} auf (siehe Listing~\ref{java:tricolor-core}).
 Der einzige nennenswerte Unterschied ist die Umsetzung der linearen Heaptraversierung in der Bereinigungsphase:
 Die implementierten Allokatoren besitzen zwar die Information, welche Bereiche des Heaps belegt sind, nicht aber, an welcher Adresse ein Objekt beginnt.
 Daher wird die Traversierung simuliert, indem die Menge \code{objects} aller Heapobjekte vermöge des \code{AddressComparator}s nach den Adressen der Objekte sortiert und anschließend iteriert wird.
@@ -176,7 +172,7 @@ Auch hier landen Löschkandidaten zunächst in einer Liste \code{toRemove}, um \
 	\label{java:lisp2-core}
 \end{listing}
 
-Da sich die Markierungsphase des LISP-2-Algorithmus nicht von der des Mark-Sweep-Algorithmus unterscheidet (siehe Abschnitt~\ref{sec:lisp2-compact}, ist eine Spezialisierung der Klasse \code{MarkSweep} zur Umsetzung naheliegend.
+Da sich die Markierungsphase des LISP-2-Algorithmus nicht von der des Mark-Sweep-Algorithmus unterscheidet (siehe Abschnitt~\ref{sec:lisp2-compact}), ist eine Spezialisierung der Klasse \code{MarkSweep} zur Umsetzung naheliegend.
 In der Tat genügt es, in der Klasse lediglich die \code{sweep}-Methode zu überschreiben (siehe Listing~\ref{java:lisp2-core}).
 Der große Unterschied zum Pseudocode-Algorithmus~\ref{algo:lisp2gc} ist allerdings -- neben der Simulation der linearen Traversierung -- der weitestgehende Verzicht auf die \code{update}-Methode:
 Da die Verschiebung eines Objekts durch Manipulation des Attributs \code{address} bewerkstelligt wird, anstatt die Objekte tatsächlich im Speicher zu verschieben, ist hier eine Anpassung von Referenzen obsolet.
