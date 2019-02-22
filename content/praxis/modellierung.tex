@@ -199,6 +199,17 @@ Auch beim Halbraumverfahren ist zuletzt eine Entfernung der verwaisten Objekte a
 
 \subsection{Konfigurationsklasse}
 \label{sub:settings}
+Die Konfigurationsklasse \code{Settings} enthält wesentliche Einstellungen zum Betrieb des Simulators sowie vorkonfigurierte Standardwerte (siehe Listing~\ref{java:settings}).
+Dazu gehören etwa die Größe des Heaps (\code{HEAP\_COLS}, \code{HEAP\_ROWS}), die Größe erzeugter Objekte (\code{MIN\_OBJECT\_SIZE}, \code{MIN\_OBJECT\_SIZE}) und die Animationsgeschwindigkeit sowie Einstellungen, die Erreichbarkeit (\code{CONNECTIVITY}, \code{ROOT\_PROBABILITY}) und Verwaisung (\code{REFERENCE\_DELETION}) von Objekten beeinflussen.
+Diese können über die grafische Oberfläche verändert werden (siehe Abschnitt~\ref{sec:execution}) und werde beim Beenden in einer Datei \code{gcsim.config} gesichert bzw. aus dieser geladen werden.
+Zudem befindet sich in der Klasse \code{Settings} eine Auflistung der zur Verfügung stehenden Garbage-Collection-Algorithmen.
+In Abschnitt \ref{sec:extension} wird erläutert, wie diese um weitere Algorithmen ergänzt werden kann.
+
+\begin{listing}[h]
+	\inputminted[]{java}{code/Settings.java}
+	\caption[Auszug aus der Konfigurationsklasse \code{Settings}]{Auszug aus der Konfigurationsklasse \code{Settings}.}
+	\label{java:settings}
+\end{listing}
 
 \section{Grafische Benutzeroberfläche}
 \label{sec:gui}
