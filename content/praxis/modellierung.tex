@@ -58,7 +58,7 @@ Dadurch greifen Kollektor und Steuerklasse auf denselben simulierten Heap zu.
 \label{sec:implementation}
 Im nun folgenden Abschnitt wird vorgestellt, wie die obige Modellierung unter Beachtung der spezifizierten Anforderungen realisiert werden.
 Dabei wird zunächst die Umsetzung des Speichermodells und der Programmlogik fokussiert.
-Abschnitt~\ref{sec:gui} widmet sich anschließend der Anbindung an die grafische Benutzeroberfläche.
+Abschnitt~\ref{sec:gui} widmet sich anschließend der Anbindung an die grafische Benutzerschnittstelle.
 
 Im Sinne der Plattformunabhängigkeit wurde dazu die Programmiersprache \textit{Java} gewählt, wobei auf die \textit{Java Language Specification 9}\footnote{\url{https://docs.oracle.com/javase/specs/jls/se9/html/index.html}} zurückgegriffen wird.
 Der gesamte Programmcode wurde über das Versionskontrollsystem \textit{Git}\footnote{\url{https://git-scm.com/}} verwaltet.
@@ -71,7 +71,7 @@ Das bedeutet, dass zu jeder zu implementierenden Methode zunächst mehrere Testf
 Einzige Ausnahme bilden hier Methoden, die mit GUI-Komponenten interagieren, da diese nur schwer automatisiert testbar sind.
 Als Testframework wurde auf \textit{JUnit 5}\footnote{\url{https://junit.org/junit5/}} zurückgegriffen.
 
-\subsection{Heapobjekte}
+\subsection{Heapobjekte (\code{pst.gcsim.Objects})}
 \label{sub:heapobject}
 Die Implementation der Klasse \code{HeapObject} unterscheidet sich nur unwesentlich von der in Abschnitt~\ref{sec:model} aufgeführten Modellierung.
 Erwähnenswert ist jedoch die zusätzlich implementierte Klasse \code{AddressComparator} (siehe \ref{java:comparator}):
@@ -92,7 +92,7 @@ Diese ist ein zusätzliches Attribut, das beim Erstellen eines \code{HeapObject}
 	\label{fig:implementation}
 \end{figure}
 
-\subsection{Allokatorklassen}
+\subsection{Allokatorklassen (\code{pst.gcsim.Allocators})}
 \label{sub:allocator}
 Der Allokator verwaltet die Information, welche Wörter des simulierten Heaps belegt sind.
 Aus diesem Grund wurde zunächst eine Klasse \code{AllocationBitmap} entworfen, die diese Information in einem \mintinline{java}{boolean}-Array speichert (siehe Abbildung~\ref{fig:implementation}).
@@ -121,7 +121,7 @@ Der \code{SemispaceAllocator} wurde zur Realisierung des Halbraumverfahrens nach
 Die Allokation läuft hier weitestgehend analog ab, allerdings wird der Allokationsversuch auf den aktuellen Zielhalbraum beschränkt, dessen Beginn im Attribut \code{target} notiert ist.
 Zusätzlich steht eine Methode \code{swapSemispaces} zur Verfügung, die die Rolle der beiden Halbräume tauscht, sowie eine Methode \code{clearSource}, die einen Halbraum in Gänze als unbelegt markiert.
 
-\subsection{Zentrale Steuerklasse}
+\subsection{Zentrale Steuerklasse \code{CollectionController}}
 \label{sub:controller}
 Die Klasse \code{CollectionController} verwaltet als zentrale Steuerklasse zum einen die beiden Objektmengen \code{objects} und \code{roots}, auf die von den implementierten Garbage-Collection-Algorithmen per Getter-Methoden zugegriffen werden kann.
 Zum anderen bietet sie Methoden, um neue Objekte im Heap anzulegen bzw. bereits vorhandene Objekte verwaisen zu lassen.
@@ -145,7 +145,7 @@ Der Typparameter \code{T} muss dabei die Schnittstelle \code{Allocator} implemen
 Würde das Attribut \code{alloc} stattdessen lediglich als Instanz von \code{Allocator} deklariert werden, gäbe es für die implementierten Garbage-Collection-Algorithmen keine Möglichkeit, speziellere Allokatoren mit zusätzlichen Methoden anzufordern, da sie lediglich Zugriff auf die durch die Schnittstelle definierten Methoden hätten.
 Aus gleichem Grund sind auch alle Kollektorklassen generisch, wobei jeder Kollektor zusätzliche Anforderungen an den Typparameter stellen kann.
 
-\subsection{Kollektorklassen}
+\subsection{Kollektorklassen (\code{pst.gcsim.GarbageCollectors})}
 \label{sub:impl-gc}
 Die abstrakte Klasse \code{GarbageCollector} besitzt sämtliche Attribute und Methoden, die von allen konkret implementierten Garbage-Collection-Algorithmen verwendet werden.
 Neben der Anbindung an den \code{CollectionController} gehört dazu auch ein Attribut \code{initialized}, das angibt, ob eine Verbindung zur Steuerinstanz besteht.
@@ -193,7 +193,7 @@ Auch beim Halbraumverfahren ist zuletzt eine Entfernung der verwaisten Objekte a
 	\label{java:semispace-core}
 \end{listing}
 
-\subsection{Konfigurationsklasse}
+\subsection{Konfigurationsklasse \code{Settings}}
 \label{sub:settings}
 Die Konfigurationsklasse \code{Settings} enthält wesentliche Einstellungen zum Betrieb des Simulators sowie vorkonfigurierte Standardwerte (siehe Listing~\ref{java:settings}).
 Dazu gehören etwa die Größe des Heaps (\code{HEAP\_COLS}, \code{HEAP\_ROWS}), die Größe erzeugter Objekte (\code{MIN\_OBJECT\_SIZE}, \code{MIN\_OBJECT\_SIZE}) und die Animationsgeschwindigkeit sowie Einstellungen, die Erreichbarkeit (\code{CONNECTIVITY}, \code{ROOT\_PROBABILITY}) und Verwaisung (\code{REFERENCE\_DELETION}) von Objekten beeinflussen.
@@ -207,5 +207,35 @@ In Abschnitt \ref{sec:extension} wird erläutert, wie diese um weitere Algorithm
 	\label{java:settings}
 \end{listing}
 
-\section{Grafische Benutzeroberfläche}
+\section{Grafische Benutzerschnittstelle}
 \label{sec:gui}
+Für die Umsetzung der grafischen Benutzerschnittstelle wird auf das Framework \textit{Swing} sowie das \textit{Abstract Window Toolkit} (AWT) zurückgegriffen, die sich für die Entwicklung plattformunahängiger Oberflächen eignen.
+Jedes Fenster wurde dabei in einer eigenen Klasse umgesetzt (siehe Abbildung~\ref{fig:gui}).
+So genannte \textit{Event Listener}, die auf Benutzerinteraktionen wie Button-Klicks, Textfeldeingaben und Fensterschließungen reagieren, werden dabei konsequent durch innere Klassen
+realisiert.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.6]{img/uml/ch7-gui.pdf}
+	\caption[Klassendiagramm des Pakets \code{pst.gcsim.GUI}]{Klassendiagramm (Auszug) des Pakets \code{pst.gcsim.GUI}. Zur Bedeutung der Klasse \code{GarbageCollectorSelection} siehe Abschnitt~\ref{sec:extension}.}
+	\label{fig:gui}
+\end{figure}
+
+Das Herzstück der grafischen Ausgabe des Heaps bildet die Klasse \code{CanvasView}.
+Diese besitzt neben einer Referenz auf die Menge \code{objects} und der aktuellen Position des Allokators zusätzlich die innere Klasse \code{CanvasPanel} als Spezialisierung der Swing-Komponente \code{JPanel} (siehe Listing~\ref{java:canvas}).
+Durch Überschreibung der \code{paintComponent}-Methode können benutzerdefinierte Zeichnungen ausgegeben werden.
+Diese Methode wird zum Rendern des Fensterinhalts aufgerufen, beispielsweise wenn das Fenster über den Bildschirmrand hinausgeschoben wird.
+Ein manueller Aufruf ist durch den \code{CollectionController} über die Methode \code{refreshFrame} (Zeile~2 bis~6) möglich.
+
+\begin{listing}[p]
+	\inputminted[]{java}{code/CanvasView.java}
+	\caption[Auszug aus der Klasse \code{CanvasView}]{Auszug aus der Klasse \code{CanvasView}. Zu sehen sind die Methoden \code{paintComponent} und \code{drawObject}, welche die grafische Ausgabe erzeugen.}
+	\label{java:canvas}
+\end{listing}
+
+Da der Heap als zweidimensionale Grafik angezeigt werden soll, wird in der Methode \code{drawObject} zunächst anhand der Adresse des Heapobjekts \code{obj} die Startposition bestimmt (Zeile~22f).
+Zudem wird anhand der Markierung die verwendete Farbe festgelegt (Zeile~26 bis~34).
+Anschließend wird durch die \mintinline{java}{while}-Schleife das Objekt Zeile für Zeile gezeichnet (Zeile 37 bis 42).
+Dadurch wird berücksichtigt, dass sich das Objekt gegebenenfalls über mehrere Zeilen erstreckt.
+Zuletzt werden Linien gezeichnet, die Beginn und Ende des Objekts markieren.
+Ein Objekt erscheint somit als farbiges, geschlossenes Rechteck mit eventuellen Zeilenumbrüchen.

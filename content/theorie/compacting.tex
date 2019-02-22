@@ -214,7 +214,7 @@ Für die oben genannte Wortbreite und Blockgröße ergibt sich daher ein Overhea
 Eine Erhöhung der Wortbreite $w$, an der Objekte im Heap ausgerichtet werden, kann diesen Anteil zwar reduzieren (siehe Tabelle~\ref{tab:compressor}), aber auch eine ineffizientere Speichernutzung verursachen, da jedes Objekt stets ein Vielfaches von $w$ an Speicher belegt.
 Größere Blöcke wiederum erhöhen den Aufwand zur Berechnung der neuen Speicheradressen, da eine höhere Anzahl an Objekten pro Block zu erwarten ist.
 
-\begin{table}[h]
+\begin{figure}[h]
 	\centering \renewcommand{\arraystretch}{1.15} \setstretch{1.15}
 	\begin{tabular}{|r|cccc|}
 		\hline
@@ -231,7 +231,7 @@ Größere Blöcke wiederum erhöhen den Aufwand zur Berechnung der neuen Speiche
 	
 	\caption[Speicherbedarf des Compressor-Algorithmus]{Verhältnis $M$ des Speicherbedarfs des Compressor-Algorithmus zum gesamten Heap in Abhängigkeit von Wortbreite $w$ in Bit und Blockgröße $b$ in Byte. Es gilt $M = \frac{1}{w} + \frac{w}{8 \cdot b}$.}
 	\label{tab:compressor}
-\end{table}
+\end{figure}
 
 Die Korrektheit der beiden vorgestellten Mark-Compact-Algorithmen ergibt sich aus der Korrektheit der Markierungsphase.
 Wurden alle erreichbaren Objekte erfasst, werden auch die Zeiger \Var{pos} und \Var{next} im LISP-2-Algorithmus korrekt weitergeschoben, ohne dass es zur Überschreibung erreichbarer Objekte kommt.
@@ -282,7 +282,7 @@ Diese Idee wurde ursprünglich von \textsc{Fenichel} und \textsc{Yochelson} für
 	\State \quad \quad $\Method{add}(\Var{toDo}, \Var{newAdr}(\Var{oldAdr}))$	\Comment{Füge Kopie zu \Var{toDo} hinzu}
 	\State \quad $\Var{*field} \gets \Var{newAdr}(\Var{oldAdr})$	\Comment{Feld aktualisieren}
 \end{algorithmic}
-\caption[Kopierende Garbage Collection nach \textsc{Fenichel}, \textsc{Yochelson} und \textsc{Cheney}]{Kopierende Garbage Collection zwischen Halbräumen nach \textsc{Fenichel}, \textsc{Yochelson} und \textsc{Cheney} (vgl. \cite{fenichel1969} und \cite{cheney1970}).}
+\caption[Kopierende Garbage Collection nach \textsc{Fenichel}, \textsc{Yochelson}, \textsc{Cheney}]{Kopierende Garbage Collection zwischen Halbräumen nach \textsc{Fenichel}, \textsc{Yochelson} und \textsc{Cheney} (vgl. \cite{fenichel1969} und \cite{cheney1970}).}
 \label{algo:copying-gc}
 \end{algorithm}
 
