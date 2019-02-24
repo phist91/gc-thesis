@@ -2,7 +2,7 @@
 \chapter{Anwendung und Erweiterung}
 \label{cha:application}
 
-\todo[inline]{Erweiterungen: Implementation zusätzlicher Algorithmen, zusätzliche Allokatoren, Grafische Ausgabe mit Graph, um Verwaisung direkter beeinflussen und Referenzmanipulationen und -anpassungen sehen zu können, Stepper mit Swing-Timern}
+\todo[inline]{Kurzes Intro}
 
 \section{Betrieb des Simulators}
 \label{sec:execution}
@@ -40,6 +40,8 @@ Die Schaltfläche \textit{Heap ausblenden} verbirgt die grafische Ausgabe des He
 Im unteren Bereich des Kontrollfensters lässt sich mit dem \textit{Verwaisungsgrad} die Wahrscheinlichkeit einstellen, mit der eine Referenz entfernt wird (siehe auch Abschnitt~\ref{sub:controller}).
 Im Textfeld \textit{Animationsgeschwindigkeit} kann der zeitliche Abstand zweier Animationsschritte festgelegt werden (siehe auch Abschnitt~\ref{sec:gui}).
 Ein Klick auf \textit{GC ausführen} löst den Garbage-Collection-Algorithmus aus.
+Unentdeckte Objekte werden dabei zunächst hellblau dargestellt und bei Entdeckung gelb markiert.
+Nach erfolgter Abarbeitung werden sie grün gefärbt.
 
 \begin{figure}[h]
 	\centering
@@ -57,7 +59,36 @@ Ein Klick auf \textit{GC ausführen} löst den Garbage-Collection-Algorithmus au
 	\label{fig:app-simulation}
 \end{figure}
 
+Durch wiederholte Ausführung von Füll- und Kollektionsphasen kann der langfristige Einsatz eines Algorithmus simuliert werden, wobei interessante Eigenschaften beobachtet werden können.
+Eine Anpassung der einstellbaren Parameter sorgt dabei für eine Simulation mannigfaltiger Szenarien (siehe Abbildung~\ref{fig:simulation}).
+Eine Verwendung unterschiedlich großer Objekte lässt etwa beim Mark-Sweep-Algorithmus die zunehmende Fragmentierung des ungenutzten Speichers erkennen, die Allokationsversuche fehlschlagen lässt.
+Dieses Phänomen tritt jedoch nicht auf, wenn die Objektgröße konstant ist.
+Beim Lisp-2-Algorithmus ist wiederum zu sehen, dass bei geringem Verwaisungsgrad (bzw. hohem Verzweigungsgrad) die Ausbeute des Kollektors eher gering ist, aber bedingt durch die Kompaktierungsphase dennoch viele Objekte verschoben werden, was sehr zeitaufwendig sein kann.
+Eine ähnliche Kausalität kann ebenfalls beim Halbraumverfahren beobachtet werden, wobei hier zusätzlich die Halbierung des Speicherplatzes ins Auge springt.
+Objekte, die bei diesem Algorithmus bereits in den anderen Halbraum kopiert wurden, werden hier zusätzlich dunkelblau dargestellt.
 
+\begin{figure}[p]
+	\centering
+	\begin{subfigure}{\textwidth}
+		\centering
+		\includegraphics[scale=0.3]{img/gui/marksweep-simulation.png}
+		\caption{Nach mehreren Kollektionzyklen lässt sich beim Mark-Sweep-Algorithmus deutlich eine langfristige Fragmentierung des Heaps erkennen.}
+	\end{subfigure}\\[0.7cm]
+	\begin{subfigure}{\textwidth}
+		\centering
+		\includegraphics[scale=0.3]{img/gui/lisp2-simulation.png}
+		\caption{Bei geringem Verwaisungsgrad ist zu sehen, dass die Kompaktierungsphase des Lisp-2-Algorithmus sehr zeitaufwendig ist, obwohl die Ausbeute eher gering ist.}
+	\end{subfigure}\\[0.7cm]
+	\begin{subfigure}{\textwidth}
+		\centering
+		\includegraphics[scale=0.3]{img/gui/semispace-simulation.png}
+		\caption{Beim Halbraumverfahren ist die Aufteilung des Heaps in zwei Hälften deutlich zu sehen.}
+	\end{subfigure}
+	\caption[Simulation der verschiedenen Algorithmen]{Simulation der verschiedenen Algorithmen.}
+	\label{fig:simulation}
+\end{figure}
 
 \section{Erweiterungsmöglichkeiten}
 \label{sec:extension}
+
+\todo[inline]{Erweiterungen: Implementation zusätzlicher Algorithmen, zusätzliche Allokatoren, Grafische Ausgabe mit Graph, um Verwaisung direkter beeinflussen und Referenzmanipulationen und -anpassungen sehen zu können, Stepper mit Swing-Timern}
