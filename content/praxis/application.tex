@@ -2,8 +2,6 @@
 \chapter{Anwendung und Erweiterung}
 \label{cha:application}
 
-\todo[inline]{Kurzes Intro}
-
 \section{Betrieb des Simulators}
 \label{sec:execution}
 Der Start der Anwedung erfolgt mithilfe des beigelegten Datenträgers in drei verschiedenen Möglichkeiten:
@@ -88,7 +86,30 @@ Objekte, die bei diesem Algorithmus bereits in den anderen Halbraum kopiert wurd
 	\label{fig:simulation}
 \end{figure}
 
-\section{Erweiterungsmöglichkeiten}
+\section{Erweiterung um zusätzliche Algorithmen}
 \label{sec:extension}
+Die in Kapitel~\ref{cha:modelling} vorgestellte Modellierung und ihre Umsetzung ermöglicht grundsätzlich, den Simulator um eigene Algorithmen zu ergänzen, indem die Klasse \code{GarbageCollector} spezialisiert bzw. die Schnittstelle \code{Allocator} implementiert wird.
+Die im Simulator auswählbaren Garbage-Collection-Algorithmen werden in der Klasse \code{Settings} durch das Array \code{collectors} definiert (siehe Listing~\ref{java:selection}).
+Dieses bildet die Grundlage für das Model der \code{JComboBox} des Auswahlfensters.
+Somit steht jeder Eintrag des Arrays für einen auswählbaren Algorithmus.
+Wenn ein implementierter Garbage-Collection-Algorithmus zum Simulator hinzugefügt werden soll, muss das Array entsprechend um einen Eintrag der Klasse \code{GarbageCollectorSelection} ergänzt werden.
+Zur Erzeugung eines Objekts dieser Klasse ist folgende Syntax zu verwenden:
 
-\todo[inline]{Erweiterungen: Implementation zusätzlicher Algorithmen, zusätzliche Allokatoren, Grafische Ausgabe mit Graph, um Verwaisung direkter beeinflussen und Referenzmanipulationen und -anpassungen sehen zu können, Stepper mit Swing-Timern}
+\vspace*{-0.5cm}
+\begin{center}
+	\mintinline{java}{new GarbageCollectorSelection(<Name>, <Controller>, <Einstellfenster>);}
+\end{center}
+
+\vspace*{-0.5cm}
+Der erste Konstruktorparameter ist dabei der Name, der im Auswahlfenster angezeigt werden soll.
+Der zweite Parameter ist ein Objekt vom Typ \code{Runnable}, bei dessen Ausführung ein neuer \code{CollectionController} instanziiert werden muss.
+Dabei ist auch eine geeignete Allokator- und Kollektorinstanz zu erzeugen (siehe etwa Zeile~5f).
+Der dritte Parameter -- ebenfalls vom Typ \code{Runnable} -- ist optional und wird verwendetn, um ein zusätzliches Einstellfenster zu erzeugen.
+Wird der Parameter spezifiziert, ist die Schaltfläche \textit{Einstellungen} im Auswahlfenster des Simulators verfügbar.
+Das Einstellfenster kann dazu verwendet werden, um durch die Anwenderin weitere Konfigurationsmöglichkeiten festlegen zu lassen, die in der grafischen Benutzerschnittstelle nicht vorgesehen sind.
+
+\begin{listing}[h]
+	\inputminted[]{java}{code/CollectorSelection.java}
+	\caption[Spezifikation der verfügbaren Algorithmen]{Spezifikation der verfügbaren Garbage-Collection-Algorithmen in der Klasse \code{Settings}. Für jeden Algorithmus ist eine Instanz der Klasse \code{GarbageCollectorSelection} anzulegen und dem Array \code{collectors} hinzuzufügen.}
+	\label{java:selection}
+\end{listing}
