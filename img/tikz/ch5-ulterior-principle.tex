@@ -7,11 +7,11 @@
 		\node[state] (R) [above right=of N] {\Roots};
 		\node[state] (M) [below right=of R] {\Mature};
 		
-		\draw [<-,thick] (N) to node[pos=0.9,sloped,font=\small]{ignorieren} (R);
+		\draw [<-,thick] (N) to node[pos=0.5,sloped,font=\small]{ignorieren} (R);
 		\path (N) edge [thick, loop left] node[midway,left,font=\small]{ignorieren} (N);
 		\draw [->,thick] (N) to [bend angle=20, bend left] node[midway,font=\small]{verzögern} (M);
 		\draw [->,thick] (M) to [bend angle=20, bend left] node[midway,font=\small]{protokollieren} (N);
 		\path (M) edge [thick, loop right] node[midway,right,font=\small]{RC} (M);
-		\draw [->,thick] (R) to node[pos=0.2,sloped,font=\small]{verzögern} (M);
+		\draw [->,thick] (R) to node[pos=0.5,sloped,font=\small]{verzögern} (M);
 	\end{tikzpicture}
 \end{document}

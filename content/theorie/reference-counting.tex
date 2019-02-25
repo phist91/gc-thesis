@@ -111,7 +111,7 @@ In der Folge würde das Ziel sofort freigegeben werden, obwohl es weiterhin erre
 \end{proof}
 
 Die Garbage Collection mithilfe naive Referenzzählung bietet im Vergleich zum Mark-Sweep-Algorithmus einige Vorteile, aber auch gewisse Nachteile (vgl. \cite[S. 346]{linhou2006}):
-Der Mechanismus zur Freigabe von Objekten wird durch die Entstehung von verwaisten Objekten ausgelöst und nicht etwa, wenn unzureichend freier Speicher zu Verfügung steht.
+Eine Freigabe von Objekten wird unmittelbar durch ihre Verwaisung ausgelöst und nicht etwa, wenn unzureichend freier Speicher zur Verfügung steht.
 Dadurch wird die Allokation von Speicher für neu erzeugte Objekte nicht verzögert.
 Verwaiste Objekte werden beim Löschen ihrer letzten Referenz unmittelbar erkannt und freigegeben und nicht erst beim nächsten Mark-Sweep-Zyklus.
 Speichermangel kann so de facto nur dadurch entstehen, dass der gesamte Speicher von erreichbaren Objekten belegt wird -- in diesem Fall bietet allerdings kein Garbage-Collection-Algorithmus Abhilfe -- oder der Heap zunehmend fragmentiert wird (siehe Kapitel~\ref{cha:compacting}).
@@ -260,7 +260,7 @@ Besitzt hingegen ein grau markiertes Objekt \Var{a} einen Referenzzähler mit ei
 In diesem Fall wird die Prozedur \Method{unmark} aufgerufen, die \Var{a} weiß markiert (Zeile~2 in Algorithmus~\ref{algo:cyclic-clean}).
 Ebenso müssen jedoch auch alle Objekte weiß markiert werden, die von \Var{a} aus erreichbar sind, 
 weswegen \Method{unmark} rekursiv für diese Objekte aufgerufen wird (Zeile~6).
-Dabei werden gleichzeitig die zugehörigen Referenzzähler angepasst, sodass nach Beendigung diese wieder mit der Anzahl aller Referenzen auf ein Objekt übereinstimmen (Zeile~4).
+Dabei werden gleichzeitig die zugehörigen Referenzzähler angepasst, sodass diese nach Beendigung wieder mit der Anzahl aller Referenzen auf ein Objekt übereinstimmen (Zeile~4).
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
@@ -480,13 +480,14 @@ Objekte, die im Anschluss in \Var{ZCT} verbleiben, sind tatsächlich verwaist un
 \end{figure}
 
 Abbildung~\ref{fig:rc-deferred} veranschaulicht die Arbeitsweise des Algorithmus und die Verschiebung eines Objekts \Var{obj} in bzw. aus \Var{ZCT} und \Var{MRT}.
-Der maßgebliche Performancegewinn entsteht dadurch, dass Referenzmanipulationen in lokalen Variablen nicht unmmittelbar, sondern erst während einer Bereinigungsphase vermerkt werden.
+Der maßgebliche Performancegewinn entsteht dadurch, dass Referenzmanipulationen in lokalen Variablen nicht unmittelbar, sondern erst während einer Bereinigungsphase vermerkt werden.
 Somit wirken sich die durch die Garbage Collection bedingten Schreibbarrieren nicht auf Berechnungen aus, die vorwiegend auf lokale Variablen zugreifen.
 Dies kommt etwa Iterationen durch Datenstrukturen zu Gute.
+Je nach Implementation der \Var{ZCT} können außerdem Löschkaskaden, die während einer Kollektionsphase entstehen können, auf den nächsten Kollektionszyklus verschoben werden, um Unterbrechungen minimal zu halten. 
 Ein weiterer Vorteil ergibt sich für Anwendungen, in denen die meisten Objekte höchstens einmal referenziert werden und sich zu keinem Zeitpunkt in der \Var{MRT} befinden.
 Für diese entfällt die Notwendigkeit, Referenzzähler zu hinterlegen und für die \Var{MRT} muss weniger Speicher reserviert werden, was den Speicherbedarf des gesamten Verfahrens reduziert.
 Für Anwendungen, in denen diese Bedingung nicht zutrifft, ergibt sich jedoch die Problematik, die \Var{MRT} angemessen zu realisieren.
-Im Falle einer Hashtabelle muss etwa eine geeignete Hashfunktion gewählt werden, um Schlüsselkollisionen und damit verbundene Performanceeinbußen zu vermeiden.\footnote{Kommt es zu vielen Schlüsselkollisionen, kann die Komplexität eines Zugriffs auf ein einzelnes Tabellenelement in $\oh(n)$ liegen, wobei $n$ die Anzahl der Einträge ist. Eine Vergrößerung der Schlüsselmenge zur Vermeidung von Kollisionen kann wiederum zu einem hohen Speicherbedarf führen, was den für den Heap zu Verfügung stehenden Speicher einschränkt (vgl. \cite[S. 253]{cormen-leiserson}).}
+Im Falle einer Hashtabelle muss etwa eine geeignete Hashfunktion gewählt werden, um Schlüsselkollisionen und damit verbundene Performanceeinbußen zu vermeiden.\footnote{Kommt es zu vielen Schlüsselkollisionen, kann die Komplexität eines Zugriffs auf ein einzelnes Tabellenelement in $\oh(n)$ liegen, wobei $n$ die Anzahl der Einträge ist. Eine Vergrößerung der Schlüsselmenge zur Vermeidung von Kollisionen kann wiederum zu einem hohen Speicherbedarf führen, was den für den Heap zur Verfügung stehenden Speicher einschränkt (vgl. \cite[S. 253]{cormen-leiserson}).}
 
 Eine weitere Optimierungsmöglichkeit zielt darauf ab, die Auswirkung einer mehrfachen Änderung eines Referenzfeldes eines Objekts zusammenzufassen, anstatt jede einzelne Änderung nachzuverfolgen.
 \textsc{Levanoni} und \textsc{Petrank} beobachten, dass viele einzelne Referenzmanipulationen innerhalb des selben Feldes unnötige Anpassungen von Referenzzählern verursachen, die sich gewissermaßen \textit{kürzen} lassen \cite[S. 4ff]{levanoni2006}.

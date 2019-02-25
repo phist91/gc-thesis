@@ -12,7 +12,7 @@ Zum einen kann die Verantwortung für den korrekten Umgang mit dynamisch angefor
 Dies ist in der Regel mit zusätzlichem Aufwand verbunden (vgl. \cite[S. 1f]{wilson1992}):
 Speicheradressen müssen manuell verwaltet werden, Anweisungen zur Anforderung und Freigabe von Speicher müssen in den eigentlichen Code integriert werden und entsprechende Ausnahmefälle bei Fehlschlägen müssen ordnungsgemäß abgefangen werden.
 Neben einer komplexer werdenden Codestruktur führt dies zu weiteren Fehlerquellen:
-Die Freigabe noch benötigten Speichers führt zu so genannten \textit{hängenden Zeigern} (engl. \textit{dangling pointer}) -- Referenzen, die \textit{ins Leere zeigen} und in der Folge bestenfalls zu Programmabstürzen, schlimmstenfalls aber zu unerwartetem Verhalten und Datenverlust führen können.
+Die Freigabe noch benötigten Speichers führt zu sogenannten \textit{hängenden Zeigern} (engl. \textit{dangling pointers}) -- Referenzen, die \textit{ins Leere zeigen} und in der Folge bestenfalls zu Programmabstürzen, schlimmstenfalls aber zu unerwartetem Verhalten und Datenverlust führen können.
 Nicht freigegebener, aber nicht mehr benötigter Speicher kann wiederum zu \textit{Speicherlecks} (engl. \textit{memory leaks}) und -- bei hinreichend langer Laufzeit des Programms -- zu einer Ausschöpfung des Speichers führen.
 \textit{Double frees}, bei denen Speicherbereiche doppelt freigegeben werden, sind eine weitere Ursache für unerwünschtes Programmverhalten.
 Während die Anforderung von Speicher in der Regel unproblematisch ist, ist die Frage, wann und an welcher Stelle angeforderter Speicher wieder freigegeben werden kann, deutlich komplizierter, und fehlerhafte Verwendungen werden gegebenenfalls erst bei langfristiger Ausführung des Programms bemerkt.
@@ -52,17 +52,17 @@ Auch einzelne Werte eines Basisdatentyps oder Arrays werden als Objekt aufgefass
 Ferner wird vorausgesetzt, dass Objekte und ihre Felder \textit{typisiert} sind.
 Das bedeutet, dass stets nachvollziehbar ist, aus welchen Feldern ein Objekt besteht und von welchem Datentyp diese sind.
 Insbesondere ist unterscheidbar, ob ein Feld eines Objekts eine Referenz enthält oder nicht.
-Weiter wird angenommen, dass jedes Objekt einen so genannten \textit{Header} besitzt.
+Weiter wird angenommen, dass jedes Objekt einen sogenannten \textit{Header} besitzt.
 Dies sind separate Felder, die Metainformationen aufnehmen, die für den Compiler und die Laufzeitumgebung, nicht aber aus Sicht der Entwicklerin, zugänglich sind.
 Diverse vorgestellte Algorithmen werden diesen Bereich nutzen, um für die Speicherverwaltung relevante Informationen zu hinterlegen.\footnote{Technisch kann dies etwa dadurch realisiert werden, dass die angeforderte Speichermenge für ein Objekt vergrößert wird, sodass die Informationen des Headers am Anfang des Objekts aufgenommen werden können.
 Als Ergebnis der Speicheranforderung wird dann die Speicheradresse zurückgegeben, die auf den Bereich hinter dem Header verweist.}
 
 \subsubsection*{Heap}
-Der \textbf{Heap} ist derjenigen Speicherbereich, in dem zur Laufzeit eines Programms Objekte in beliebiger Reihenfolge erzeugt und freigegeben werden können.
+Der \textbf{Heap} ist derjenige Speicherbereich, in dem zur Laufzeit eines Programms Objekte in beliebiger Reihenfolge erzeugt und freigegeben werden können.
 Der Heap besteht aus \textit{Wörtern} einer festen Größe, auf die über eine Speicheradresse zugegriffen werden kann; ein \textit{Wort} ist dabei die kleinste zuweisbare Speichermenge und kann die Zustände \textit{belegt} (bzw. \textit{zugewiesen}) oder \textit{frei} annehmen.
 Sofern nichts anderes vereinbart ist, wird davon ausgegangen, dass der Heap ein zusammenhängender linearer Speicherbereich ist.\footnote{Tatsächlich ist dies eine starke Vereinfachung.
 In der Praxis ist der Bereich des physikalischen Speichers, der von einer Anwendung verwendet wird, häufig fragmentiert und inhomogen.
-Die Speicherverwaltung eines Betriebssystems bildet diesen Bereich auf einen \textit{virtuellen Speicher} ab, der der Anwendung zu Verfügung gestellt wird und aus ihrer Sicht linear zusammenhängend ist.
+Die Speicherverwaltung eines Betriebssystems bildet diesen Bereich auf einen \textit{virtuellen Speicher} ab, der der Anwendung zur Verfügung gestellt wird und aus ihrer Sicht linear zusammenhängend ist.
 Für einen Überblick hierzu siehe etwa \cite[Kap. 3.3]{tanenbaum}.}
 
 \begin{figure}[h]
@@ -73,10 +73,10 @@ Für einen Überblick hierzu siehe etwa \cite[Kap. 3.3]{tanenbaum}.}
 \end{figure}
 
 Den Zugriff auf das \Var{i}-te Feld eines Objekts \Var{a} wird -- analog zur Syntax der Programmierspache C -- mit \Var{a[i]} notiert.
-Ebenso bezeichnet \Var{\&a} die Adresse eines Objekts und mit \Var{*p} die Dereferenzierung eines Zeigers \Var{p}.
+Ebenso bezeichnet \Var{\&a} die Adresse eines Objekts und \Var{*p} die Dereferenzierung eines Zeigers \Var{p}.
 Mit $\Pointers(\Var{a})$ wird zudem die Menge aller von \Var{a} ausgehenden Referenzen auf andere Objekte des Heaps und mit $\Fields(\Var{a})$ die Menge aller Felder von \Var{a}, die eine solche Referenz enthalten, bezeichnet.
 Ist also $\Var{x} \in \Fields(\Var{a})$, so bezeichnet \Var{*x} entsprechend die im Feld gespeicherte Referenz und \Var{**x} das Ziel dieser Referenz.
-In den Algorithmen wird in der Regel auf eine Überprüfung von Referenzen auf \Null verzichtet, bevor sie derefenziert werden.\footnote{In vielen Algorithmen, die in dieser Arbeit vorgestellt werden, werden Objekte als Parameter an Hilfsprozeduren übergeben.
+In den Algorithmen wird in der Regel auf eine Überprüfung von Referenzen auf \Null verzichtet, bevor sie dereferenziert werden.\footnote{In vielen Algorithmen, die in dieser Arbeit vorgestellt werden, werden Objekte als Parameter an Hilfsprozeduren übergeben.
 Ob es an der Stelle sinnvoll ist, Objekte \textit{by value} oder \textit{by reference} zu übergeben, sind Implementationsdetails, die die Entwicklerin im Anbetracht der verwendeten Programmiersprache festlegt.
 In dieser Arbeit soll die Übergabe eines Objekts die Intention erzeugen, dass die im Objekt gespeicherten Informationen relevant sind, während die Übergabe einer Objektadresse dessen Position im Speicher in den Fokus rückt.
 Ähnliches gilt für Mengen von Objekten, die in manchen Algorithmen auftauchen.}
@@ -85,7 +85,7 @@ In dieser Arbeit soll die Übergabe eines Objekts die Intention erzeugen, dass d
 Aufgabe des \textbf{Allokators}, der zur Laufzeitumgebung eines Programms gehört, ist zum einen die Zuweisung von Heapspeicher bei dynamischer Instanziierung eines neuen Objekts und zum anderen die Freigabe von Objekten.
 Der Allokator führt somit Buch über die belegten und freien Wörter des Heaps.
 Die genaue Realisierung dieser Mechanismen werden in dieser Arbeit weitestgehend außen vor gelassen, jedoch wird in gewissen Situationen das Vorhandensein bestimmter Funktionalitäten vorausgesetzt.
-Beispielsweise wird verlangt, dass eine Prozedur \Method{new} zu Verfügung steht, die bei der Erzeugung eines neuen Objekts Speicher reserviert und die entsprechende Speicheradresse zurückgibt.
+Beispielsweise wird verlangt, dass eine Prozedur \Method{new} zur Verfügung steht, die bei der Erzeugung eines neuen Objekts Speicher reserviert und die entsprechende Speicheradresse zurückgibt.
 Die Funktionsweise von \Method{new} kann dabei vom verwendeten Garbage-Collection-Algorithmus abhängen (siehe Algorithmus~\ref{algo:new}).
 
 \begin{algorithm}
@@ -105,7 +105,7 @@ Die Funktionsweise von \Method{new} kann dabei vom verwendeten Garbage-Collectio
 
 Nach \textsc{Dijkstra} et al. besteht ein Programm zudem aus zwei funktional unterscheidbaren Bestandteilen \cite[S. 967]{dijkstra1978}:
 Der \textbf{Mutator} ist derjenige Thread (bzw. eine Menge von Threads), die den eigentlichen Programmcode ausführen.
-Bedeutsam sind dabei vor allem Programmanweisungen , die in Feldern von Objekten vorhandene Referenzen manipulieren und somit ursächlich für die Entstehung nicht mehr benötigter Objekte sind.
+Bedeutsam sind dabei vor allem Programmanweisungen, die in Feldern von Objekten vorhandene Referenzen manipulieren und somit ursächlich für die Entstehung nicht mehr benötigter Objekte sind.
 Im Gegensatz dazu ist die Aufgabe des \textbf{Kollektors}, die nicht mehr benötigten Objekte zu identifizieren und ihre Freigabe zu veranlassen.
 Der Kollektor ist demnach derjenige Thread (bzw. eine Menge von Threads), die einen Garbage-Collection-Algorithmus ausführen.
 
@@ -152,7 +152,7 @@ Allerdings ist die Frage, ob dies der Fall ist oder nicht, nicht beantwortbar:
 	Ein solcher Algorithmus existiert jedoch im Allgemeinen nicht (vgl. \cite[Kap. 4.2]{sipser}).
 \end{proof}
 
-Aus diesem Grund wird nachfolgend eine schwächere Eigenschaft von Objekten: die Erreichbarkeit über Referenzen.
+Aus diesem Grund wird nachfolgend eine schwächere Eigenschaft von Objekten betrachtet: die Erreichbarkeit über Referenzen.
 Dafür wird von einer Menge \Roots von \textbf{Basisobjekten} (engl. \textit{root objects}) ausgegangen, die nicht zum Heap gehören.
 Diese sind dadurch gekennzeichnet, dass der Mutator unmittelbaren Zugriff auf sie hat, ohne dafür zunächst ihre Adresse aus den Feldern anderer Objekte beschaffen zu müssen.
 Hierzu zählen zum Beispiel statische Objekte, deren Positionen im Speicher bereits zur Übersetzungszeit bekannt sind, oder Objekte, die sich in Aufrufstapeln von Unterprogrammen befinden.
@@ -175,12 +175,13 @@ Formal wird diese Eigenschaft wie folgt definiert:
 
 Diese Definition garantiert zwar nicht, dass jedes erreichbare Objekt auch lebendig ist.
 Davon ausgehend, dass unerreichbare Objekte auch nicht \textit{wiedergefunden} werden können und verwaist bleiben, lässt sich jedoch mit Sicherheit sagen, dass unerreichbare Objekte nicht mehr verwendet werden und gefahrlos durch den Kollektor freigegeben werden dürfen.
+Basisobjekte selbst werden durch die Garbage Collection nicht verwaltet, allerdings werden ihre Header von manchen Algorithmen dennoch zur Speicherung von Informationen genutzt.
 
 Die Erreichbarkeit von Objekten lässt sich mithilfe eines sogenannten \textbf{Objektgraphen} visualisieren.
-Jedes existierende Objekt korrespondiert dabei zu einem Knoten des Graphen, sodass das Objekt mit seinem Knoten identifizieren werden kann (und umgekehrt).
-Besitzt ein Objekt \Var{a} in mindestens einem seiner Felder eine Referenz auf ein weiteres Objekt \Var{b}, so wird dies durch eine gerichtete Kante zwischen den ensprechenden Knoten dargestellt.
+Jedes existierende Objekt korrespondiert dabei zu einem Knoten des Graphen, sodass das Objekt mit seinem Knoten identifiziert werden kann (und umgekehrt).
+Besitzt ein Objekt \Var{a} in mindestens einem seiner Felder eine Referenz auf ein weiteres Objekt \Var{b}, so wird dies durch eine gerichtete Kante zwischen den entsprechenden Knoten dargestellt.
 Ein Objekt ist somit nicht erreichbar, wenn es im Objektgraphen keinen Pfad zu ihm gibt, der in einem Basisobjekt startet.
-Objektgraphen werden im Rahmen dieser Arbeit bei der Veranschaulichng der vorgestellten Algorithmen dienlich sein.
+Objektgraphen werden im Rahmen dieser Arbeit bei der Veranschaulichung der vorgestellten Algorithmen dienlich sein.
 
 	
 \begin{mybox}
@@ -203,7 +204,7 @@ An dieser Stelle folgt die Formulierung eines Korrektheitskriteriums für Garbag
 Dieses besteht aus der Anforderung, dass keine noch benötigten Daten zerstört werden.
 
 \begin{mybox}
-\begin{defn}[Korrektheit für Garbage-Collection-Algorithmen]
+\begin{defn}[Korrektheit von Garbage-Collection-Algorithmen]
 	Ein Garbage-Collection-Algorithmus ist \textbf{korrekt}, wenn er keine lebendigen Objekte freigibt.
 \end{defn}
 \end{mybox}

@@ -1,7 +1,7 @@
 %!TEX root = ../../thesis.tex
 \chapter{Mark-Sweep-Algorithmen}
 \label{cha:mark-sweep}
-Dieses Kapitel beginnt mit einer Vorstellung des ersten Garbage-Collection-Algorithmus, der auf \textsc{McCarthy} zurückgeht \cite[191--193]{mccarthy1960}.
+Dieses Kapitel beginnt mit einer Vorstellung des ersten Garbage"=Collection"=Algorithmus, der auf \textsc{McCarthy} zurückgeht \cite[191--193]{mccarthy1960}.
 Im Rahmen eines im Jahr 1960 veröffentlichten Artikels über die Berechnung rekursiver Funktionen auf dem \textit{IBM 704} mithilfe des \textit{LISP Programming Systems} erläutert \textsc{McCarthy} die Speicherung von Daten in einer Listenstruktur.
 Diese besteht aus Paaren, deren erster Eintrag \texttt{car} die zu speichernde Information enthält\footnote{Genauer: Die Adresse des Registers, in dem die zu speichernde Information gelagert wird.}, während im zweiten Eintrag \texttt{cdr} die Registeradresse des nachfolgenden Paares zu finden ist.
 Diese Struktur hat den Vorteil, dass ein in mehreren Listen vorkommendes Datum nur ein einziges Register belegt.
@@ -10,7 +10,7 @@ Bei der Anforderung von Speicher für ein zu speicherndes Datum werden Register 
 Durch die Manipulation der Registeradressen können Paare verwaisen, was zu Speicherlecks führt.
 Zur Auflösung dieser Problematik bietet LISP als erste Programmiersprache ihrer Zeit eine automatische Speicherverwaltung, die von \textsc{McCarthy} wie folgt grob umschrieben wird:
 Im Falle von Speicherknappheit wird -- ausgehend von einer Menge von Basisregistern -- ermittelt, welche Register über eine Folge von \texttt{cdr}-Einträgen erreichbar sind.
-Nicht erreichbare Register enthalten überschreibbare Inhalte, sodass diese zurück in die \textit{free storage list} eingefügt werden können und wieder als freie Speicherplätze zu Verfügung stehen.
+Nicht erreichbare Register enthalten überschreibbare Inhalte, sodass diese zurück in die \textit{free storage list} eingefügt werden können und wieder als freie Speicherplätze zur Verfügung stehen.
 Diese zweischrittige Vorgehensweise -- das Erkennen nicht mehr benötigter Speicherbereiche und die anschließende Freigabe eben jener -- bildet die Grundlage des \textbf{Mark-Sweep-Algorithmus}.
 
 \begin{figure}[h]
@@ -33,7 +33,7 @@ Zunächst wird bestimmt, welche Objekte im Speicher unerreichbar sind, weil sie 
 Diese Objekte können gefahrlos freigegeben werden, da auf ihre Informationen nicht mehr zugegriffen werden kann.
 Der zweite Schritt besteht aus einer Traversierung des gesamten Heaps.
 Dabei werden alle existierenden Objekte besucht und diejenigen freigegeben, die im ersten Schritt als unerreichbar identifiziert werden konnten.
-Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekte zu Verfügung.
+Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekte zur Verfügung.
 
 \begin{algorithm}
 \begin{algorithmic}[1]
@@ -130,7 +130,7 @@ Da zudem mit jeder Iteration der \WHILE-Schleife mindestens ein Objekt aus \Var{
 
 Die Bereinigungsphase (engl. \textit{sweep}) beginnt unmittelbar nach der Markierungsphase durch Aufruf der Prozedur \Method{sweep}.
 Die Variable \Var{pos} wird mit der Speicheradresse initialisiert, an der sich das erste Objekt im Heap befindet.
-Hier wird davon ausgegangen, dass eine Prozedur \Method{nextObject} des Allokators zu Verfügung steht, die anhand einer übergebenen Speicheradresse die Adresse des nachfolgenden Objektes oder \Null zurückgibt, wenn dieses nicht existiert.
+Hier wird davon ausgegangen, dass eine Prozedur \Method{nextObject} des Allokators zur Verfügung steht, die anhand einer übergebenen Speicheradresse die Adresse des nachfolgenden Objektes oder \Null zurückgibt, wenn dieses nicht existiert.
 Dadurch wird der Heap linear traversiert; nicht markierte Objekte werden freigegeben, während die Markierung erreichbarer Objekte zurückgesetzt wird.
 
 Wir halten zunächst fest, dass der Mark-Sweep-Algorithmus in seiner Gänze terminiert und korrekt ist, sofern während der Garbage Collection das laufende Programm angehalten wird:
@@ -158,7 +158,7 @@ Wir halten zunächst fest, dass der Mark-Sweep-Algorithmus in seiner Gänze term
 	Es existiert somit keine Referenz von einem erreichbaren auf ein unmarkiertes Objekt, weswegen keine erreichbaren Objekte freigegeben werden.
 \end{proof}
 
-Die Bedingung, dass der Mutator während des Markierens pausiert wird, ist tatsächlich notwendig, um zu vermeiden, dass fälschlicherweise erreichbaren Objekte entfernt werden, wie folgendes Beispiel zeigt (vgl. \cite[969]{dijkstra1978}):
+Die Bedingung, dass der Mutator während des Markierens pausiert wird, ist tatsächlich notwendig, um zu vermeiden, dass fälschlicherweise erreichbare Objekte entfernt werden, wie folgendes Beispiel zeigt (vgl. \cite[969]{dijkstra1978}):
 Betrachtet man etwa die Situation, dass zwei Basisobjekte $\Var{a}$ und $\Var{b}$ alternierend auf ein Objekt $\Var{c}$ verweisen, das ausschließlich über $\Var{a}$ oder $\Var{b}$ erreichbar ist.
 Während der Kollektor aktiv ist, führe der Mutator folgenden Code aus:
 
@@ -337,7 +337,7 @@ Für Systeme ohne hardware- oder softwareseitige Unterstützung für Multithread
 	\label{fig:heap-region}
 \end{figure}
 
-Bei der verzögerten Bereinigung ist der Heapspeicher in \textbf{Blöcken} eingeteilt.
+Bei der verzögerten Bereinigung ist der Heapspeicher in \textbf{Blöcke} eingeteilt.
 Jeder Block enthält Objekte einer festgelegten Größenordnung; zu jeder Größenordnung können mehrere Blöcke existieren (Abbildung~\ref{fig:heap-region}).
 Die Idee ist nun, das Sweeping durch den Allokator ausführen zu lassen, wenn Speicher angefordert wird.
 Dabei werden die zuvor markierten Objekte freigegeben, allerdings nur in denjenigen Blöcken, die der angeforderten Speichermenge zugeordnet sind.
@@ -396,7 +396,7 @@ Sobald ein Block um ein Objekt reduziert werden konnte, wird der Zyklus beendet 
 Falls aus keinem Block ein Objekt freigegeben werden konnte, bedeutet dies, dass alle Blöcke der entsprechenden Objektgröße mit erreichbaren Objekten gefüllt sind.
 In diesem Fall muss der Allokator einen neuen Block initialisieren, der neue Objekte aufnehmen kann (Zeile~25).
 
-Was geschieht nun, wenn nicht genügend freier Speicher zu Verfügung steht, um einen weiteren Block zu erzeugen?
+Was geschieht nun, wenn nicht genügend freier Speicher zur Verfügung steht, um einen weiteren Block zu erzeugen?
 In diesem Fall schlägt auch der zweite Al"-lo"-ka"-tions"-versuch fehl (Zeile~5f).
 Der letzte Versuch besteht nun darin, die Markierungen der Objekte zu aktualisieren, indem eine Markierungsphase gestartet wird (Zeile~7).
 Da die letzte Markierungsphase nicht unmittelbar vor der Speicheranforderung, sondern möglicherweise wesentlich früher stattgefunden hat, könnten in der Zwischenzeit weitere Objekte verwaist sein.
@@ -405,14 +405,14 @@ Diese werden nachfolgend in einem zweiten Lazy-Sweep-Zyklus freigegeben, sodass 
 Während die Einschränkung der Bereinigung auf einzelne Blöcke zwar einen Performancevorteil mit sich bringt, besitzt diese Variante des Mark-Sweep-Algorithmus auch einige Nachteile:
 Eine ungünstige Kombination von Speicheranforderungen und Sweep-Zyklen könnte dazu führen, dass viele Blöcke einer Größenordnung angelegt werden, die jeweils nur wenige Objekte enthalten und größtenteils ungenutzt sind.
 Wenn jeder Block allerdings mindestens ein erreichbares Objekt enthält, kann er nicht in Gänze freigegeben werden.
-Eine hohe Zahl dieser ineffizient genutzter Blöcke führt dazu, dass möglicherweise nicht mehr genügend freier Speicher zu Verfügung steht, um Blöcke anderer Größenordnung zu initialisieren, obwohl ausreichend Speicher vorhanden wäre, der nicht durch Objekte belegt wird.
+Eine hohe Zahl dieser ineffizient genutzter Blöcke führt dazu, dass möglicherweise nicht mehr genügend freier Speicher zur Verfügung steht, um Blöcke anderer Größenordnung zu initialisieren, obwohl ausreichend Speicher vorhanden wäre, der nicht durch Objekte belegt wird.
 Eine Lösung dieses Problems wäre eine zusätzliche Konsolidierungsphase, bei der Blöcke gleicher Größenordnung zusammengelegt werden.
-Dies bedeutet jedoch zusätzlicher Aufwand für die Verschiebung von Objekten (siehe Kapitel~\ref{cha:compacting}).
+Dies bedeutet jedoch zusätzlichen Aufwand für die Verschiebung von Objekten (siehe Kapitel~\ref{cha:compacting}).
 Der zweite Nachteil ist, dass nicht mehr erreichbare Objekte eventuell erst sehr spät freigegeben werden, wenn primär Objekte anderer Größenordnungen angefordert werden.
-In so einem Fall können auch Blöcke, die keine erreichbare Objekte mehr enthalten, über lange Zeit im Speicher verweilen, sodass diese für einen gewissen Zeitraum ein Speicherleck darstellen.
+In so einem Fall können auch Blöcke, die keine erreichbaren Objekte mehr enthalten, über lange Zeit im Speicher verweilen, sodass diese für einen gewissen Zeitraum ein Speicherleck darstellen.
 Zuletzt kann auch die Aufteilung des Heaps nach Objektgrößen nicht zielführend sein:
 Je nach Anwendungsfall und verwendeter Programmiersprache besteht die Möglichkeit, dass zwischen den meisten Objekten keine signifikanten Größenunterschiede bestehen und die Blöcke einer bestimmten Größenordnung besonders stark beansprucht werden.
-Der Vorteil, nur einen beschränktes Gebiet des Heaps zu bereinigen, würde damit deutlich geschmälert werden.
+Der Vorteil, nur ein beschränktes Gebiet des Heaps zu bereinigen, würde damit deutlich geschmälert werden.
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -442,7 +442,7 @@ Dieses Kapitel schließt mit einer Betrachtung der Komplexität der vorgestellte
 In seiner einfachsten Form erweist sich der Mark-Sweep-Algorithmus als vergleichsweise platzsparend:
 Werden Markierungsinformationen unmittelbar in den Objekten gespeichert, wird pro Objekt lediglich ein einzelnes Bit oder Byte beansprucht.
 Zwischen verschiedenen Mark-Sweep-Zyklen müssen ferner keinerlei zusätzliche Informationen bereitgehalten werden.
-Während eines yklus muss jedoch die Menge \Var{toDo} der noch zu untersuchenden Objekte verwaltet werden.
+Während eines Zyklus muss jedoch die Menge \Var{toDo} der noch zu untersuchenden Objekte verwaltet werden.
 Da bereits festgestellt wurde, dass keine Objekte mehrfach zu \Var{toDo} hinzugefügt werden, ist ihre Mächtigkeit durch die Anzahl $|\Reach|$ der erreichbare Objekte beschränkt.
 Davon ausgehend, dass in \Var{toDo} ausschließlich Referenzen konstanter Größe gespeichert werden müssen, ergibt sich insgesamt ein Platzbedarf von $\oh(|\Reach|)$.
 

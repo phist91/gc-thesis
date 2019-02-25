@@ -56,12 +56,12 @@ Auch hier werden dann Referenzen auf Objekte aus der $k$-ten Generation nach \Va
 	\State \quad $\Var{target} \gets \Method{newVersion}(\textsc{Gen}_k)$		\Comment{Neue Version der Generation initialisieren}
 	\State \quad $\textsc{Gen}_k \gets \Var{target}$
 	\State \quad $\Var{pos} \gets \Var{target}$
-	\State \quad \Method{updateHandles}(\Var{source},\Var{target})		\Comment{Handles anpassen}
+	\State \quad \Method{updateHandles}(\Var{source}, \Var{target})		\Comment{Handles anpassen}
 	\State \quad \Method{updateFields}(\Var{source})		\Comment{Übrige Objekte kopieren}
 	\State \quad \Method{clear}(\Var{newAdr})
 	\State \quad \Method{free}(\Var{source})		\Comment{Alte Version freigeben}
 	\Statex
-	\State \MethodHead{updateHandles}(\Var{source},\Var{target}):
+	\State \MethodHead{updateHandles}(\Var{source}, \Var{target}):
 	\State \quad \FOREACH $\Var{handle} \in \Handles(\Var{source})$		\Comment{Handles der Generation anpassen}
 	\State \quad \quad $\Var{obj} \gets \Var{*forward}(\Var{handle})$
 	\State \quad \quad \Method{copy}(\Var{obj}, \Var{pos})
@@ -184,7 +184,7 @@ In \Mature befinden sich alle Objekte, die mindestens einen Kollektionszyklus ü
 \end{figure}
 
 Ob und in welcher Form die Referenzzählung zum Einsatz kommt, richtet sich nun danach, ob sich Quelle oder Ziel in \Roots, \Nursery oder \Mature befinden (siehe Abbildung~\ref{fig:ulterior-principle}).
-Bereits in Abschnitt~\ref{sec:naive-rc} wurde festgestellt, dass Referenzzählungen -- bedingt durch nötige Schreibbarrieren -- die Performance einer Anwendung beeinträchtigt, wenn viele Manipulationen von Referenzen stattfinden.
+Bereits in Abschnitt~\ref{sec:naive-rc} wurde festgestellt, dass Referenzzählungen -- bedingt durch nötige Schreibbarrieren -- die Performance einer Anwendung beeinträchtigen, wenn viele Manipulationen von Referenzen stattfinden.
 Da junge Objekte in \Nursery tendenziell häufiger Manipulationen von eingehenden wie ausgehenden Referenzen unterworfen sind, bietet es sich an, diese von der Referenzzählung auszusparen.
 Referenzen von \Roots nach \Nursery sowie innerhalb von \Nursery sind von der Schreibbarriere nicht betroffen; Referenzen von \Mature nach \Nursery werden zunächst protokolliert und während des nächsten Kollektionszyklus behandelt.
 Objekte in \Mature verändern sich tendenziell seltener, weshalb Markierungs- und Kompaktierungsalgorithmen keine hohe Ausbeute versprechen, aber dennoch aufwendig sind.
@@ -211,7 +211,7 @@ Algorithmus~\ref{algo:ulterior-barrier} zeigt die entsprechende Schreibbarriere.
 \label{algo:ulterior-barrier}
 \end{algorithm}
 
-Kommt es nun zu einem Garbage-Collection-Zyklus, etwa weil der freie Speicher im \Nursery-Bereich zu Neige geht, werden alle erreichbare Objekte aus \Nursery nach \Mature kopiert.
+Kommt es nun zu einem Garbage-Collection-Zyklus, etwa weil der freie Speicher im \Nursery-Bereich zu Neige geht, werden alle erreichbaren Objekte aus \Nursery nach \Mature kopiert.
 Da die Objekte in \Nursery von der Referenzzählung ausgeschlossen sind, wird dies analog zum Halbraumverfahren aus Abschnitt~\ref{sec:copying} bewerkstelligt.
 Zunächst werden daher alle Felder von Basisobjekten untersucht (Zeile~2 bis~5 aus Algorithmus~\ref{algo:ulterior-rc}).
 Enthält ein Feld eine Referenz auf ein junges Objekt, wird es an die Prozedur \Method{tenure} übergeben.

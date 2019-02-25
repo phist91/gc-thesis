@@ -9,7 +9,7 @@ public class Settings {
 	public static double REFERENCE_DELETION = 0.3;
 	public static double ROOT_PROBABILITY = 0.2;
 
-	// Zu Verfügung stehende Kollektoren
+	// Zur Verfügung stehende Kollektoren
 	public static final GarbageCollectorSelection[] collectors =
 		{marksweep, lisp2, semispace, naiveAlloc, semispaceAlloc};
 }

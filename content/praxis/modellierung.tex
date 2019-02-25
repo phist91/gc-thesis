@@ -38,7 +38,7 @@ Insofern ist es sinnvoll, diese Einteilung möglichst auch in die Modellierung e
 Heapobjekte werden als Instanzen einer Klasse \code{HeapObject} modelliert und beinhalten Speicheradresse (\code{address}), Größe (\code{size}), Markierungsinformation (\code{mark}) und eine Menge \code{pointers} an Referenzen auf weitere Instanzen von \code{HeapObject}, um die Menge \Pointers zu realisieren.
 Ansonsten bieten sie keinerlei Funktionalität an.
 
-Eine Instanz der Schnittstelle \code{Allocator} stellt die wesentlichen Dienste eines Allokators zu Verfügung.
+Eine Instanz der Schnittstelle \code{Allocator} stellt die wesentlichen Dienste eines Allokators zur Verfügung.
 Dazu zählt die Anforderung einer Speichermenge durch den Mutator mittels \code{new}, die Freigabe von Objekten und des durch sie belegten Speicherbereichs sowie das Verschieben eines Objekts.
 Ersteres geschieht durch Übergabe der gewünschten Speichermenge und Rückgabe eines neu erzeugten Instanz von \code{HeapObject}, die die entsprechende Speicheradresse enthält.
 Der Allokator ist diejenige Instanz, die Informationen über den Füllstand des Heaps und insbesondere über die Belegung einzelner Wörter besitzt.
@@ -214,7 +214,7 @@ In Abschnitt \ref{sec:extension} wird erläutert, wie diese um weitere Algorithm
 \label{sec:gui}
 Für die Umsetzung der grafischen Benutzerschnittstelle wird auf das Framework \textit{Swing} sowie das \textit{Abstract Window Toolkit} (AWT) zurückgegriffen, die sich für die Entwicklung plattformunahängiger Oberflächen eignen.
 Jedes Fenster wird dabei in einer eigenen Klasse umgesetzt (siehe Abbildung~\ref{fig:gui}).
-So genannte \textit{Event Listener}, die auf Benutzerinteraktionen wie Button-Klicks, Textfeldeingaben und Fensterschließungen reagieren, werden dabei konsequent durch innere Klassen
+Sogenannte \textit{Event Listener}, die auf Benutzerinteraktionen wie Button-Klicks, Textfeldeingaben und Fensterschließungen reagieren, werden dabei konsequent durch innere Klassen
 realisiert.
 
 \begin{figure}[h]

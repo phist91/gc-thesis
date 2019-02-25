@@ -39,7 +39,7 @@ Auch die Aufteilung des Heaps in Blöcke macht die Speicherung zusätzlicher Inf
 Die Algorithmen selbst benötigen meist Hilfsdatenstrukturen wie Warteschlangen, um Adressen noch zu untersuchender Objekte zwischenzuspeichern sowie Änderungen von Speicheradressen nachzuverfolgen.
 Entsprechend viel Speicher muss ebenfalls reserviert werden, damit die Algorithmen ordnungsgemäß arbeiten können.
 Als besonders speicherhungrig erweisen sich hier der Compressor-Algorithmus (siehe Tabelle~\ref{tab:compressor} auf Seite~\pageref{tab:compressor}) sowie das Halbraumverfahren aus Abschnitt~\ref{sec:copying}, welches die Heapgröße praktisch halbiert.
-Für Anwendungen, in denen wenig Speicher zu Verfügung steht, kann dies ein Ausschlusskriterium sein, da häufige Ausführungen der Garbage Collection den Mutator verdrängen könnten.
+Für Anwendungen, in denen wenig Speicher zur Verfügung steht, kann dies ein Ausschlusskriterium sein, da häufige Ausführungen der Garbage Collection den Mutator verdrängen könnten.
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
