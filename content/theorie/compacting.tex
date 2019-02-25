@@ -4,7 +4,7 @@
 Mit dem Mark-Sweep-Algorithmus und der Referenzzählung sind in den vorigen Kapiteln zwei grundlegende Ansätze eingeführt worden, die eine Wiederverwendung bereits genutzten Speichers durch Freigabe nicht mehr benötigter Objekte realisieren.
 Außen vor gelassen wurde bislang jedoch ein Phänomen, das mit zunehmender Laufzeit eines Programms in Erscheinung tritt:
 die \textbf{Fragmentierung} des Heaps.
-Je häufiger eine Garbage Collection zum Einsatz kommt, umso wahrscheinlicher ist es, dass die erreichbaren Objekte keinen zusammenhängenden Speicherbereich mehr bilden.
+Je häufiger eine Garbage Collection zum Einsatz kommt, umso wahrscheinlicher ist es, dass die erreichbaren Objekte keinen zusammenhängenden Speicherbereich mehr bilden (siehe Abbildung~\ref{fig:fragmentation}).
 In der Folge ist auch der freie Speicher in mehrere unzusammenhängende Teile unterschiedlicher Größe aufgeteilt.
 Dies kann sich nachteilig auf die Performance einer Anwendung auswirken:
 Bildet der freie Speicher einen möglichst großen zusammenhängenden Bereich, so können viele aufeinanderfolgende Speicheranforderungen in hoher Geschwindigkeit erfüllt werden.
@@ -25,11 +25,11 @@ Die Vermeidung von Heapfragmentierung durch optimale Allokation ist nicht zielf�
 Allerdings existieren akzeptable Lösungen, die die Fragmentierung des Heaps durch geschickte Allokation zumindest in Grenzen halten.\footnote{Für einen Überblick siehe etwa \cite[Kap. 7]{handbook}.}
 Nichtsdestoweniger werden in diesem Kapitel ausschließlich Algorithmen betrachtet, die den Heap im Rahmen einer Garbage Collection \textbf{kompaktieren}, da die Durchführung eines Kollektionszyklus ursächlich für die Entstehung von Fragmentierung ist.
 
-Algorithmen, die im Rahmen der Garbge Collection die Fragmentierung des Heaps beseitigen oder verhindern, lassen sich grob in zwei Kategorien einteilen:
+Algorithmen, die im Rahmen der Garbage Collection die Fragmentierung des Heaps beseitigen oder verhindern, lassen sich grob in zwei Kategorien einteilen:
 Die erste Kategorie der \textbf{Mark-Compact-Algorithmen} baut auf der Markierungsphase eines Mark-Sweep-Kollektors auf, indem aus den Markierungsinformationen die zukünftigen Positionen der Objekte generiert werden und die Bereinigung durch eine Kompaktierungsphase ersetzt werden kann.
 Im Folgenden werden mit dem \textit{LISP-2-Algorithmus} und \textit{The Compressor} zwei Exemplare dieser Gattung vorgestellt.
 Die zweite Kategorie der \textbf{kopierenden} Algorithmen -- gelegentlich auch \textit{Mark-Copy-Algorithmen} genannt -- vereinen Markierungs- und Kompaktierungsphase, indem als erreichbar identifizierte Objekte unmittelbar an eine neue Position kopiert werden.
-Hier wird exemplarisch ein Algorithmus betrachtet, der den Heap in zwei Halbräume aufteilt.
+In dieser Arbeit wird exemplarisch ein Algorithmus betrachtet, der den Heap in zwei Halbräume aufteilt.
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -49,7 +49,7 @@ Weiter soll eine Prozedur \Method{moveObject}(\Var{old}, \Var{new}) existieren, 
 
 Der Algorithmus verfährt nun recht intuitiv (siehe Abbildung~\ref{fig:lisp2}):
 Beginnend am Anfang des Heaps werden der Reihe nach alle markierten Objekte besucht und an die vorderste Stelle bewegt, an der noch kein markiertes Objekt steht.
-Dabei wird für jedes verschobene Objekt alte und neue Speicheradresse in einer Tabelle \Var{log} hinterlegt (Zeile~6 in Algorithmus~\ref{algo:lisp2gc}).
+Dabei wird für jedes verschobene Objekt die alte und neue Speicheradresse in einer Tabelle \Var{log} hinterlegt (Zeile~6 in Algorithmus~\ref{algo:lisp2gc}).
 Nach jeder Verschiebung wird der Zeiger \Var{pos} auf das neue Ende des kompaktierten Bereichs und \Var{next} auf das nächste markierte Objekt gesetzt (Zeile~8f).
 Die erreichbaren Objekte befinden sich nun lückenlos am Anfang des Heaps.
 
@@ -103,7 +103,7 @@ Um auch die Objekte des Heaps anzupassen, wird dieser ein weiteres Mal linear tr
 Zuletzt wird die Tabelle mit den zwischengespeicherten Adressen geleert.
 Dadurch, dass der Heap in aufsteigender Reihenfolge durchlaufen wird, die Objekte jedoch in entgegengesetzte Richtung verschoben werden, werden keine lebendigen Daten überschrieben und der Algorithmus arbeitet korrekt.
 
-Die Laufzeit des gesamten Algorithmus lässt sich wie folgt einschätzen:
+Die Laufzeit des gesamten Algorithmus lässt sich wie folgt abschätzen:
 Im schlimmsten Fall läuft der Zeiger \Var{pos} in der Prozedur \Method{compact} über den gesamten Heap.
 Davon ausgehend, dass das Hinzufügen eines Adresspaares zur Tabelle \Var{log} in $\oh(1)$ möglich ist  (siehe auch Abschnitt~\ref{sec:rc-optimizing}), ergibt sich dadurch eine Komplexität von $\oh(\abs{\mathbb{H}})$ für die Verschiebung der erreichbaren Objekte an den Anfang des Heaps.
 Für die Aktualisierung der Referenzen ergibt sich die Laufzeit aus der Anzahl der Felder der Basisobjekte sowie einer weiteren Traversierung über den Heap.
@@ -150,7 +150,7 @@ Alle weiteren Berechnungen können dann mithilfe des Bitvektors realisiert werde
 \begin{figure}[h]
 	\centering
 	\includestandalone[scale=1.1]{img/tikz/ch4-bitvector}
-	\caption[Bitvektor]{Ein Bitvektor speichert zu jedem Wort des Heaps, ob es durch ein erreichbares Objekt belegt wird.}
+	\caption[Bitvektor]{Ein Bitvektor speichert zu jedem Wort des Heaps, ob es durch ein erreichbares Objekt belegt wird. Dargestellt ist ein Heapausschnitt mit 5 Blöcken à 10 Wörtern.}
 	\label{fig:bitvector}
 \end{figure}
 
@@ -204,7 +204,7 @@ Zwar befindet sich auch der hintere Teil von \Var{c} im dritten Block, allerding
 \begin{figure}[h]
 	\centering
 	\includestandalone[scale=1.1]{img/tikz/ch4-compressor-example}
-	\caption[Beispiel zum Compressor-Algorithmus]{Beispiel zum Compressor-Algorithmus. Die neue Speicheradresse eines Objekts berechnet sich aus dem Offset des zugehörigen Blocks und dem Speicherplatz, der durch die davorliegenden Objekte im Block beansprucht wird.}
+	\caption[Beispiel zum Compressor-Algorithmus]{Beispiel zum Compressor-Algorithmus. Die neue Speicheradresse eines Objekts berechnet sich aus dem Offset des zugehörigen Blocks (erster Summand) und dem Speicherplatz, der durch die davorliegenden Objekte im Block beansprucht wird (zweiter Summand).}
 	\label{fig:compressor-example}
 \end{figure}
 
@@ -234,7 +234,7 @@ Größere Blöcke wiederum erhöhen den Aufwand zur Berechnung der neuen Speiche
 \end{figure}
 
 Die Korrektheit der beiden vorgestellten Mark-Compact-Algorithmen ergibt sich aus der Korrektheit der Markierungsphase.
-Wurden alle erreichbaren Objekte erfasst, werden auch die Zeiger \Var{pos} und \Var{next} im LISP-2-Algorithmus korrekt weitergeschoben, ohne dass es zur Überschreibung erreichbarer Objekte kommt.
+Wurden alle erreichbaren Objekte erfasst, werden auch die Zeiger \Var{pos} und \Var{next} im LISP-2-Algorithmus korrekt weitergesetzt, ohne dass es zur Überschreibung erreichbarer Objekte kommt.
 Mit gleichem Argument sind auch die berechneten Speicheradressen im Compressor-Algorithmus korrekt.
 
 
@@ -248,7 +248,7 @@ Mit gleichem Argument sind auch die berechneten Speicheradressen im Compressor-A
 Die zweite Klasse der Algorithmen, die eine Kompaktierung des Heaps erreichen, bilden die \textbf{kopierenden} Algorithmen.
 Hier werden Markierungs- und Kompaktierungsphase vereint:
 Analog zu Mark-Sweep-Ansätzen werden Referenzen verfolgt, um erreichbare Objekte zu identifizieren.
-Im Gegensatz zu den in den vorigen beiden Abschnitten vorgestellten Mark-Compact-Algorithmen werden Objekte jedoch nicht durch eine zusätzliche lineare Traversierung des Heaps zusammengefasst, sondern unmittelbar bei Entdeckung an eine neue Position kopiert.
+Im Gegensatz zu den in den vorigen beiden Abschnitten vorgestellten Mark-Compact-Algorithmen werden erreichbare Objekte jedoch nicht durch eine zusätzliche lineare Traversierung des Heaps zusammengefasst, sondern unmittelbar bei Entdeckung an eine neue Position kopiert.
 Dazu wird der Heap in zwei Halbräume (engl. \textit{semispaces}) aufgeteilt, zwischen denen die Objekte hin- und herkopiert werden und die nach jedem Kollektionszyklus ihre Rollen tauschen.
 Diese Idee wurde ursprünglich von \textsc{Fenichel} und \textsc{Yochelson} für LISP entwickelt (vgl. \cite{fenichel1969}); im Folgenden wird eine Anlehnung an eine Variante von \textsc{Cheney} betrachtet, die ohne Rekursion auskommt (vgl. \cite{cheney1970}).
 
@@ -277,8 +277,8 @@ Diese Idee wurde ursprünglich von \textsc{Fenichel} und \textsc{Yochelson} für
 	\State \quad $\Var{oldAdr} \gets \Var{*field}$		\Comment{Adresse aus Feld holen}
 	\State \quad \IF $\Var{newAdr}(\Var{oldAdr}) = \Null$	\Comment{Falls Ziel noch nicht kopiert wurde\dots}
 	\State \quad \quad $\Var{newAdr}(\Var{oldAdr}) \gets \Var{pos}$		\Comment{\dots definiere neue Position}
-	\State \quad \quad $\Method{moveObject}(\Var{oldAdr}, \Var{newAdr}(\Var{oldAdr}))$
-	\State \quad \quad $\Var{pos} \gets \Var{pos} + \Method{sizeOf}(\Var{*oldAdr})$	\Comment{Kopiere Objekt an neue Position}
+	\State \quad \quad $\Var{pos} \gets \Var{pos} + \Method{sizeOf}(\Var{*oldAdr})$	
+	\State \quad \quad $\Method{moveObject}(\Var{oldAdr}, \Var{newAdr}(\Var{oldAdr}))$ \Comment{Kopiere Objekt an neue Position}
 	\State \quad \quad $\Method{add}(\Var{toDo}, \Var{newAdr}(\Var{oldAdr}))$	\Comment{Füge Kopie zu \Var{toDo} hinzu}
 	\State \quad $\Var{*field} \gets \Var{newAdr}(\Var{oldAdr})$	\Comment{Feld aktualisieren}
 \end{algorithmic}
@@ -289,14 +289,14 @@ Diese Idee wurde ursprünglich von \textsc{Fenichel} und \textsc{Yochelson} für
 Zur Vorbereitung wird der Heap zu Programmbeginn in zwei Hälften eingeteilt, die durch zwei Zeiger \Var{source} und \Var{target} markiert werden (Prozedur \Method{initialize} in Algorithmus~\ref{algo:copying-gc}).
 Der durch \Var{target} referenzierte Halbraum ist stets derjenige, der neu angelegte bzw. zu kopierende Objekte aufnimmt.
 Ein dritter Pointer \Var{pos} zeigt den Füllstand von \Var{target} und damit die Position an, an der ein neues Objekt angelegt bzw. kopiert wird.
-Der Allokator ist entsprechend so zu modifizieren, dass neue Objekte an der Stelle \Var{pos} angelegt werden und \Var{pos} anschließend angepasst wird, sowie die Garbage Collection bereits dann ausgelöst wird, wenn der freie Speicher in \Var{target} zu Neige geht.
+Der Allokator ist entsprechend so zu modifizieren, dass neue Objekte an der Stelle \Var{pos} angelegt werden und \Var{pos} anschließend angepasst wird, sowie die Garbage Collection bereits dann ausgelöst wird, wenn der freie Speicher in \Var{target} zur Neige geht.
 
 Kommt es zu einem Kollektionszyklus, werden zunächst die Rollen von \Var{source} und \Var{target} vertauscht (Zeile 6).
 Der Füllstandsanzeiger \Var{pos} wird auf den Beginn des nun leeren Halbraums \Var{target} gesetzt.
 Um alle erreichbaren Objekte aus \Var{source} nach \Var{target} zu kopieren, werden erst alle Felder von Basisobjekten auf Referenzen zu Heapobjekten untersucht (Zeile~8f).
 Diese Felder und die entsprechend referenzierten Objekte werden durch die Prozedur \Method{update} bearbeitet.
 Diese schlägt in einer Tabelle \Var{newAdr} nach, ob das Objekt bereits nach \Var{target} kopiert und in ihr eine neue Speicheradresse hinterlegt wurde (Zeile~17).
-Falls nein, wird die neue Adresse des Objekts auf die Position von \Var{pos} gesetzt, das Objekt an diese Stelle kopiert und \Var{pos} hinter das Objekt gesetzt (Zeile~18 bis~20).
+Falls nicht, wird die neue Adresse des Objekts auf die Position von \Var{pos} gesetzt, das Objekt an diese Stelle kopiert und \Var{pos} hinter das Objekt gesetzt (Zeile~18 bis~20).
 Damit alle Objekte erfasst werden können, die vom kopierten Objekt referenziert werden, wird dieses zu \Var{toDo} hinzugefügt.
 In \Var{toDo} befinden sich demnach alle Objekte, die bereits kopiert, aber deren ausgehende Referenzen noch nicht untersucht wurden.
 Schließlich kann die Referenz im untersuchten Feld auf die neue Speicheradresse aktualisiert werden (Zeile~22).
@@ -352,7 +352,7 @@ Entsprechend analog zu Satz~\ref{satz:tricolor-correctness} lässt sich die Term
 	Somit werden alle erreichbaren Objekte nach \Var{target} kopiert.	
 \end{proof}
 
-Die Laufzeit der kopierenden Garbage Collection ist vergleichbar mit der Markierungsphase des Mark-Sweep-Algorithmus (siehe Satz~\ref{satz:mark-sweep-complexity}), da alle erreichbaren Objekte und ihre Felder aufgesucht bzw. aktualisiert werden müssen.
+Die Laufzeit der kopierenden Garbage Collection ist vergleichbar mit der der Markierungsphase des Mark-Sweep-Algorithmus (siehe Satz~\ref{satz:mark-sweep-complexity}), da alle erreichbaren Objekte und ihre Felder aufgesucht bzw. aktualisiert werden müssen.
 Hinzu kommen allerdings Verzögerungen, die durch das Kopieren aller erreichbaren Objekte entstehen.
 Dies bietet jedoch die Möglichkeit, Objekte innerhalb des Heaps neu anzuordnen:
 Abbildung~\ref{fig:fenichel-example} lässt bereits erkennen, dass zwei Objekte, die vom selben Objekt referenziert werden, nebeneinander kopiert werden können.
@@ -375,7 +375,7 @@ Letzterer lässt jedoch vermeiden, indem etwa die neue Speicheradresse des kopie
 \label{sec:handle}
 In allen drei vorgestellten Algorithmen war zu sehen, dass eine Anpassung von Referenzen notwendig ist, wenn ein Objekt im Speicher verschoben oder kopiert wird.
 Dies erfordert im Allgemeinen eine Anpassung aller Felder von Objekten, die die ursprüngliche Speicheradresse enthalten.
-Um den Aufwand hierfür zu reduzieren, können \textbf{Handles} verwendet werden.
+Um den Aufwand hierfür zu reduzieren, können \textbf{Handles} (dt. \textit{Griff}, \textit{Henkel}) verwendet werden.
 Ein Handle \handle{a} eines Objekts \Var{a} ist ein weiteres Objekt, das lediglich die Speicheradresse von \Var{a} enthält und eine feste Position im Speicher besitzt.
 Alle Objekte besitzen anstelle einer Referenz auf \Var{a} eine solche auf \handle{a}.
 Ändert sich die Position von \Var{a} im Speicher, ist ausschließlich eine Anpassung der Speicheradresse in \handle{a} nötig (vgl. \cite{brooks1984}).
@@ -422,7 +422,7 @@ Diese ist notwendig, damit nach Verschiebung von \Var{a} der zugehörige Handle 
 
 Aus Sicht des Mutators soll die Existenz der Handles im Verborgenen bleiben:
 Müsste die Entwicklerin auf den korrekten Umgang mit Handles achten, stünde dies im Widerspruch zur Idee einer Garbage Collection, die Entwicklerin von der Speicherverwaltung zu entlasten.
-Insofern sollte der Zugriff auf \Var{header}(\Var{a}) nur dem Kollektor ermöglicht werden.
+Insofern sollte der Zugriff auf \Var{handle}(\Var{a}) nur dem Kollektor ermöglicht werden.
 Je nach Programmiersprache müssen dafür auch gewisse Operatoren angepasst werden, wenn sie durch den Mutator verwendet werden.
 So muss etwa die Dereferenzierung einer Speicheradresse nicht den Handle, sondern das vom Handle referenzierte Objekt liefern (siehe Algorithmus~\ref{algo:operator-overload}).
 Dies kann beispielsweise in der Programmiersprache \Cpp durch Überladung des Adress- und Dereferenzierungsoperators realisiert werden (vgl. \cite[Kap. 18]{cpp}).
@@ -446,7 +446,7 @@ Da jedes Objekt im Heap einen Handle besitzt, der ebenfalls dynamisch erzeugt wu
 Wie bereits diskutiert kann dies zu häufigeren Garbage-Collection-Zyklen führen, weswegen Handles in Kombination mit der kopierenden Garbage Collection eher unattraktiv sind.
 Zudem müssen Handles durch eine eigene Garbage Collection behandelt werden, da sie nicht verschoben werden dürfen.
 Zwar ist ein Handle genau dann erreichbar, wenn das zugehörige Objekt erreichbar ist.
-Allerdings werden in den oben betrachteten Algorithmen verwaiste Objekte nicht explizit freigegeben, sondern durch andere Objekte überschrieben bzw. dadurch überschreibbar, dass sie sich außerhalb des kompaktierten Bereichs befinden.
+Allerdings werden in den zuletzt betrachteten Algorithmen verwaiste Objekte nicht explizit freigegeben, sondern durch andere Objekte überschrieben bzw. dadurch überschreibbar, dass sie sich außerhalb des kompaktierten Bereichs befinden.
 Ein gleichzeitiges Freigeben von Handle und Objekt ist somit nicht realisierbar.
 Weiter verursacht die feste Position der Handles eine Fragmentierung des Heaps, die eigentlich beseitigt werden soll.
 Das Problem lässt sich jedoch in Grenzen halten:

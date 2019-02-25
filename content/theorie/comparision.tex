@@ -30,7 +30,7 @@ Soll die Referenzzählung auch zyklische Strukturen zuverlässig freigeben oder 
 
 
 \subsubsection*{Speicherbedarf}
-Da eine Garbage Collection häufig ausgelöst wird, wenn der freie Heapspeicher zu neige geht, ist der Speicherbedarf der verschiedenen Konzepte ein weiterer Aspekt, der bei der Wahl des passenden Algorithmus beachtet werden sollte.
+Da eine Garbage Collection häufig ausgelöst wird, wenn der freie Heapspeicher zur Neige geht, ist der Speicherbedarf der verschiedenen Konzepte ein weiterer Aspekt, der bei der Wahl des passenden Algorithmus beachtet werden sollte.
 Alle vorgestellten Algorithmen benötigen zusätzlichen Speicher pro Objekt, sei es, um Markierungsinformationen oder Referenzzähler innerhalb oder außerhalb von Objekt"-headern zu speichern.
 Einzelne Bits, die von markierenden Algorithmen verwendet werden, können gegebenenfalls in bereits vorhandene Header integriert werden, Referenzzähler können jedoch prinzipiell unbeschränkt groß werden.
 Für diese muss dann während der gesamten Laufzeit der Anwendung Speicher bereitgehalten werden.

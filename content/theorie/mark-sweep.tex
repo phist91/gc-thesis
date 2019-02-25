@@ -72,7 +72,7 @@ In beiden Fällen muss es folglich nicht erneut zu \Var{toDo} hinzugefügt werde
 Bereits nach dem Hinzufügen des ersten Basisobjekts wird die Prozedur \Method{mark} aufgerufen, welche die \Var{toDo}-Menge abarbeitet.
 Für jedes Objekt in \Var{toDo} werden diejenigen Felder betrachtet, die eine Referenz auf ein Objekt enthalten (Zeile 13 und 14).
 Wenn dieses Objekt noch nicht markiert wurde, wird es in diesem Augenblick zum ersten Mal entdeckt.
-Da es somit erreichbar ist, kann es markiert und zu \Var{toDo} hinzugefügt werden, um zu einem späteren Zeitpunkt abgearbeitet zu werden (Zeile 16 und 17).
+Da es somit erreichbar ist, kann es markiert und zu \Var{toDo} hinzugefügt werden (Zeile 16 und 17), um zu einem späteren Zeitpunkt abgearbeitet zu werden.
 Verweist die Referenz hingegen auf ein Objekt, das bereits markiert wurde, wurde dieses schon zuvor entdeckt.
 Auch hier ist ein erneutes Hinzufügen zu \Var{toDo} überflüssig.
 Sobald \Var{toDo} leer ist, erfolgt die Rückkehr zur Prozedur \Method{markStart}, sodass gegebenenfalls das nächste Basisobjekt abgearbeitet wird.
@@ -117,7 +117,7 @@ Da zudem mit jeder Iteration der \WHILE-Schleife mindestens ein Objekt aus \Var{
 \begin{algorithm}
 \begin{algorithmic}[1]
 	\State \MethodHead{sweep}():
-	\State \quad \Var{pos} $\gets$ \Method{nextObject}(\Var{HEAP\_START})
+	\State \quad \Var{pos} $\gets$ \Method{nextObject}(\Var{HEAP\_START})	\Comment{Beginne bei erstem Objekt im Heap}
 	\State \quad \WHILE \Var{pos} $\neq$ \Null
 	\State \quad \quad \IF \Method{isMarked}(\Var{*pos})
 	\State \quad \quad \quad \Method{unsetMarked}(\Var{*pos})
@@ -159,7 +159,7 @@ Wir halten zunächst fest, dass der Mark-Sweep-Algorithmus in seiner Gänze term
 \end{proof}
 
 Die Bedingung, dass der Mutator während des Markierens pausiert wird, ist tatsächlich notwendig, um zu vermeiden, dass fälschlicherweise erreichbare Objekte entfernt werden, wie folgendes Beispiel zeigt (vgl. \cite[969]{dijkstra1978}):
-Betrachtet man etwa die Situation, dass zwei Basisobjekte $\Var{a}$ und $\Var{b}$ alternierend auf ein Objekt $\Var{c}$ verweisen, das ausschließlich über $\Var{a}$ oder $\Var{b}$ erreichbar ist.
+Man betrachte etwa die Situation, dass zwei Basisobjekte $\Var{a}$ und $\Var{b}$ alternierend auf ein Objekt $\Var{c}$ verweisen, das ausschließlich über $\Var{a}$ oder $\Var{b}$ erreichbar ist.
 Während der Kollektor aktiv ist, führe der Mutator folgenden Code aus:
 
 \begin{center}
@@ -185,7 +185,7 @@ Während der Kollektor aktiv ist, führe der Mutator folgenden Code aus:
 Es könnte passieren, dass der Kollektor gerade Objekt $\Var{a}$ abarbeitet, unmittelbar nachdem Zeile~2 ausgeführt wurde.
 Es wird dann keine Referenz auf Objekt $\Var{c}$ vorgefunden.
 Wenn der Kollektor nun Objekt $\Var{b}$ betrachtet, nachdem bereits Zeile~4 abgearbeitet wurde, wird Objekt $\Var{c}$ weiterhin nicht entdeckt.
-Insgesamt wird Objekt $\Var{c}$ somit nicht markiert, obwohl es erreichbar ist.
+Insgesamt wird Objekt $\Var{c}$ somit nicht markiert, obwohl es über $\Var{a}$ erreichbar ist.
 In der Folge würde $\Var{c}$ irrtümlich freigegeben werden, sodass ein hängender Zeiger entsteht oder sogar Datenverlust verursacht wird -- der Algorithmus arbeitet also nicht korrekt.
 
 Situationen, in denen die nebenläufige Ausführung von Programmsegmenten zu unvorhersehbarem Verhalten führt, werden als \textit{race conditions} bezeichnet.
@@ -199,10 +199,10 @@ Algorithmen, die zur Vermeidung von \textit{race conditions} zwischen Kollektor 
 
 \section{Drei-Farben-Abstraktion}
 \label{sec:tricolor}
-Da das Anhalten des Mutators während eines gesamten Garbage-Collection-Zyklus zu vergleichsweise großen Verzögerungen führt, ist eine Optimierung der Markierungsphase wünschenswert.
+Da das Anhalten des Mutators während eines gesamten Garbage-Collection-Zyklus zu großen Verzögerungen führen kann, ist eine Optimierung der Markierungsphase wünschenswert.
 Zielführend ist, Kollektor und Mutator möglichst häufig eine nebenläufige Ausführung zu ermöglichen, ohne dabei die Korrektheit der Garbage Collection zu gefährden.
 Wir haben gesehen, dass die Manipulation von Referenzen während der Markierungsphase dazu führt, dass Verweise von markierten auf unmarkierte Objekte entstehen können, sodass erreichbare Objekte unmarkiert bleiben.
-Um dies zu vermeiden, könnte man als ersten Ansatz auf die Idee kommen, beim Schreiben einer neuen Referenz in ein Feld eines Objekts das Ziel dieser Referenz sofort zu markieren.
+Um dies zu vermeiden, könnte man als ersten Ansatz beim Schreiben einer neuen Referenz in ein Feld eines Objekts das Ziel dieser Referenz sofort markieren.
 Dies ist jedoch nur scheinbar eine Lösung:
 Da das Ziel ebenfalls Referenzen auf unmarkierte Objekte bereithalten könnte, entstehen dadurch möglicherweise neue Referenzen von markierten auf unmarkierte Objekte.
 Von \textsc{Dijkstra} et al. stammt ein Ansatz, der diese Idee aufgreift und um ein \textit{Zwischenstadium} erweitert \cite[S. 969f]{dijkstra1978}.
@@ -254,10 +254,10 @@ Andernfalls wird ihre Markierung zurück auf weiß gesetzt.
 \label{algo:tricolor}
 \end{algorithm}
 
-Mithilfe dieser \textbf{Drei-Farben-Abstraktion} (engl. \textit{tri-color abstraction}) können nun Referenzmanipulationen zugelassen werden, die parallel zur Markierungsphase der Garbage Collection stattfinden:
+Mithilfe dieser \textbf{Drei-Farben-Abstraktion} (engl. \textit{tri-color abstraction}, Algorithmus~\ref{algo:tricolor}) können nun Referenzmanipulationen zugelassen werden, die parallel zur Markierungsphase der Garbage Collection stattfinden:
 Wird in einem Objekt \Var{a} eine Referenz auf ein Objekt \Var{b} hinterlegt, so kann dies dazu führen, dass \Var{b} erreichbar wird.
 Infolgedessen müssen auch alle von \Var{b} referenzierten Objekte als erreichbar identifiziert werden.
-Somit ist es zielführend, \Var{b} beim Setzen der Referenz grau zu markieren und zu \Var{graySet} hinzuzufügen, sofern dies noch nicht der Fall ist oder die Felder von \Var{b} nicht bereits verfolgt wurden.
+Somit ist es zielführend, \Var{b} beim Setzen der Referenz grau zu markieren und zur Menge \Var{graySet} hinzuzufügen, sofern dies noch nicht der Fall ist oder die Felder von \Var{b} nicht bereits verfolgt wurden.
 Dies kann etwa mit einer \textit{Schreibbarriere} (engl. \textit{write barrier}) realisiert werden, die genau dann zum Einsatz kommt, wenn während eines Kollektionszyklus eine Referenz in ein Feld eines Objektes geschrieben wird (siehe Algorithmus~\ref{algo:tricolor-barrier}).
 Auf diese Art kann es jedoch vorkommen, dass Objekte unerreichbar werden, nachdem sie bereits grau oder schwarz markiert wurden.
 Entsprechend verbleiben sie zunächst im Speicher und werden erst im nächsten Garbage-Collection-Zyklus entfernt.
@@ -293,7 +293,7 @@ An dieser Stelle gehen wir auf die Terminierung und Korrektheit des modifizierte
 	
 	\textit{Zur Korrektheit:} Erneut ist zu zeigen, dass keine Objekte unmarkiert bleiben, die erreichbar sind.
 	Dies wäre genau dann der Fall, wenn nach der Markierungsphase ein schwarz markiertes Objekt eine Referenz auf ein weiß markiertes Objekt besitzt.
-	Daher ist die Gültigkeit folgender Schleifeninvariante für die \WHILE-Schleife zu zeigen:
+	Daher ist die Gültigkeit folgender Schleifeninvariante für die \WHILE-Schleife (Zeile~9 bis~15) zu zeigen:
 	\begin{description}
 		\item[(A)] Es existieren keine zwei Objekte \Var{a} und \Var{b} mit \Var{a} $\rightarrow$ \Var{b}, sodass \Var{a} schwarz markiert und \Var{b} weiß markiert ist.
 	\end{description}
@@ -308,7 +308,7 @@ An dieser Stelle gehen wir auf die Terminierung und Korrektheit des modifizierte
 \end{proof}
 
 Die Atomizität der Schreibbarriere \Method{writeRef} in Algorithmus~\ref{algo:tricolor-barrier} ist in der Tat notwendig, um die Korrektheit zu gewährleisten.
-Käme es unmittelbar nach der Markierung des Referenzziels, aber vor dem eigentlichen Setzen der Referenz in Zeile 5, zu einen kompletten Garbage-Collection-Zyklus, so würde die Markierung durch den Kollektor wieder aufgehoben.
+Käme es unmittelbar nach der Markierung des Referenzziels, aber vor dem eigentlichen Setzen der Referenz in Zeile 5, zu einem kompletten Garbage-Collection-Zyklus, so würde die Markierung durch den Kollektor wieder aufgehoben.
 Damit bestünde im Anschluss die Möglichkeit, dass die Invariante (A) verletzt wird.
 Allerdings kann die Invariante (A) abgeschwächt und damit eine \textit{feingranularere} Lösung ermöglicht werden.
 Für Details hierzu sei auf die Publikation von \textsc{Dijkstra} et al. verwiesen \cite[S. 972ff]{dijkstra1978}.
@@ -328,7 +328,7 @@ Meist können Mutator und Kollektor während der Bereinigung gleichzeitig tätig
 Nicht mehr erreichbare Objekte sind ohne Nebenwirkungen zerstörbar und Markierungsinformationen werden so hinterlegt, dass sie für den Mutator grundsätzlich nicht zugänglich sind.
 \textit{Race conditions} sind dadurch prinzipiell ausgeschlossen.
 Ferner ergibt sich hierdurch die Möglichkeit, die Bereinigungsphase nicht unmittelbar nach der Markierungsphase ausführen zu müssen.
-Für Systeme ohne hardware- oder softwareseitige Unterstützung für Multithreading, in denen die Aufgaben des Mutators und Kollektors nicht gleichzeitig bearbeitet werden können, bietet sich hingegen die \textbf{verzögerte Bereinigung} (engl. \textit{lazy sweeping}) nach \textsc{Hughes} \cite{hughes} an.
+Für Systeme ohne hardware- oder softwareseitige Unterstützung von Multithreading, in denen die Aufgaben des Mutators und Kollektors nicht gleichzeitig bearbeitet werden können, bietet sich hingegen die \textbf{verzögerte Bereinigung} (engl. \textit{lazy sweeping}) nach \textsc{Hughes} \cite{hughes} an.
 
 \begin{figure}[h]
 	\centering
@@ -396,14 +396,13 @@ Sobald ein Block um ein Objekt reduziert werden konnte, wird der Zyklus beendet 
 Falls aus keinem Block ein Objekt freigegeben werden konnte, bedeutet dies, dass alle Blöcke der entsprechenden Objektgröße mit erreichbaren Objekten gefüllt sind.
 In diesem Fall muss der Allokator einen neuen Block initialisieren, der neue Objekte aufnehmen kann (Zeile~25).
 
-Was geschieht nun, wenn nicht genügend freier Speicher zur Verfügung steht, um einen weiteren Block zu erzeugen?
-In diesem Fall schlägt auch der zweite Al"-lo"-ka"-tions"-versuch fehl (Zeile~5f).
+Falls nicht genügend freier Speicher zur Verfügung steht, um einen weiteren Block zu erzeugen, schlägt auch der zweite Al"-lo"-ka"-tions"-versuch fehl (Zeile~5f).
 Der letzte Versuch besteht nun darin, die Markierungen der Objekte zu aktualisieren, indem eine Markierungsphase gestartet wird (Zeile~7).
 Da die letzte Markierungsphase nicht unmittelbar vor der Speicheranforderung, sondern möglicherweise wesentlich früher stattgefunden hat, könnten in der Zwischenzeit weitere Objekte verwaist sein.
 Diese werden nachfolgend in einem zweiten Lazy-Sweep-Zyklus freigegeben, sodass zuletzt Platz innerhalb eines Blocks bzw. für einen neuen Block geschaffen werden kann (Zeile~8).
 
 Während die Einschränkung der Bereinigung auf einzelne Blöcke zwar einen Performancevorteil mit sich bringt, besitzt diese Variante des Mark-Sweep-Algorithmus auch einige Nachteile:
-Eine ungünstige Kombination von Speicheranforderungen und Sweep-Zyklen könnte dazu führen, dass viele Blöcke einer Größenordnung angelegt werden, die jeweils nur wenige Objekte enthalten und größtenteils ungenutzt sind.
+Eine ungünstige Kombination von Speicheranforderungen und Sweep-Zyklen könnte dazu führen, dass viele Blöcke derselben Größenordnung angelegt werden, die jeweils nur wenige Objekte enthalten und größtenteils ungenutzt sind.
 Wenn jeder Block allerdings mindestens ein erreichbares Objekt enthält, kann er nicht in Gänze freigegeben werden.
 Eine hohe Zahl dieser ineffizient genutzter Blöcke führt dazu, dass möglicherweise nicht mehr genügend freier Speicher zur Verfügung steht, um Blöcke anderer Größenordnung zu initialisieren, obwohl ausreichend Speicher vorhanden wäre, der nicht durch Objekte belegt wird.
 Eine Lösung dieses Problems wäre eine zusätzliche Konsolidierungsphase, bei der Blöcke gleicher Größenordnung zusammengelegt werden.
@@ -434,7 +433,7 @@ Anstatt etwa im naiven Algorithmus~\ref{algo:naive-mark} die Abarbeitung der \Va
 Je nachdem, wie \Var{toDo} in der Praxis realisiert wird -- zum Beispiel in Form eines Stacks -- kann die Traversierung der Objekte -- und damit die Performanz des Kollektors in der Markierungsphase -- signifikant beeinflusst werden (vgl. \cite{garner2007}).
 
 Statt Markierungsinformationen im Header zu speichern, können diese auch in Bitmaps oder tabellenähnlichen Strukturen außerhalb eines Objekts verwaltet werden.
-Dies vermeidet schreibende Zugriffe auf Objekte während der Markierungsphase, sodass Objekte ohne Referenzfelder übersprungen werden können und die Garbage Collection das Caching weniger stark beeinträchtigt.
+Dies vermeidet schreibende Zugriffe auf Objekte während der Markierungsphase, da Objekte ohne Referenzfelder übersprungen werden können und die Garbage Collection das Caching weniger stark beeinträchtigt.
 Im Falle eines in Blöcken eingeteilten Heaps bietet es sich beispielsweise an, pro Block eine Bitmap anzulegen.
 Somit kann während der Bereinigung schnell erkannt werden, ob größere Teile eines Blocks freigegeben werden können, ohne ihn komplett traversieren zu müssen.
 
@@ -447,7 +446,7 @@ Da bereits festgestellt wurde, dass keine Objekte mehrfach zu \Var{toDo} hinzuge
 Davon ausgehend, dass in \Var{toDo} ausschließlich Referenzen konstanter Größe gespeichert werden müssen, ergibt sich insgesamt ein Platzbedarf von $\oh(|\Reach|)$.
 
 Während der Speicherbedarf der Markierungsphase also linear mit der Anzahl der erreichbaren Objekte wächst, spielt für die Laufzeit auch die Anzahl der Referenzen eine Rolle.
-Für jedes erreichbare Objekt müssen alle enthaltenen Referenzen verfolgt werden, um auszuschließen, dass ein erreichbares Objekt nicht unmarkiert bleibt.
+Für jedes erreichbare Objekt müssen alle enthaltenen Referenzen verfolgt werden, um auszuschließen, dass kein erreichbares Objekt unmarkiert bleibt.
 Die Komplexität dieser Operation ist analog zur vollständigen Traversierung eines beliebigen Graphen $(V,E)$, die durch $\oh(|V|+|E|)$ gegeben ist \cite[Kap. 22]{cormen-leiserson}.
 
 \begin{mybox}

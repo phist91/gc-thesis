@@ -19,6 +19,10 @@
 	\draw [thick] (0,#1*\yscale) rectangle (20*\xscale,#1*\yscale+\yscale);
 }
 
+\newcommand{\labelnum}[2]{
+	\draw (-2*\xscale,#1*\yscale + 0.5*\yscale) node[left]{\textbf{(#2)}};
+}
+
 \begin{document}
 	\begin{tikzpicture}	
 		\object{1}{2}{0}
@@ -27,6 +31,7 @@
 		\object{11}{11}{0}
 		\object{15}{17}{0}
 		\border{0}
+		\labelnum{0}{1}
 		\pos{0}{0}
 		\nextCur{1}{0}
 			
@@ -36,6 +41,7 @@
 		\object{11}{11}{-3}
 		\object{15}{17}{-3}
 		\border{-3}
+		\labelnum{-3}{2}
 		\pos{2}{-3}
 		\nextCur{5}{-3}
 		
@@ -45,6 +51,7 @@
 		\object{11}{11}{-6}
 		\object{15}{17}{-6}
 		\border{-6}
+		\labelnum{-6}{3}
 		\pos{5}{-6}
 		\nextCur{8}{-6}
 		
@@ -54,6 +61,7 @@
 		\object{11}{11}{-9}
 		\object{15}{17}{-9}
 		\border{-9}
+		\labelnum{-9}{4}
 		\pos{6}{-9}
 		\nextCur{11}{-9}
 		
@@ -63,6 +71,7 @@
 		\object{6}{6}{-12}
 		\object{15}{17}{-12}
 		\border{-12}
+		\labelnum{-12}{5}
 		\pos{7}{-12}
 		\nextCur{15}{-12}
 
@@ -72,6 +81,7 @@
 		\object{6}{6}{-15}
 		\object{7}{9}{-15}
 		\border{-15}
+		\labelnum{-15}{6}
 		\pos{10}{-15}
 		\nextCur{20}{-15}		
 	\end{tikzpicture}

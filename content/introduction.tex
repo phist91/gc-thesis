@@ -20,16 +20,16 @@ Während die Anforderung von Speicher in der Regel unproblematisch ist, ist die 
 Zum anderen existiert zur Vermeidung eben jener Schwierigkeiten der Ansatz, dem Compiler und der Laufzeitumgebung die adäquate Freigabe nicht mehr benötigten Speichers zu überlassen.
 Zuständig hierfür ist dann ein Mechanismus, der gemeinhin als \textbf{Garbage Collection} (dt. \textit{Abfallentsorgung}) bezeichnet wird.
 Eine Garbage Collection führt automatisch zu bestimmten Zeitpunkten -- etwa regelmäßig oder wenn akuter Speichermangel besteht -- eine Bereinigung des Speichers durch und gibt nicht mehr benötigte Speicherbereiche frei, ohne dass die Entwicklerin entsprechende Routinen in ihr Programm integrieren muss.
-Nichtsdestoweniger wird dieser Komfortgewinn nicht ohne Nachteile erworben:
+Nichtsdestoweniger wird dieser Komfort nicht ohne Nachteile erworben:
 Wie jede Programmanweisung besitzt auch eine Garbage Collection einen gewissen Bedarf an Rechenzeit und Ressourcen, der sich negativ auf die Performance der eigentlichen Anwendung auswirken kann.
-Vor allem in Anwendungen, die einen hohen Durchsatz erreichen sollen oder in denen Deadlines und maximale Laufzeiten (\textit{worst case execution times}) um jeden Preis eingehalten werden müssen, spielt die Auswahl eines geeigneten Garbage-Collection-Algorithmus eine signifikante Rolle.
+Vor allem in Anwendungen, die einen hohen Durchsatz erreichen sollen oder in denen Deadlines und maximale Laufzeiten (engl. \textit{worst case execution times}) um jeden Preis eingehalten werden müssen, spielt die Auswahl eines geeigneten Garbage-Collection-Algorithmus eine signifikante Rolle.
 
 In dieser Arbeit werden gängige Ansätze zur Garbage Collection vorgestellt und miteinander verglichen.
 Dabei werden zunächst drei Klassen von Algorithmen fokussiert, die als Grundlage aller fortgeschrittenen Konzepte betrachtet werden können: markierende Algorithmen, referenzzählende Algorithmen und objektkopierende Algorithmen zur Kompaktierung des Heaps (vgl. \cite[S. 25]{blackburn2004}).
 Dazu wird aus jeder Klasse ein elementarer Algorithmus betrachtet, an dem das Grundprinzip der zugehörigen Algorithmen nachvollzogen werden kann.
 Durch einen Blick auf Performance und Ressourcenbedarf im Kontext verschiedener Anwendungsfälle ergeben sich dann Ansätze, die zu einer Auseinandersetzung mit elaborierteren Varianten motivieren.
 Im zweiten Teil der Arbeit wird der Entwurf und die Implementation einer Anwendung beschrieben, die die diskutierten Garbage-Collection-Algorithmen grafisch visualisiert und in einem vereinfachten Speichermodell simuliert.
-Anhand dieser Anwendung soll die Arbeitsweise der Algorithmen zusätzlich veranschaulicht werden, sodass ihre charakteristischen Merkmale erkennbar sind.
+Anhand dieser Anwendung wird die Arbeitsweise der Algorithmen zusätzlich veranschaulicht, sodass ihre charakteristischen Merkmale erkennbar sind.
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -39,8 +39,8 @@ Anhand dieser Anwendung soll die Arbeitsweise der Algorithmen zusätzlich verans
 
 \section{Terminologie}
 \label{sec:intro:terminologie}
-Bevor genauer darauf eingangen wird, was man unter einer Garbage Collection konkret versteht, sollen zunächst die nötige Terminologie sowie ein Speichermodell eingeführt werden, das im Fortgang dieser Arbeit benutzt wird.
-Dieses Speichermodell ist bewusst so abstrakt gehalten, dass es möglichst allgemeine Betrachtungen losgelöst von gängigen Programmiersprachen, Laufzeitumgebungen und Betriebssystemen ermöglicht, auch wenn an einigen Stellen exemplarisch Bezüge zu diesen hergestellt werden.
+Bevor genauer darauf eingangen wird, was man unter einer Garbage Collection konkret versteht, erfolgt zunächst eine Einführung der nötigen Terminologie sowie eines Speichermodells, das im Fortgang dieser Arbeit benutzt wird.
+Dieses Speichermodell ist bewusst abstrakt gehalten, sodass es möglichst allgemeine Betrachtungen losgelöst von konkreten Programmiersprachen, Laufzeitumgebungen und Betriebssystemen ermöglicht, auch wenn an einigen Stellen exemplarisch Bezüge zu diesen hergestellt werden.
 Die eingeführten Begrifflichkeiten orientieren sich stark an der Terminologie aus der Fachliteratur (vgl. \cite[Kap. 1]{jones-lins}).
 
 \subsubsection*{Objekt}
@@ -72,7 +72,7 @@ Für einen Überblick hierzu siehe etwa \cite[Kap. 3.3]{tanenbaum}.}
 	\label{fig:heap}
 \end{figure}
 
-Den Zugriff auf das \Var{i}-te Feld eines Objekts \Var{a} wird -- analog zur Syntax der Programmierspache C -- mit \Var{a[i]} notiert.
+Der Zugriff auf das \Var{i}-te Feld eines Objekts \Var{a} wird -- analog zur Syntax der Programmierspache C -- mit \Var{a[i]} notiert.
 Ebenso bezeichnet \Var{\&a} die Adresse eines Objekts und \Var{*p} die Dereferenzierung eines Zeigers \Var{p}.
 Mit $\Pointers(\Var{a})$ wird zudem die Menge aller von \Var{a} ausgehenden Referenzen auf andere Objekte des Heaps und mit $\Fields(\Var{a})$ die Menge aller Felder von \Var{a}, die eine solche Referenz enthalten, bezeichnet.
 Ist also $\Var{x} \in \Fields(\Var{a})$, so bezeichnet \Var{*x} entsprechend die im Feld gespeicherte Referenz und \Var{**x} das Ziel dieser Referenz.
@@ -146,7 +146,7 @@ Allerdings ist die Frage, ob dies der Fall ist oder nicht, nicht beantwortbar:
 \end{satz}
 \end{mybox}
 
-\begin{proof}
+\begin{proof}[Beweisskizze]
 	Dies ist ein Korollar aus der Unentscheidbarkeit des Halteproblems:
 	Angenommen, es gäbe einen Algorithmus, der für ein beliebiges Programm entscheidet, ob Objekte zu einem bestimmten Zeitpunkt lebendig sind.
 	Dieser müsste insbesondere entscheiden, dass der Teil eines Programms, in dem ein Objekt lebendig ist, terminiert.
@@ -167,7 +167,7 @@ Formal wird diese Eigenschaft wie folgt definiert:
 	Jedes Element der Menge $\Reach$ der \textbf{erreichbaren Objekte} ist durch endlich häufige Anwendung der folgenden beiden Regeln konstruiert:
 	\begin{enumerate}[(1)]
 		\item Ist $\Var{a} \in \Roots$, so folgt $\Var{a} \in \Reach$.
-		\item Ist $\Var{a} \in \Reach$, $\Var{b}$ ein weiteres Objekt und existiert ein $\Var{i} \in \NN$ mit $\Var{*a[i]} = \Var{b}$, so folgt $\Var{b} \in \Reach$.
+		\item Ist $\Var{a} \in \Reach$, $\Var{b}$ ein weiteres Objekt und existiert ein $\Var{i} \in \NN_0$ mit $\Var{*a[i]} = \Var{b}$, so folgt $\Var{b} \in \Reach$.
 	\end{enumerate}
 	Gilt $\Var{*a[i]} = \Var{b}$, so schreibt man auch $\Var{a} \rightarrow \Var{b}$.
 	Existiert für zwei Objekte $\Var{a}, \Var{b}$ eine endliche Folge von Objekten $\Var{a}_1, \dots, \Var{a}_n$ mit $\Var{a} \rightarrow \Var{a}_1 \rightarrow \dots \rightarrow \Var{a}_n \rightarrow \Var{b}$, so wird dies zudem mit $\Var{a} \transreach \Var{b}$ notiert.
@@ -179,7 +179,7 @@ Davon ausgehend, dass unerreichbare Objekte auch nicht \textit{wiedergefunden} w
 Basisobjekte selbst werden durch die Garbage Collection nicht verwaltet, allerdings werden ihre Header von manchen Algorithmen dennoch zur Speicherung von Informationen genutzt.
 
 Die Erreichbarkeit von Objekten lässt sich mithilfe eines sogenannten \textbf{Objektgraphen} visualisieren.
-Jedes existierende Objekt korrespondiert dabei zu einem Knoten des Graphen, sodass das Objekt mit seinem Knoten identifiziert werden kann (und umgekehrt).
+Jedes existierende Objekt korrespondiert dabei mit einem Knoten des Graphen, sodass das Objekt mit seinem Knoten identifiziert werden kann (und umgekehrt).
 Besitzt ein Objekt \Var{a} in mindestens einem seiner Felder eine Referenz auf ein weiteres Objekt \Var{b}, so wird dies durch eine gerichtete Kante zwischen den entsprechenden Knoten dargestellt.
 Ein Objekt ist somit nicht erreichbar, wenn es im Objektgraphen keinen Pfad zu ihm gibt, der in einem Basisobjekt startet.
 Objektgraphen werden im Rahmen dieser Arbeit bei der Veranschaulichung der vorgestellten Algorithmen dienlich sein.
@@ -198,7 +198,7 @@ Objektgraphen werden im Rahmen dieser Arbeit bei der Veranschaulichung der vorge
 \begin{figure}[h]
 	\centering
 	\includestandalone{img/tikz/ch1-objgraph}
-	\caption[Beispiel für einen Objektgraphen]{Beispiel für einen Objektgraphen. Die Objekte \Var{a}, \Var{b} und \Var{c} sind Basisobjekte. Die Objekte \Var{h}, \Var{i}, \Var{l} und \Var{m} sind in dieser Konstellation nicht erreichbar.}
+	\caption[Beispiel eines Objektgraphen]{Beispiel eines Objektgraphen. Die Objekte \Var{a}, \Var{b} und \Var{c} sind Basisobjekte. Die Objekte \Var{h}, \Var{i}, \Var{l} und \Var{m} sind in dieser Konstellation nicht erreichbar.}
 \end{figure}
 
 An dieser Stelle folgt die Formulierung eines Korrektheitskriteriums für Garbage-Collection-Algorithmen.
@@ -212,6 +212,6 @@ Dieses besteht aus der Anforderung, dass keine noch benötigten Daten zerstört 
 
 Gemäß Definition~\ref{def:erreichbar} ist es folglich hinreichend zu zeigen, dass nur nicht erreichbare Objekte freigegeben werden, um Korrektheit nachzuweisen.
 
-Man mag sich an dieser Stelle fragen, warum nicht vorausgesetzt wird, dass die Ausführung eines Garbage-Collection-Algorithmus die Freigabe \textit{sämtlicher} nicht erreichbaren Objekte anfordert.
+An dieser Stelle ist erwähnenswert, warum nicht vorausgesetzt wird, dass die Ausführung eines Garbage-Collection-Algorithmus die Freigabe \textit{sämtlicher} nicht erreichbaren Objekte anfordert.
 Tatsächlich wird zu sehen sein, dass es aus Performancegründen vorteilhaft sein kann, nur einen Teil des nicht mehr benötigten zugewiesenen Speichers zu bereinigen, um längere Wartezeiten zu vermeiden.
 Ein solches Kriterium wäre daher zu restriktiv.

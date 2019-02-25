@@ -1,9 +1,9 @@
 %!TEX root = ../../thesis.tex
 \chapter{Referenzzählung}
 \label{cha:reference-counting}
-Der zweite Garbage-Collection-Algorithmus, der in dieser Arbeit vorgestellt wird, stammt von \textsc{Collins} und aus dem selben Jahr wie der Mark-Sweep-Algorithmus.
-\textsc{Collins} betrachtet wie \textsc{McCarthy} das \textit{LISP Programming System} auf Großrechnern und das Problem, wann Listenelemente, die prinzipiell in mehreren Listen vorkommen können, wieder freigegeben werden dürfen.
-\textsc{McCarthys} Ansatz bezeichnet er jedoch als \enquote{elegant but inefficient} \cite[S. 655]{collins1960}, da dieser sowohl zeitaufwändig sei, als auch den Speicherplatz für Nutzdaten einschränke.
+Der zweite Garbage-Collection-Algorithmus, der in dieser Arbeit vorgestellt wird, stammt von \textsc{Collins} und aus demselben Jahr wie der Mark-Sweep-Algorithmus.
+\textsc{Collins} betrachtet wie \textsc{McCarthy} das \textit{LISP Programming System} auf Großrechnern und das Problem, wann Listenelemente, die in mehreren Listen vorkommen können, wieder freigegeben werden dürfen.
+\textsc{McCarthys} Ansatz bezeichnet er allerdings als \enquote{elegant but inefficient} \cite[S. 655]{collins1960}, da dieser sowohl zeitaufwändig sei, als auch den Speicherplatz für Nutzdaten einschränke.
 Stattdessen schlägt \textsc{Collins} vor, zusätzlich zu einem Datum die Anzahl der Referenzen auf dieses zu speichern.
 Anhand dieses Zählers, der bei der Manipulation von Referenzen aktualisiert wird, kann unmittelbar festgestellt werden, ob ein Datum verwaist ist und der entsprechende Speicherplatz freigegeben werden kann \cite[S. 656f]{collins1960}.
 Dieser Ansatz -- die \textbf{Referenzzählung} (engl. \textit{reference counting}) -- wird in diesem Kapitel ausführlich betrachtet.
@@ -16,7 +16,7 @@ Dieser Ansatz -- die \textbf{Referenzzählung} (engl. \textit{reference counting
 
 \section{Naive Referenzzählung}
 \label{sec:naive-rc}
-Zur Realisierung des Ansatzes von \textsc{Collins} im betrachteten Speichermodell wird erneut der Header eines Objekts \Var{a} genutzt, um einen ganzzahligen, nicht negativen Wert \Var{rc}(\Var{a}) zu hinterlegen, der als \textbf{Referenzzähler} von \Var{a} bezeichnet wird.
+Zur Realisierung des Ansatzes von \textsc{Collins} im eingangs betrachteten Speichermodell wird erneut der Header eines Objekts \Var{a} genutzt, um einen ganzzahligen, nicht negativen Wert \Var{rc}(\Var{a}) zu hinterlegen, der als \textbf{Referenzzähler} von \Var{a} bezeichnet wird.
 Dieser gibt an, wie viele Referenzen von anderen Objekten auf \Var{a} existieren und wird bei der Erzeugung von \Var{a} mit dem Wert $0$ initialisiert.
 Auf diese Art erhält man unmittelbar eine notwendige Bedingung für die Erreichbarkeit eines Heapobjekts:
 Ist $\Var{a} \in \Reach$, so existiert mindestens ein Objekt $\Var{b} \neq \Var{a}$ mit $\Var{b} \rightarrow \Var{a}$ und somit gilt $\Var{rc}(\Var{a}) \geq 1$.
@@ -54,7 +54,7 @@ Daher bieten sich zur Realisierung Schreibbarrieren an, die bereits in Abschnitt
 	\State \quad \IF $\Var{rc}(\Var{obj}) = 0$
 	\State \quad \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
 	\State \quad \quad \quad \IF (\Var{ref} $\neq$ \Null $\wedge$ \Var{*ref} $\neq$ \Var{obj}) \Comment{Reduziere rekursiv \Var{rc}}
-	\State \quad \quad \quad \quad \Method{decRefCount}(\Var{*ref}) \Comment{referenzierter Objekte}
+	\State \quad \quad \quad \quad \Method{decRefCount}(\Var{*ref}) \CommentCont{referenzierter Objekte}
 	\State \quad \quad \Method{free}(\Var{\&obj})
 \end{algorithmic}
 \caption[Naive Referenzzählung]{Naive Referenzzählung mittels Schreibbarriere (vgl. \cite[S. 58]{handbook}).}
@@ -68,7 +68,7 @@ Analog wird überprüft, ob im betroffenen Feld bereits eine Referenz auf ein an
 Wenn ja, muss dessen Referenzzähler entsprechend dekrementiert werden.
 Im Anschluss kann die neue Referenz in das Feld des Objekts geschrieben werden.
 
-Das Herabsetzen des Referenzzählers wird durch die Prozedur \Method{decRefCount} übernommen.
+Das Verringern des Referenzzählers wird durch die Prozedur \Method{decRefCount} übernommen.
 Dabei wird zugleich geprüft, ob dieser anschließend $0$ ist (Zeile 9).
 In diesem Fall wird das entsprechende Objekt \Var{obj} freigegeben.
 Die Freigabe führt allerdings dazu, dass auch die Zähler derjenigen Objekte verringert werden müssen, die von \Var{obj} referenziert werden.
@@ -110,11 +110,11 @@ In der Folge würde das Ziel sofort freigegeben werden, obwohl es weiterhin erre
 	Aus Lemma~\ref{lemma:notwendig-rc} folgt, dass \Var{a} nicht erreichbar ist.
 \end{proof}
 
-Die Garbage Collection mithilfe naive Referenzzählung bietet im Vergleich zum Mark-Sweep-Algorithmus einige Vorteile, aber auch gewisse Nachteile (vgl. \cite[S. 346]{linhou2006}):
+Die Garbage Collection mithilfe naiver Referenzzählung bietet im Vergleich zum Mark-Sweep-Algorithmus einige Vorteile, aber auch gewisse Nachteile (vgl. \cite[S. 346]{linhou2006}):
 Eine Freigabe von Objekten wird unmittelbar durch ihre Verwaisung ausgelöst und nicht etwa, wenn unzureichend freier Speicher zur Verfügung steht.
 Dadurch wird die Allokation von Speicher für neu erzeugte Objekte nicht verzögert.
-Verwaiste Objekte werden beim Löschen ihrer letzten Referenz unmittelbar erkannt und freigegeben und nicht erst beim nächsten Mark-Sweep-Zyklus.
-Speichermangel kann so de facto nur dadurch entstehen, dass der gesamte Speicher von erreichbaren Objekten belegt wird -- in diesem Fall bietet allerdings kein Garbage-Collection-Algorithmus Abhilfe -- oder der Heap zunehmend fragmentiert wird (siehe Kapitel~\ref{cha:compacting}).
+Verwaiste Objekte werden beim Löschen der letzten Referenz auf sie unmittelbar erkannt und freigegeben und nicht erst beim nächsten Mark-Sweep-Zyklus.
+Speichermangel kann de facto nur dadurch entstehen, dass der gesamte Speicher von erreichbaren Objekten belegt wird -- in diesem Fall bietet allerdings kein Garbage-Collection-Algorithmus Abhilfe -- oder der Heap zunehmend fragmentiert wird (siehe Kapitel~\ref{cha:compacting}).
 Referenzzählung benötigt zudem keinen Zugriff auf den vollständigen Objektgraphen:
 Da kein Aufspüren aller erreichbaren Objekte durchgeführt wird, kann auf eine Traversierung des Objektgraphen verzichtet werden.
 Dies ist besonders für verteilte Systeme von Vorteil, in denen die Markierungsphase sonst mehrere Knoten des Systems belasten und erhöhten Datenaustausch zwischen diesen verursachen würde.
@@ -128,7 +128,7 @@ Trotz dieser Vorteile ist die naive Referenzzählung jedoch kein Allheilmittel.
 Dadurch, dass bei jeglicher Referenzänderung eine Manipulation der Zähler erfolgt, werden Operationen des Mutators, die ursprünglich nur lesend auf Objekte zugreifen, zu Schreibzugriffen.
 Diese Problematik wird in Verbindung mit dynamischen Datenstrukturen besonders deutlich:
 Betrachtet man etwa die lineare Suche auf einer einfach verketteten Liste, so fällt auf, dass bei jeder Iteration die Referenzvariable auf das aktuell betrachtete Element neu gesetzt wird (Zeile 4 in Algorithmus~\ref{algo:linsearch}).
-Dadurch werden zwei Schreibzugriffe notwendig, die die Zähler des zuletzt betrachteten Objekts reduzieren und des nächsten Objekts erhöhen, obwohl deren Erreichbarkeit tatsächlich nicht beeinflusst wird.
+Dadurch werden zwei Schreibzugriffe notwendig, welche den Zähler des zuletzt betrachteten Objekts reduzieren und den des nächsten Objekts erhöhen, obwohl deren Erreichbarkeit tatsächlich nicht beeinflusst wird.
 Die Anzahl an Speicheroperationen wird also signifikant vergrößert.
 Durch den rekursiven Aufruf von \Method{decRefCount} kann es zudem zu einer Kaskade an Freigaben und Zählermanipulationen kommen, sobald ein Objekt freigegeben wird.
 In Verbindung mit der Atomizität der Schreibbarriere können dadurch größere und unerwartete Verzögerungen im Programmablauf entstehen, die bei zeitkritischen Anwendungen um jeden Preis zu vermeiden sind.
@@ -142,7 +142,7 @@ Die Speicherung eines Zählers für jedes Objekt, dessen Wert potenziell nur dur
 	\State \quad \quad \Var{cur} $\gets$ \Method{next}(\Var{list})
 	\State \quad \Return \Var{cur} 
 \end{algorithmic}
-\caption[Lineare Suche]{Lineare Suche in einer verketteten Liste. Obwohl der Algorithmus keine Objekte manipuliert, verursacht jede Änderung an der Referenzvariablen \Var{cur} die Manipulation von zwei Referenzzählern.}
+\caption[Lineare Suche]{Lineare Suche in einer verketteten Liste. Obwohl der Algorithmus keine Objekte manipuliert, verursacht jede Änderung der Referenzvariable \Var{cur} die Manipulation von zwei Referenzzählern.}
 \label{algo:linsearch}
 \end{algorithm}
 
@@ -167,9 +167,9 @@ Im Anschluss daran werden weitere Ansätze vorgestellt, die eine Effizienzsteige
 
 \section{Zyklische Referenzen}
 \label{sec:cyclic-rc}
-Die fehlende Möglichkeit zur Erkennung und Freigabe zyklischer Strukturen kann -- bei entsprechend häufiger Verwendung -- große Teile des Heaps brachliegen lassen.
+Die fehlende Möglichkeit zur Erkennung und Freigabe zyklischer Strukturen kann -- bei häufigem Auftreten -- große Teile des Heaps unverwendbar werden lassen.
 Ein gelegentlich zusätzlich ausgeführter Mark-Sweep-Zyklus mag diese Problematik zwar beheben, macht allerdings die oben genannten Vorteile der Referenzzählung zunichte.
-Nachfolgend wird ein Algorithmus von \textsc{Martínez}, \textsc{Wachenchauzer} und \textsc{Lins} vorgestellt, der die naive Referenzählung um ein Verfahren ergänzt, mit welchem zyklische Strukturen zuverlässig erkannt werden können \cite{martinez1990}.
+Nachfolgend wird ein Algorithmus von \textsc{Martínez}, \textsc{Wachenchauzer} und \textsc{Lins} vorgestellt, der die naive Referenzzählung um ein Verfahren ergänzt, mit welchem zyklische Strukturen zuverlässig erkannt werden können \cite{martinez1990}.
 Dieses basiert darauf, dass ein Zyklus von Objekten als \textbf{starke Zusammenhangskomponente} im Objektgraphen aufgefasst werden kann (vgl. \cite[S. 348]{linhou2006}).
 Das bedeutet, dass von jedem Objekt aus jedes andere Objekt innerhalb des Zyklus erreicht werden kann.
 
@@ -183,7 +183,7 @@ Das bedeutet, dass von jedem Objekt aus jedes andere Objekt innerhalb des Zyklus
 		\item Für alle $\Var{b}, \Var{c} \in \sk{\Var{a}}$ gilt $\Var{b} \transreach \Var{c}$ und $\Var{c} \transreach \Var{b}$.
 		\item $\sk{\Var{a}}$ ist maximal, das heißt für jede Teilmenge $M \subseteq O$, die \textbf{(1)} und \textbf{(2)} erfüllt, gilt $M \subseteq \sk{\Var{a}}$.
 	\end{enumerate}
-	Eine Referenz $\Var{x} \rightarrow \Var{a}$ von $\Var{a}$ heißt \textbf{intern}, wenn $\Var{x} \in \sk{\Var{a}}$.
+	Eine Referenz $\Var{x} \rightarrow \Var{a}$ auf $\Var{a}$ heißt \textbf{intern}, wenn $\Var{x} \in \sk{\Var{a}}$.
 	Andernfalls heißt sie \textbf{extern}.	
 \end{defn}
 \end{mybox}
@@ -222,7 +222,7 @@ Zusätzlich zum Referenzzähler wird pro Objekt eine Markierungsinformation gesp
 Nach Untersuchung der hypothetisch zyklischen Struktur sollen erreichbare Objekte weiß und nicht erreichbare schwarz markiert sein.
 Zu Beginn sind alle Objekte weiß markiert.
 Algorithmus~\ref{algo:cyclic-rc} ergänzt die Prozedur \Method{decRefCount} der naiven Referenzzählung um einen \ELSE-Fall, der ausgelöst wird, wenn der Referenzzähler \Var{rc}(\Var{obj}) nach Dekrementierung nicht $0$ beträgt (vgl. Zeile~8 bis 11).
-In diesem Fall muss überprüft werden, ob \Var{obj} das letzte Objekt einer Struktur war, durch welches diese erreichbar war.
+In diesem Fall muss überprüft werden, ob \Var{obj} das letzte Objekt einer starken Zusammenhangskomponente war, durch welches diese erreichbar war.
 Dazu wird nach einem dreischrittigen Verfahren vorgegangen, das im Folgenden beschrieben wird.\footnote{Wie bereits eingangs der Arbeit erwähnt, wird im Folgenden auf die Überprüfung von \Null-Referenzen verzichtet. Entsprechende \IF-Anweisungen lassen sich jedoch problemlos in die Algorithmen integrieren.}
 
 \begin{algorithm}[h]
@@ -267,7 +267,7 @@ Dabei werden gleichzeitig die zugehörigen Referenzzähler angepasst, sodass die
 	\State \MethodHead{unmark}(\Var{obj}):
 	\State \quad \Method{setColor}(\Var{obj}, \Var{WHITE})		\Comment{Objekt ist erreichbar}
 	\State \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
-	\State \quad \quad $\Var{rc}(\Var{*ref}) \gets \Var{rc}(\Var{*ref})+1$ \Comment{Interne Referenz wiederherstellen}
+	\State \quad \quad $\Var{rc}(\Var{*ref}) \gets \Var{rc}(\Var{*ref})+1$ \Comment{Interne Referenz wieder berücksichtigen}
 	\State \quad \quad \IF \NOT \Method{isWhite}(\Var{*ref})
 	\State \quad \quad \quad \Method{unmark}(\Var{*ref})
 	\Statex
@@ -323,7 +323,7 @@ Der Aufruf \Method{markGray}(\Var{c}) erniedrigt den Referenzzähler von \Var{d}
 An dieser Stelle geschehen jedoch keine rekursiven Aufrufe mehr, da alle von \Var{d} referenzierten Objekte bereits grau markiert sind.
 Somit terminieren hier die Aufrufe von \Method{markGray}(\Var{d}), \Method{markGray}(\Var{c}) und \Method{markGray}(\Var{b}).
 
-An dieser Stelle ist bereits erkennbar, dass alle Referenzzähler von $\sk{\Var{b}}$ $0$ sind, weswegen der Zyklus keine externen Referenzen besitzt und nicht mehr erreichbar ist.
+An dieser Stelle ist bereits erkennbar, dass alle Referenzzähler von $\sk{\Var{b}}$ $0$ sind, weswegen die starke Zusammenhangskomponente keine externen Referenzen besitzt und nicht mehr erreichbar ist.
 Dies wird nun von \Method{scan} mittels einer weiteren Tiefensuche beginnend bei \Var{b} überprüft.
 Da alle von \Var{b} aus erreichbaren Objekte grau markiert sind und ihre Referenzzähler verschwinden, werden sie schwarz markiert; ein Aufruf von \Method{unmark} findet nicht statt.
 Somit werden anschließend alle vier Knoten durch \Method{collect} mittels einer dritten Tiefensuche freigegeben.
@@ -331,11 +331,11 @@ Somit werden anschließend alle vier Knoten durch \Method{collect} mittels einer
 Was passiert jedoch, wenn der Zyklus erreichbar bleibt?
 Dazu wird das Beispiel um eine externe Referenz auf das Objekt \Var{d} ergänzt (siehe Abbildung~\ref{fig:rc-unmark-example}).
 Nach Terminierung von \Method{markGray}(\Var{b}) weist \Var{rc}(\Var{d}) dann den Wert $1$ auf.
-Durch den Aufruf \Method{scan}(\Var{b}) werden zunächst wie zuvor \Var{b}, \Var{e} und \Var{c} schwarz markiert.
+Durch den Aufruf \Method{scan}(\Var{b}) werden zunächst \Var{b}, \Var{e} und \Var{c} schwarz markiert.
 Da allerdings $\Var{rc}(\Var{d}) \neq 0$ gilt, folgt nun ein Aufruf von \Method{unmark}(\Var{d}), wodurch \Var{d} weiß markiert wird.
 Hierdurch wird eine weitere Tiefensuche angestoßen, die die von \Var{d} aus erreichbaren Objekte traversiert, weiß markiert und ihre Referenzzähler zurücksetzt.
 Der anschließend noch abzuarbeitende Aufruf von \Method{scan}(\Var{b}) markiert lediglich graue Objekte schwarz.
-Somit sind letztlich keine schwarz markierten Objekte vorhanden und kein Objekt des Zyklus wird entfernt.
+Somit sind letztlich keine schwarz markierten Objekte vorhanden und kein Objekt der starken Zusammenhangskomponente wird entfernt.
 
 \begin{figure}[h]
 	\centering
@@ -399,11 +399,11 @@ Jede Referenzlöschung, die einen Referenzzähler nicht auf $0$ fallen lässt, l
 Im schlimmsten Fall wird dabei der gesamte Objektgraph drei Mal traversiert, ohne dass am Ende Speicher freigegeben wurde.
 Der Algorithmus eignet sich daher eher für Fälle, in denen mehrere Referenzen auf ein Objekt selten sind, aber weniger für objektorientierte Konzepte (vgl. \cite[S. 215]{lins1992}).
 Zyklische Referenzzählung kann somit unter Umständen wesentlich aufwendiger sein als der naive Mark-Sweep-Algorithmus.
-Als Verbesserung hat Lins eine Variante vorgestellt, bei welcher die für eine zyklische Struktur infrage kommenden Objekte zunächst in eine Warteschlange eingefügt werden.
+Als Verbesserung hat \textsc{Lins} eine Variante vorgestellt, bei welcher die für eine zyklische Struktur infrage kommenden Objekte zunächst in eine Warteschlange eingefügt werden.
 Die Überprüfung auf zyklische Referenzen wird damit erst bei Bedarf ausgelöst, etwa bei akutem Speichermangel oder voller Warteschlange.
 Falls zuvor bereits die letzte Referenz auf ein Objekt entfernt wird, kann das Verfahren übersprungen werden \cite{lins1992}.
 Von \textsc{Lin} und \textsc{Hou} stammt darüber hinaus eine Variante, die mehrere zyklische Strukturen zu Teilgraphen eines Objektgraphen zusammenfasst.
-Mittels einer einzigen Traversierung kann dann die Zahl der externen Referenzen dieses Teilgraphen bestimmt werden; existieren keine, so kann der gesamte Teilgraph -- und damit alle enthaltenen starken Zusammenhangskomponenten -- entsorgt werden \cite{linhou2006}.
+Mittels einer einzigen Traversierung kann dann die Zahl der externen Referenzen dieses Teilgraphen bestimmt werden; existieren keine, so kann der gesamte Teilgraph -- und damit alle enthaltenen starken Zusammenhangskomponenten -- freigegeben werden \cite{linhou2006}.
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -469,8 +469,8 @@ Ist beides nicht der Fall, so muss \Var{obj} zur \Var{MRT} hinzugefügt werden; 
 Analoge Fallunterscheidungen sind nötig, wenn ein Referenzzähler reduziert wird (Zeile~14 bis~18).
 
 Die Freigabe von Objekten kann nun zu geeigneten, unkritischen Zeitpunkten mittels der Prozedur \Method{collect} ausgelöst werden, sofern diese vorhersehbar sind, oder alternativ bei akutem Speichermangel.
-Da die Objekte in der \Var{ZCT} gegebenenfalls noch von lokalen Variablen referenziert werden und nicht entfernt werden dürfen, müssen zunächst ihre Referenzzähler angepasst werden, indem über alle Referenzen von Basisobjekten iteriert wird (Zeile~20).
-Objekte, die im Anschluss in \Var{ZCT} verbleiben, sind tatsächlich verwaist und können bedenkenlos entfernt werden, ohne die Korrektheit des Algorithmus zu gefährden (Zeile~22 bis~26).
+Da die Objekte in der \Var{ZCT} gegebenenfalls noch von lokalen Variablen referenziert werden und in diesem Fall nicht entfernt werden dürfen, müssen zunächst ihre Referenzzähler angepasst werden, indem über alle Referenzen von Basisobjekten iteriert wird (Zeile~20).
+Objekte, die im Anschluss in der \Var{ZCT} verbleiben, sind tatsächlich verwaist und können bedenkenlos entfernt werden, ohne die Korrektheit des Algorithmus zu gefährden (Zeile~22 bis~26).
 
 \begin{figure}[h]
 	\centering
@@ -490,7 +490,7 @@ Für Anwendungen, in denen diese Bedingung nicht zutrifft, ergibt sich jedoch di
 Im Falle einer Hashtabelle muss etwa eine geeignete Hashfunktion gewählt werden, um Schlüsselkollisionen und damit verbundene Performanceeinbußen zu vermeiden.\footnote{Kommt es zu vielen Schlüsselkollisionen, kann die Komplexität eines Zugriffs auf ein einzelnes Tabellenelement in $\oh(n)$ liegen, wobei $n$ die Anzahl der Einträge ist. Eine Vergrößerung der Schlüsselmenge zur Vermeidung von Kollisionen kann wiederum zu einem hohen Speicherbedarf führen, was den für den Heap zur Verfügung stehenden Speicher einschränkt (vgl. \cite[S. 253]{cormen-leiserson}).}
 
 Eine weitere Optimierungsmöglichkeit zielt darauf ab, die Auswirkung einer mehrfachen Änderung eines Referenzfeldes eines Objekts zusammenzufassen, anstatt jede einzelne Änderung nachzuverfolgen.
-\textsc{Levanoni} und \textsc{Petrank} beobachten, dass viele einzelne Referenzmanipulationen innerhalb des selben Feldes unnötige Anpassungen von Referenzzählern verursachen, die sich gewissermaßen \textit{kürzen} lassen \cite[S. 4ff]{levanoni2006}.
+\textsc{Levanoni} und \textsc{Petrank} beobachten, dass viele einzelne Referenzmanipulationen innerhalb desselben Feldes unnötige Anpassungen von Referenzzählern verursachen, die sich gewissermaßen \textit{kürzen} lassen \cite[S. 4ff]{levanoni2006}.
 Man betrachte etwa einen Mutator, der folgenden Code ausführt, und die dadurch ausgelösten Anpassungen von Referenzzählern:
 
 \begin{center}
