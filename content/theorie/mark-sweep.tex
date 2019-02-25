@@ -3,7 +3,7 @@
 \label{cha:mark-sweep}
 Dieses Kapitel beginnt mit einer Vorstellung des ersten Garbage"=Collection"=Algorithmus, der auf \textsc{McCarthy} zurückgeht \cite[191--193]{mccarthy1960}.
 Im Rahmen eines im Jahr 1960 veröffentlichten Artikels über die Berechnung rekursiver Funktionen auf dem \textit{IBM 704} mithilfe des \textit{LISP Programming Systems} erläutert \textsc{McCarthy} die Speicherung von Daten in einer Listenstruktur.
-Diese besteht aus Paaren, deren erster Eintrag \texttt{car} die zu speichernde Information enthält\footnote{Genauer: Die Adresse des Registers, in dem die zu speichernde Information gelagert wird.}, während im zweiten Eintrag \texttt{cdr} die Registeradresse des nachfolgenden Paares zu finden ist.
+Diese besteht aus Paaren, deren erster Eintrag \texttt{car} die zu speichernde Information enthält\footnote{Genauer: Die Adresse des Registers, in dem die zu speichernde Information gelagert wird.}, während im zweiten Eintrag \texttt{cdr} die Registeradresse des nachfolgenden Paares zu finden ist (siehe Abbildung~\ref{fig:lisp-list}).
 Diese Struktur hat den Vorteil, dass ein in mehreren Listen vorkommendes Datum nur ein einziges Register belegt.
 Register, die aktuell nicht zur Speicherung von Daten genutzt werden, befinden sich in einer \textit{free storage list}.
 Bei der Anforderung von Speicher für ein zu speicherndes Datum werden Register aus dieser Liste entfernt.
@@ -72,7 +72,7 @@ In beiden Fällen muss es folglich nicht erneut zu \Var{toDo} hinzugefügt werde
 Bereits nach dem Hinzufügen des ersten Basisobjekts wird die Prozedur \Method{mark} aufgerufen, welche die \Var{toDo}-Menge abarbeitet.
 Für jedes Objekt in \Var{toDo} werden diejenigen Felder betrachtet, die eine Referenz auf ein Objekt enthalten (Zeile 13 und 14).
 Wenn dieses Objekt noch nicht markiert wurde, wird es in diesem Augenblick zum ersten Mal entdeckt.
-Da es somit erreichbar ist, kann es markiert und zu \Var{toDo} hinzugefügt werden, um zu einem späteren Zeitpunkt abgearbeitet zu werden (Zeile 15 und 16).
+Da es somit erreichbar ist, kann es markiert und zu \Var{toDo} hinzugefügt werden, um zu einem späteren Zeitpunkt abgearbeitet zu werden (Zeile 16 und 17).
 Verweist die Referenz hingegen auf ein Objekt, das bereits markiert wurde, wurde dieses schon zuvor entdeckt.
 Auch hier ist ein erneutes Hinzufügen zu \Var{toDo} überflüssig.
 Sobald \Var{toDo} leer ist, erfolgt die Rückkehr zur Prozedur \Method{markStart}, sodass gegebenenfalls das nächste Basisobjekt abgearbeitet wird.
@@ -455,9 +455,9 @@ Die Komplexität dieser Operation ist analog zur vollständigen Traversierung ei
 	\label{satz:mark-sweep-complexity}
 	Für den naiven Mark-Sweep-Algorithmus gelten folgende Eigenschaften:
 	\begin{enumerate}[(1)]
-		\item Der Speicherbedarf des gesamten Algorithmus ist $\oh(|\Reach|)$.
-		\item Die Laufzeit der Markierungsphase ist $\oh\enb{|\Reach|+\sum\limits_{\Var{a} \in \Reach}^{} \abs{\Pointers(\Var{a})}}$.
-		\item Die Laufzeit der Bereinigungsphase ist $\oh(|\HeapSize|)$, wobei $|\HeapSize|$ die Größe des Heaps bezeichnet.
+		\item Der Speicherbedarf des gesamten Algorithmus liegt in $\oh(|\Reach|)$.
+		\item Die Laufzeit der Markierungsphase liegt in $\oh\enb{|\Reach|+\sum\limits_{\Var{a} \in \Reach}^{} \abs{\Pointers(\Var{a})}}$.
+		\item Die Laufzeit der Bereinigungsphase liegt in $\oh(|\HeapSize|)$, wobei $|\HeapSize|$ die Größe des Heaps bezeichnet.
 	\end{enumerate}
 \end{satz}
 \end{mybox}

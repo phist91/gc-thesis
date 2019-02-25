@@ -113,8 +113,8 @@ Somit können folgende Abschätzungen festgehalten werden:
 \begin{satz}[Komplexität des LISP-2-Algorithmus]
 	Für den LISP-2-Algorithmus gelten folgende Eigenschaften:
 	\begin{enumerate}[(1)]
-		\item Die Laufzeit der Verschiebungsphase ist $\oh(|\HeapSize|)$.
-		\item Die Laufzeit von \Method{updateRefs} ist $\oh\enb{\sum\limits_{\Var{a} \in \Roots}^{} \abs{\Fields(a)} + \abs{\HeapSize}}$.
+		\item Die Laufzeit der Verschiebungsphase liegt in $\oh(|\HeapSize|)$.
+		\item Die Laufzeit von \Method{updateRefs} liegt in $\oh\enb{\sum\limits_{\Var{a} \in \Roots}^{} \abs{\Fields(a)} + \abs{\HeapSize}}$.
 	\end{enumerate}
 \end{satz}
 \end{mybox}
@@ -123,11 +123,11 @@ Der Speicherplatzbedarf, der zusätzlich durch die Kompaktierung anfällt, ist i
 Alternativ -- und näher am ursprünglichen Algorithmus -- kann zur Speicherung der neuen Adresse eines Objekts auch ein zusätzliches Feld im Header jedes Objekts eingerichtet werden.
 In diesem Fall ist allerdings ein weiterer Durchlauf über den Heap notwendig, da die Referenzen in den Feldern aller Objekte anpasst werden müssen, bevor die Objekte an ihre neue Position verschoben werden können (vgl. \cite[S. 16]{morikawa2013}).
 
-Ein wesentlicher Nachteil des Algorithmus ist, dass er selbst bei geringer Fragmentierung des Heaps viele Speicheroperationen bedarf.
+Ein wesentlicher Nachteil des Algorithmus ist, dass er selbst bei geringer Fragmentierung des Heaps viele Speicheroperationen benötigt.
 So werden etwa auch dann fast alle Objekte verschoben, wenn nur ein kleiner Bereich zu Beginn des Heaps fragmentiert ist.
 Im Falle von großen Heaps mit vielen Objekten ist die Ausbeute der Kompaktierung gering, der Aufwand zur Aktualisierung von Speicheradressen allerdings sehr hoch.
 Insofern sollte abgewägt werden, ob die Ausführung bei jedem Garbage-Collection-Zyklus zielführend ist.
-\textsc{Printezis} präsentiert beispielsweise ein heuristisches Kriterium und seine Umsetzung für Java, um zur Laufzeit zu entscheiden, ob eine Kompaktierung des Heaps erfolgen sollte.
+\textsc{Printezis} präsentiert beispielsweise ein heuristisches Kriterium und eine Umsetzung für Java, um zur Laufzeit zu entscheiden, ob eine Kompaktierung des Heaps erfolgen sollte.
 Wenn der Heap vergrößert wird oder aufeinanderfolgende Speicherallokationen nicht mehr schnell genug erfüllt werden können, ist eine Kompaktierung sinnvoll, andernfalls genügt der Mark-Sweep-Algorithmus (vgl. \cite[Kap. 3.4]{printezis2001}).
 Andere Algorithmen vermeiden diese Problematik, indem sie den Heap von beiden Seiten traversieren und hinten stehende Objekte in freie Speicherbereiche im vorderen Teil des Heaps verschieben (vgl. \cite[S. 32f]{handbook}).
 Dieses Vorgehen hat jedoch den entscheidenden Nachteil, dass die Reihenfolge der Objekte im Heap zerstört wird.
@@ -209,7 +209,7 @@ Zwar befindet sich auch der hintere Teil von \Var{c} im dritten Block, allerding
 \end{figure}
 
 Der Performancegewinn durch den Verzicht auf eine zweite Heaptraversierung ist offenkundig, wird jedoch mit zusätzlichem Speicherbedarf erkauft.
-Der Bitvektor benötigt ein Bit pro Wort Speicherplatz, während der Offsetvektor pro Block ein Wort belegt.
+Der Bitvektor benötigt ein Bit Speicherplatz pro Wort, während der Offsetvektor pro Block ein Wort belegt.
 Für die oben genannte Wortbreite und Blockgröße ergibt sich daher ein Overhead von etwa 4\% des Heaps.
 Eine Erhöhung der Wortbreite $w$, an der Objekte im Heap ausgerichtet werden, kann diesen Anteil zwar reduzieren (siehe Tabelle~\ref{tab:compressor}), aber auch eine ineffizientere Speichernutzung verursachen, da jedes Objekt stets ein Vielfaches von $w$ an Speicher belegt.
 Größere Blöcke wiederum erhöhen den Aufwand zur Berechnung der neuen Speicheradressen, da eine höhere Anzahl an Objekten pro Block zu erwarten ist.
@@ -245,7 +245,7 @@ Mit gleichem Argument sind auch die berechneten Speicheradressen im Compressor-A
 
 \section{Kopierende Garbage Collection}
 \label{sec:copying}
-Die zweite Kategorie der Algorithmen, die eine Kompaktierung des Heaps erreichen, bilden die \textbf{kopierenden} Algorithmen.
+Die zweite Klasse der Algorithmen, die eine Kompaktierung des Heaps erreichen, bilden die \textbf{kopierenden} Algorithmen.
 Hier werden Markierungs- und Kompaktierungsphase vereint:
 Analog zu Mark-Sweep-Ansätzen werden Referenzen verfolgt, um erreichbare Objekte zu identifizieren.
 Im Gegensatz zu den in den vorigen beiden Abschnitten vorgestellten Mark-Compact-Algorithmen werden Objekte jedoch nicht durch eine zusätzliche lineare Traversierung des Heaps zusammengefasst, sondern unmittelbar bei Entdeckung an eine neue Position kopiert.
@@ -377,7 +377,7 @@ In allen drei vorgestellten Algorithmen war zu sehen, dass eine Anpassung von Re
 Dies erfordert im Allgemeinen eine Anpassung aller Felder von Objekten, die die ursprüngliche Speicheradresse enthalten.
 Um den Aufwand hierfür zu reduzieren, können \textbf{Handles} verwendet werden.
 Ein Handle \handle{a} eines Objekts \Var{a} ist ein weiteres Objekt, das lediglich die Speicheradresse von \Var{a} enthält und eine feste Position im Speicher besitzt.
-Alle Objekte besitzen anstelle einer Referenz auf \Var{a} dann eine solche auf \handle{a}.
+Alle Objekte besitzen anstelle einer Referenz auf \Var{a} eine solche auf \handle{a}.
 Ändert sich die Position von \Var{a} im Speicher, ist ausschließlich eine Anpassung der Speicheradresse in \handle{a} nötig (vgl. \cite{brooks1984}).
 
 \begin{figure}[h]

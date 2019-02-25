@@ -40,7 +40,7 @@ Anhand dieser Anwendung soll die Arbeitsweise der Algorithmen zusätzlich verans
 \section{Terminologie}
 \label{sec:intro:terminologie}
 Bevor genauer darauf eingangen wird, was man unter einer Garbage Collection konkret versteht, sollen zunächst die nötige Terminologie sowie ein Speichermodell eingeführt werden, das im Fortgang dieser Arbeit benutzt wird.
-Dieses Speichermodell ist bewusst so abstrakt gehalten, dass es möglichst allgemeine Betrachtungen lösgelöst von gängigen Programmiersprachen, Laufzeitumgebungen und Betriebssystemen ermöglicht, auch wenn an einigen Stellen exemplarisch Bezüge zu diesen hergestellt werden.
+Dieses Speichermodell ist bewusst so abstrakt gehalten, dass es möglichst allgemeine Betrachtungen losgelöst von gängigen Programmiersprachen, Laufzeitumgebungen und Betriebssystemen ermöglicht, auch wenn an einigen Stellen exemplarisch Bezüge zu diesen hergestellt werden.
 Die eingeführten Begrifflichkeiten orientieren sich stark an der Terminologie aus der Fachliteratur (vgl. \cite[Kap. 1]{jones-lins}).
 
 \subsubsection*{Objekt}
@@ -53,14 +53,14 @@ Ferner wird vorausgesetzt, dass Objekte und ihre Felder \textit{typisiert} sind.
 Das bedeutet, dass stets nachvollziehbar ist, aus welchen Feldern ein Objekt besteht und von welchem Datentyp diese sind.
 Insbesondere ist unterscheidbar, ob ein Feld eines Objekts eine Referenz enthält oder nicht.
 Weiter wird angenommen, dass jedes Objekt einen sogenannten \textit{Header} besitzt.
-Dies sind separate Felder, die Metainformationen aufnehmen, die für den Compiler und die Laufzeitumgebung, nicht aber aus Sicht der Entwicklerin, zugänglich sind.
+Dies sind separate Felder, die Metainformationen aufnehmen, die für den Compiler und die Laufzeitumgebung, nicht aber für die Entwicklerin, zugänglich sind.
 Diverse vorgestellte Algorithmen werden diesen Bereich nutzen, um für die Speicherverwaltung relevante Informationen zu hinterlegen.\footnote{Technisch kann dies etwa dadurch realisiert werden, dass die angeforderte Speichermenge für ein Objekt vergrößert wird, sodass die Informationen des Headers am Anfang des Objekts aufgenommen werden können.
 Als Ergebnis der Speicheranforderung wird dann die Speicheradresse zurückgegeben, die auf den Bereich hinter dem Header verweist.}
 
 \subsubsection*{Heap}
 Der \textbf{Heap} ist derjenige Speicherbereich, in dem zur Laufzeit eines Programms Objekte in beliebiger Reihenfolge erzeugt und freigegeben werden können.
 Der Heap besteht aus \textit{Wörtern} einer festen Größe, auf die über eine Speicheradresse zugegriffen werden kann; ein \textit{Wort} ist dabei die kleinste zuweisbare Speichermenge und kann die Zustände \textit{belegt} (bzw. \textit{zugewiesen}) oder \textit{frei} annehmen.
-Sofern nichts anderes vereinbart ist, wird davon ausgegangen, dass der Heap ein zusammenhängender linearer Speicherbereich ist.\footnote{Tatsächlich ist dies eine starke Vereinfachung.
+Sofern nichts anderes vereinbart ist, wird davon ausgegangen, dass der Heap ein zusammenhängender linearer Speicherbereich ist (siehe Abbildung~\ref{fig:heap}).\footnote{Tatsächlich ist dies eine starke Vereinfachung.
 In der Praxis ist der Bereich des physikalischen Speichers, der von einer Anwendung verwendet wird, häufig fragmentiert und inhomogen.
 Die Speicherverwaltung eines Betriebssystems bildet diesen Bereich auf einen \textit{virtuellen Speicher} ab, der der Anwendung zur Verfügung gestellt wird und aus ihrer Sicht linear zusammenhängend ist.
 Für einen Überblick hierzu siehe etwa \cite[Kap. 3.3]{tanenbaum}.}
@@ -77,16 +77,17 @@ Ebenso bezeichnet \Var{\&a} die Adresse eines Objekts und \Var{*p} die Dereferen
 Mit $\Pointers(\Var{a})$ wird zudem die Menge aller von \Var{a} ausgehenden Referenzen auf andere Objekte des Heaps und mit $\Fields(\Var{a})$ die Menge aller Felder von \Var{a}, die eine solche Referenz enthalten, bezeichnet.
 Ist also $\Var{x} \in \Fields(\Var{a})$, so bezeichnet \Var{*x} entsprechend die im Feld gespeicherte Referenz und \Var{**x} das Ziel dieser Referenz.
 In den Algorithmen wird in der Regel auf eine Überprüfung von Referenzen auf \Null verzichtet, bevor sie dereferenziert werden.\footnote{In vielen Algorithmen, die in dieser Arbeit vorgestellt werden, werden Objekte als Parameter an Hilfsprozeduren übergeben.
-Ob es an der Stelle sinnvoll ist, Objekte \textit{by value} oder \textit{by reference} zu übergeben, sind Implementationsdetails, die die Entwicklerin im Anbetracht der verwendeten Programmiersprache festlegt.
+Ob es an der Stelle sinnvoll ist, Objekte \textit{by value} oder \textit{by reference} zu übergeben, ist ein Implementationsdetail, das die Entwicklerin im Anbetracht der verwendeten Programmiersprache festlegt.
 In dieser Arbeit soll die Übergabe eines Objekts die Intention erzeugen, dass die im Objekt gespeicherten Informationen relevant sind, während die Übergabe einer Objektadresse dessen Position im Speicher in den Fokus rückt.
-Ähnliches gilt für Mengen von Objekten, die in manchen Algorithmen auftauchen.}
+Ähnliches gilt für Mengen von Objekten, die in manchen Algorithmen vorkommen.}
 
 \subsubsection*{Allokator, Mutator und Kollektor}
 Aufgabe des \textbf{Allokators}, der zur Laufzeitumgebung eines Programms gehört, ist zum einen die Zuweisung von Heapspeicher bei dynamischer Instanziierung eines neuen Objekts und zum anderen die Freigabe von Objekten.
 Der Allokator führt somit Buch über die belegten und freien Wörter des Heaps.
 Die genaue Realisierung dieser Mechanismen werden in dieser Arbeit weitestgehend außen vor gelassen, jedoch wird in gewissen Situationen das Vorhandensein bestimmter Funktionalitäten vorausgesetzt.
 Beispielsweise wird verlangt, dass eine Prozedur \Method{new} zur Verfügung steht, die bei der Erzeugung eines neuen Objekts Speicher reserviert und die entsprechende Speicheradresse zurückgibt.
-Die Funktionsweise von \Method{new} kann dabei vom verwendeten Garbage-Collection-Algorithmus abhängen (siehe Algorithmus~\ref{algo:new}).
+Die Funktionsweise von \Method{new} kann dabei vom verwendeten Garbage-Collection-Algorithmus abhängen.
+In Algorithmus~\ref{algo:new} ist etwa eine naive Implementation zu sehen.
 
 \begin{algorithm}
 \begin{algorithmic}[1]
@@ -103,7 +104,7 @@ Die Funktionsweise von \Method{new} kann dabei vom verwendeten Garbage-Collectio
 \label{algo:new}
 \end{algorithm}
 
-Nach \textsc{Dijkstra} et al. besteht ein Programm zudem aus zwei funktional unterscheidbaren Bestandteilen \cite[S. 967]{dijkstra1978}:
+Nach \textsc{Dijkstra} et al. besteht die Laufzeitumgebung eines Programms zudem aus zwei funktional unterscheidbaren Bestandteilen \cite[S. 967]{dijkstra1978}:
 Der \textbf{Mutator} ist derjenige Thread (bzw. eine Menge von Threads), die den eigentlichen Programmcode ausführen.
 Bedeutsam sind dabei vor allem Programmanweisungen, die in Feldern von Objekten vorhandene Referenzen manipulieren und somit ursächlich für die Entstehung nicht mehr benötigter Objekte sind.
 Im Gegensatz dazu ist die Aufgabe des \textbf{Kollektors}, die nicht mehr benötigten Objekte zu identifizieren und ihre Freigabe zu veranlassen.

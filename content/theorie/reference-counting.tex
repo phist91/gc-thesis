@@ -3,7 +3,7 @@
 \label{cha:reference-counting}
 Der zweite Garbage-Collection-Algorithmus, der in dieser Arbeit vorgestellt wird, stammt von \textsc{Collins} und aus dem selben Jahr wie der Mark-Sweep-Algorithmus.
 \textsc{Collins} betrachtet wie \textsc{McCarthy} das \textit{LISP Programming System} auf Großrechnern und das Problem, wann Listenelemente, die prinzipiell in mehreren Listen vorkommen können, wieder freigegeben werden dürfen.
-\textsc{McCarthys} Ansatz bezeichnet er jedoch als \enquote{elegant but inefficient} \cite[S. 655]{collins1960}, da dieser sowohl zeitaufwändig sei als auch den Speicherplatz für Nutzdaten einschränke.
+\textsc{McCarthys} Ansatz bezeichnet er jedoch als \enquote{elegant but inefficient} \cite[S. 655]{collins1960}, da dieser sowohl zeitaufwändig sei, als auch den Speicherplatz für Nutzdaten einschränke.
 Stattdessen schlägt \textsc{Collins} vor, zusätzlich zu einem Datum die Anzahl der Referenzen auf dieses zu speichern.
 Anhand dieses Zählers, der bei der Manipulation von Referenzen aktualisiert wird, kann unmittelbar festgestellt werden, ob ein Datum verwaist ist und der entsprechende Speicherplatz freigegeben werden kann \cite[S. 656f]{collins1960}.
 Dieser Ansatz -- die \textbf{Referenzzählung} (engl. \textit{reference counting}) -- wird in diesem Kapitel ausführlich betrachtet.
@@ -197,7 +197,7 @@ Man kann leicht sehen, dass die starke Zusammenhangskomponente eines Objekts ein
 	\label{fig:rc-scc}
 \end{figure}
 
-Passt man die Referenzzähler jedes Objekts so an, dass interne Referenzen unberücksichtigt bleiben, geben diese anschließend Auskunft darüber, wie viele externe Referenzen von Objekten außerhalb der Komponente auf Objekte innerhalb der Komponente existieren.
+Passt man die Referenzzähler jedes Objekts so an, dass interne Referenzen unberücksichtigt bleiben, geben diese anschließend Auskunft darüber, wie viele externe Referenzen von Objekten außerhalb der Komponente auf Objekte innerhalb selbiger existieren.
 Besitzen alle so modifierten Zähler den Wert $0$, so ist die Komponente nicht mehr erreichbar und kann entfernt werden.
 Anders formuliert: Besitzt die Komponente ein Objekt, das über eine externe Referenz erreichbar ist, so ist die gesamte Komponente von außen erreichbar.
 
@@ -401,7 +401,7 @@ Der Algorithmus eignet sich daher eher für Fälle, in denen mehrere Referenzen 
 Zyklische Referenzzählung kann somit unter Umständen wesentlich aufwendiger sein als der naive Mark-Sweep-Algorithmus.
 Als Verbesserung hat Lins eine Variante vorgestellt, bei welcher die für eine zyklische Struktur infrage kommenden Objekte zunächst in eine Warteschlange eingefügt werden.
 Die Überprüfung auf zyklische Referenzen wird damit erst bei Bedarf ausgelöst, etwa bei akutem Speichermangel oder voller Warteschlange.
-Falls zuvor bereits die letzte Referenz auf ein Objekt entfernt wird, kann das Verfahren überspringen werden \cite{lins1992}.
+Falls zuvor bereits die letzte Referenz auf ein Objekt entfernt wird, kann das Verfahren übersprungen werden \cite{lins1992}.
 Von \textsc{Lin} und \textsc{Hou} stammt darüber hinaus eine Variante, die mehrere zyklische Strukturen zu Teilgraphen eines Objektgraphen zusammenfasst.
 Mittels einer einzigen Traversierung kann dann die Zahl der externen Referenzen dieses Teilgraphen bestimmt werden; existieren keine, so kann der gesamte Teilgraph -- und damit alle enthaltenen starken Zusammenhangskomponenten -- entsorgt werden \cite{linhou2006}.
 
@@ -461,7 +461,7 @@ Entsprechend wird ein Objekt genau einmal von einem Heapobjekt referenziert, wen
 \label{algo:deferred-rc}
 \end{algorithm}
 
-Wird nun eine Referenz \Var{ref} in ein Feld \Var{obj[i]} geschrieben, kann der Schreibzugriff unsynchronisiert ausgeführt werden, wenn \Var{obj} ein Basisobjekt ist, da keine Referenzzähler angepasst werden (Zeile~2 in Algorithmus~\ref{algo:deferred-rc}).
+Wird nun eine Referenz \Var{ref} in ein Feld \Var{obj[i]} geschrieben, kann der Schreibzugriff unsynchronisiert ausgeführt werden, sofern \Var{obj} ein Basisobjekt ist, da keine Referenzzähler angepasst werden (Zeile~2 in Algorithmus~\ref{algo:deferred-rc}).
 Andernfalls sind mehrere Fälle zu unterscheiden:
 Wird ein Referenzzähler eines Objekts \Var{obj} erhöht, das sich in \Var{ZCT} befindet (etwa, da es bislang nur von lokalen Variablen referenziert wird), so muss es aus \Var{ZCT} entfernt werden, da der Referenzzähler nun $1$ beträgt (Zeile~8f).
 Ist es in der \Var{MRT}, so ist der zugehörige Referenzzähler $\Var{MRT}(\Var{obj})$ zu erhöhen (Zeile~10f).
@@ -482,7 +482,7 @@ Objekte, die im Anschluss in \Var{ZCT} verbleiben, sind tatsächlich verwaist un
 Abbildung~\ref{fig:rc-deferred} veranschaulicht die Arbeitsweise des Algorithmus und die Verschiebung eines Objekts \Var{obj} in bzw. aus \Var{ZCT} und \Var{MRT}.
 Der maßgebliche Performancegewinn entsteht dadurch, dass Referenzmanipulationen in lokalen Variablen nicht unmittelbar, sondern erst während einer Bereinigungsphase vermerkt werden.
 Somit wirken sich die durch die Garbage Collection bedingten Schreibbarrieren nicht auf Berechnungen aus, die vorwiegend auf lokale Variablen zugreifen.
-Dies kommt etwa Iterationen durch Datenstrukturen zu Gute.
+Dies kommt etwa Iterationen über Datenstrukturen zu Gute.
 Je nach Implementation der \Var{ZCT} können außerdem Löschkaskaden, die während einer Kollektionsphase entstehen können, auf den nächsten Kollektionszyklus verschoben werden, um Unterbrechungen minimal zu halten. 
 Ein weiterer Vorteil ergibt sich für Anwendungen, in denen die meisten Objekte höchstens einmal referenziert werden und sich zu keinem Zeitpunkt in der \Var{MRT} befinden.
 Für diese entfällt die Notwendigkeit, Referenzzähler zu hinterlegen und für die \Var{MRT} muss weniger Speicher reserviert werden, was den Speicherbedarf des gesamten Verfahrens reduziert.
@@ -491,7 +491,7 @@ Im Falle einer Hashtabelle muss etwa eine geeignete Hashfunktion gewählt werden
 
 Eine weitere Optimierungsmöglichkeit zielt darauf ab, die Auswirkung einer mehrfachen Änderung eines Referenzfeldes eines Objekts zusammenzufassen, anstatt jede einzelne Änderung nachzuverfolgen.
 \textsc{Levanoni} und \textsc{Petrank} beobachten, dass viele einzelne Referenzmanipulationen innerhalb des selben Feldes unnötige Anpassungen von Referenzzählern verursachen, die sich gewissermaßen \textit{kürzen} lassen \cite[S. 4ff]{levanoni2006}.
-Betrachte etwa einen Mutator, der folgenden Code ausführt, und die dadurch ausgelösten Anpassungen von Referenzzählern:
+Man betrachte etwa einen Mutator, der folgenden Code ausführt, und die dadurch ausgelösten Anpassungen von Referenzzählern:
 
 \begin{center}
 \begin{minipage}{0.3\textwidth}

@@ -46,7 +46,7 @@ Für Anwendungen, in denen wenig Speicher zur Verfügung steht, kann dies ein Au
 
 
 \subsubsection*{Kopieren oder nicht kopieren?}
-Ein weiteres Kriterium bei der Suche eines geeigneten Garbage-Collection-Algorithmus ist, ob der Algorithmus den genutzten Heapspeicher kompaktiert oder nicht.
+Ein weiteres Kriterium bei der Suche eines geeigneten Garbage"=Collection"=Algorithmus ist, ob der Algorithmus den genutzten Heapspeicher kompaktiert oder nicht.
 Bildet der freie Speicher einen möglichst großen zusammenhängenden Bereich, können aufeinanderfolgende Speicheranforderungen schnell erfüllt werden, da keine \textit{passende Lücke} für die angeforderte Speichermenge gesucht werden muss.
 Allerdings sind kopierende Algorithmen vor allem für große Heaps tendenziell langsamer, da im schlimmsten Fall alle erreichbaren Objekte verschoben werden, sämtliche Referenzen auf verschobene Objekte angepasst werden müssen und der Mutator in dieser Zeit angehalten wird.
 Zumal besteht die Gefahr, dass der Kollektor \textit{gegen den Allokator} arbeitet, da kopierende Algorithmen die Reihenfolge der Objekte verändern könnte, die zuvor vom Allokator zur Ausnutzung räumlicher Lokalität optimiert wurde.

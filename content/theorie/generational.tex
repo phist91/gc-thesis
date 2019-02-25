@@ -13,7 +13,7 @@ Die verschiedenen Bereiche können unterschiedlich häufig, durch passend abgest
 Im Folgenden werden exemplarisch zwei Algorithmen vorgestellt, die diese Idee aufgreifen.
 Der erste unterscheidet Objekte nach ihrer Lebensdauer, was eine feine Abstimmung der Kollektionshäufigkeit ermöglicht.
 Der zweite Algorithmus verwendet für unterschiedlich alte Objekte verschiedene Ansätze, die in den vorigen Kapiteln dieser Arbeit behandelt wurden.
-Abschließend werden überblicksartig weitere Möglichkeiten zur Partitionierung des Heaps betrachtet.
+Abschließend erfolgt ein kurzer Überblick über weitere Möglichkeiten zur Partitionierung des Heaps.
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -138,7 +138,7 @@ Abbildung~\ref{fig:lieberman-example} zeigt die Arbeitsweise am Beispiel der obe
 
 \newpage
 
-Die Stärke des Algorithmus besteht nun darin, die Häufigkeit der Garbage Collection von der Generation von Objekten und der Versionszahl abhängig zu machen.
+Die Stärke des Algorithmus besteht darin, die Häufigkeit der Garbage Collection von der Generation von Objekten und der Versionszahl abhängig zu machen.
 Sehr junge Generationen niedriger Version enthalten nach der Hypothese von \textsc{Deutsch} und \textsc{Bobrow} potenziell viele Objekte, die bereits verwaist sind.
 Entsprechend ist es attraktiv, diese zu bereinigen, da sie eine vielversprechende Ausbeute bieten.
 Die erwartete Laufzeit des Kollektors hält sich dabei gleichzeitig in Grenzen, da nur wenige Nachfolgegenerationen existieren, die Referenzen auf die zu reinigende Generation besitzen könnten.
