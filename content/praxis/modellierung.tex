@@ -3,7 +3,7 @@
 \label{cha:modelling}
 
 Der zweite Teil der Arbeit beginnt mit einer Vorstellung des Entwicklungsprozesses des \textit{Garbage-Collection-Simulators}.
-Nach einer kurzen Beschreibung der Anforderungen an diese Anwendung erfolgt ein Blick auf die Modellierung und Implementation der zentralen Programmkomponenten, in der die wichtigsten Designentscheidungen erläutert werden.
+Nach einer kurzen Beschreibung der Anforderungen an diese Anwendung erfolgt ein Blick auf die Modellierung und Implementation der zentralen Programmkomponenten, wobei die wichtigsten Designentscheidungen erläutert werden.
 Abschließend wird die Realisierung der grafischen Ausgabe erläutert, die für eine nachvollziehbare Darstellung der ausgewählten Algorithmen wesentlich ist.
 Das folgende Kapitel beschreibt schließlich, wie die Anwendung zu verwenden ist und wie sie um weitere Algorithmen ergänzt werden kann.
 
@@ -15,7 +15,7 @@ Eine grafische Ausgabe visualisiert dabei den Heap als Blockgrafik: Belegte Teil
 Die Anwenderin soll darüber hinaus die Möglichkeit haben, den Simulator zu konfigurieren:
 Neben einer obligatorischen Auswahl des verwendeten Garbage-Collection-Algorithmus soll auch die Größe des Heaps sowie die Größe der erzeugten Heapobjekte einstellbar sein.
 Weitere Anpassungsmöglichkeiten sind der Verzweigungsgrad der Objekte untereinander sowie die Verwaisungswahrscheinlichkeit, sodass verschiedene Objektkonstellationen betrachtet werden können.
-Zuletzt soll durch eine Anpassbarkeit der Animationsgeschwindigkeit auch die Visualisierung anpassbar sein.
+Zuletzt soll durch eine Anpassbarkeit der Animationsgeschwindigkeit auch die Visualisierung konfigurierbar sein.
 
 Aus Sicht der Softwareentwicklung ergeben sich zusätzliche Anforderungen, die für die Umsetzung der Anwendung relevant sind:
 Der Simulator soll als frei verwendbare Software im Rahmen der Lehre eingesetzt werden können und beliebig anpassbar und erweiterbar sein, etwa indem Entwicklerinnen weitere Garbage-Collection-Algorithmen ergänzen.
@@ -55,24 +55,24 @@ Andererseits fungiert \code{CollectionController} als Steuerklasse, um über die
 
 Die Idee ist nun, beim Start des Simulators zunächst eine Instanz der Klasse \code{CollectionController} erzeugen.
 Diese legt wiederum -- je nach ausgewählter Garbage Collection -- eine geeignete \code{Allocator}-Instanz sowie einen \code{GarbageCollector} an und trägt sich beim Garbage Collector als Steuerinstanz ein.
-Dadurch greifen Kollektor und Steuerklasse auf denselben simulierten Heap zu.
+Dadurch greifen Kollektor, Allokator und Steuerklasse auf denselben simulierten Heap zu.
 
 \section{Implementation zentraler Komponenten}
 \label{sec:implementation}
-Im nun folgenden Abschnitt wird vorgestellt, wie die obige Modellierung unter Beachtung der spezifizierten Anforderungen realisiert werden.
+Im nun folgenden Abschnitt wird vorgestellt, wie die obige Modellierung unter Beachtung der spezifizierten Anforderungen realisiert wird.
 Dabei wird zunächst die Umsetzung des Speichermodells und der Programmlogik fokussiert.
 Abschnitt~\ref{sec:gui} widmet sich anschließend der Anbindung an die grafische Benutzerschnittstelle.
 
-Im Sinne der Plattformunabhängigkeit wurde dazu die Programmiersprache \textit{Java} gewählt, wobei auf die \textit{Java Language Specification 9}\footnote{\url{https://docs.oracle.com/javase/specs/jls/se9/html/index.html}} zurückgegriffen wird.
-Der gesamte Programmcode wurde über das Versionskontrollsystem \textit{Git}\footnote{\url{https://git-scm.com/}} verwaltet.
-Um eine plattformunabhängige Entwicklung zu gewährleisten, wurde zudem das Build-Management-Tool \textit{Apache Maven}\footnote{\url{https://maven.apache.org/}} verwendet.
+Im Sinne der Plattformunabhängigkeit wird dazu die Programmiersprache \textit{Java} gewählt, wobei auf die \textit{Java Language Specification 9}\footnote{\url{https://docs.oracle.com/javase/specs/jls/se9/html/index.html}} zurückgegriffen wird.
+Der gesamte Programmcode wird über das Versionskontrollsystem \textit{Git}\footnote{\url{https://git-scm.com/}} verwaltet.
+Um eine plattformunabhängige Entwicklung zu gewährleisten, kommt zudem das Build-Management-Tool \textit{Apache Maven}\footnote{\url{https://maven.apache.org/}} zum Einsatz.
 Dieses bildet die verschiedenen Arbeitsschritte der Entwicklung, wie etwa Kompilieren, Testen und Erzeugen von \code{JAR}-Dateien, auf automatisiert durchführbare Phasen ab und kümmert sich dabei eigenständig um Abhängigkeiten von externen Bibliotheken.
 Zur Weiterentwicklung des Systems genügt somit ein Klonen des Git-Repositorys und eine Ausführung von Maven, um alle benötigten Abhängigkeiten beschaffen zu lassen.
 
-Bei der Entwicklung der einzelnen Komponenten wurde grundsätzlich \textit{testgetrieben} vorgegangen.
+Bei der Entwicklung der einzelnen Komponenten wird grundsätzlich \textit{testgetrieben} vorgegangen.
 Das bedeutet, dass zu jeder zu implementierenden Methode zunächst mehrere Testfälle erstellt werden, die das erwartete Verhalten des Programms beschreiben.
 Einzige Ausnahme bilden hier Methoden, die mit GUI-Komponenten interagieren, da diese nur schwer automatisiert testbar sind.
-Als Testframework wurde auf \textit{JUnit 5}\footnote{\url{https://junit.org/junit5/}} zurückgegriffen.
+Als Testframework wird auf \textit{JUnit 5}\footnote{\url{https://junit.org/junit5/}} zurückgegriffen.
 
 \subsection{Heapobjekte (\code{pst.gcsim.Objects})}
 \label{sub:heapobject}
@@ -99,7 +99,7 @@ Diese ist ein zusätzliches Attribut, das beim Erstellen eines \code{HeapObject}
 \label{sub:allocator}
 Der Allokator verwaltet die Information, welche Wörter des simulierten Heaps belegt sind.
 Aus diesem Grund wurde zunächst eine Klasse \code{AllocationBitmap} entworfen, die diese Information in einem \mintinline{java}{boolean}-Array speichert (siehe Abbildung~\ref{fig:implementation}).
-Der $i$-te Eintrag dieses Arrays gibt an, ob das $i$-te Wort des Heaps durch ein Wort belegt (\mintinline{java}{true}) oder frei (\mintinline{java}{false}) ist.
+Der $i$-te Eintrag dieses Arrays gibt an, ob das $i$-te Wort des Heaps durch ein Objekt belegt (\mintinline{java}{true}) oder frei (\mintinline{java}{false}) ist.
 Weiter stellt \code{AllocationBitmap} zwei Methoden \code{nextFree} und \code{nextUsed} zur Verfügung, welche ausgehend von einer übergebenen Speicheradresse die nächste freie bzw. belegte Stelle des Heaps liefern, indem das Array linear durchsucht wird.
 Diese Methoden sind essenziell, um für eine angeforderte Speichermenge eine hinreichend große freie Stelle zu finden.
 
@@ -109,7 +109,7 @@ Die Startposition ist dabei gegeben durch das Attribut \code{position}, welches 
 
 Das Herzstück der Klasse \code{NaiveAllocator} ist die Methode \code{allocate}, die intern durch \code{newObject} aufgerufen wird und das Auffinden einer geeigneten Position für ein neues Heapobjekt übernimmt (siehe Listing~\ref{java:naive-alloc}).
 Diese Methode sucht zunächst unter Zuhilfenahme von \code{nextFree} und \code{nextUsed} der Reihe nach alle freien Stellen hinter \code{position} ab, bis eine genügend große gefunden oder das Ende des Heaps erreicht wurde (Zeile~7 bis~14).
-Dabei wird auch berücksichtigt, dass sich hinter \code{position} eventuell kein freier Speicher befindet (Zeile~9f) oder ein freie Speicherbereich sich bis ans Heapende erstreckt (Zeile 12f).
+Dabei wird auch berücksichtigt, dass sich hinter \code{position} eventuell kein freier Speicher befindet (Zeile~9f) oder ein freier Speicherbereich sich bis ans Heapende erstreckt (Zeile 12f).
 Wird so ein hinreichend großer Bereich freien Speichers gefunden, wird dieser entsprechend der angeforderten Speichermenge als belegt markiert und die Anfangsadresse des Bereichs zurückgegeben (Zeile~18 bis 22).
 Andernfalls wird auf analoge Weise der Bereich vor \code{position} durchsucht.
 Sollte auch hierbei kein geeigneter Speicherbereich gefunden werden können, wird als Ergebnis \code{-1} zurückgegeben, was \code{newObject} dazu veranlasst, kein neues Objekt zu erzeugen.
@@ -128,12 +128,12 @@ Zusätzlich steht eine Methode \code{swapSemispaces} zur Verfügung, die die Rol
 \label{sub:controller}
 Die Klasse \code{CollectionController} verwaltet als zentrale Steuerklasse zum einen die beiden Objektmengen \code{objects} und \code{roots}, auf die von den implementierten Garbage-Collection-Algorithmen per Getter-Methoden zugegriffen werden kann.
 Zum anderen bietet sie Methoden, um neue Objekte im Heap anzulegen bzw. bereits vorhandene Objekte verwaisen zu lassen.
-Die Entscheidung, ob zwischen zwei Objekten eine Referenz erzeugt wird oder ein Objekt zur Menge der Basisobjekte gehört, wird dabei zufällig entschieden.
+Die Entscheidung, ob zwischen zwei Objekten eine Referenz erzeugt wird oder ein Objekt zur Menge der Basisobjekte gehört, wird dabei zufällig gefällt.
 Die Wahrscheinlichkeit hierfür ist in der zentralen Konfigurationsklasse \code{Settings} (siehe Abschnitt~\ref{sub:settings}) hinterlegt und kann zur Laufzeit verändert werden.
 Ebenso wird auch die Verwaisung eines Objekts simuliert (siehe Listing~\ref{java:controller-collect}):
 Vor Auslösung der Garbage Collection wird zunächst über die Menge der Basisobjekte iteriert und bei jeder Iteration eine zufällige Zahl im Intervall $[0,1)$ bestimmt (Zeile~11).
 Liegt diese unterhalb einer eingestellten Wahrscheinlichkeit, wird das Objekt aus der Menge der Basisobjekte entfernt.
-Zur Vermeidung von Nebenläufigkeitskonflikten (\code{ConcurrentModificationException}), die beim Manipulieren einer Datenstruktur auftreten, über die gleichzeitig iteriert wird, werden Löschkandidaten dabei zunächst zu einer separaten Liste hinzugefügt (Zeile~12).
+Zur Vermeidung von Nebenläufigkeitskonflikten (\code{ConcurrentModificationException}), die bei Manipulation einer Datenstruktur auftreten, über die gleichzeitig iteriert wird, werden Löschkandidaten dabei zunächst zu einer separaten Liste hinzugefügt (Zeile~12).
 Gleiches geschieht für jedes Objekt mit der Menge \code{pointers} der ausgehenden Referenzen.
 Somit ist sichergestellt, dass jedes Objekt tatsächlich nach genügend Kollektionszyklen durch die Garbage Collection entsorgt wird, sofern die Verwaisungswahrscheinlichkeit größer als $0$ ist.
 
@@ -151,7 +151,7 @@ Aus gleichem Grund sind auch alle Kollektorklassen generisch, wobei jeder Kollek
 \subsection{Kollektorklassen (\code{pst.gcsim.GarbageCollectors})}
 \label{sub:impl-gc}
 Die abstrakte Klasse \code{GarbageCollector} besitzt sämtliche Attribute und Methoden, die von allen konkret implementierten Garbage-Collection-Algorithmen verwendet werden.
-Neben der Anbindung an den \code{CollectionController} gehört dazu auch ein Attribut \code{initialized}, das angibt, ob eine Verbindung zur Steuerinstanz besteht.
+Neben der Anbindung an den \code{CollectionController} gehört dazu auch eine Methode \code{isInitialized}, das angibt, ob eine Verbindung zur Steuerinstanz besteht.
 Erst dann ist eine Auslösung der Garbage Collection möglich.
 
 \begin{listing}[t!]
@@ -200,7 +200,7 @@ Auch beim Halbraumverfahren ist zuletzt eine Entfernung der verwaisten Objekte a
 \label{sub:settings}
 Die Konfigurationsklasse \code{Settings} enthält wesentliche Einstellungen zum Betrieb des Simulators sowie vorkonfigurierte Standardwerte (siehe Listing~\ref{java:settings}).
 Dazu gehören etwa die Größe des Heaps (\code{HEAP\_COLS}, \code{HEAP\_ROWS}), die Größe erzeugter Objekte (\code{MIN\_OBJECT\_SIZE}, \code{MIN\_OBJECT\_SIZE}) und die Animationsgeschwindigkeit sowie Einstellungen, die Erreichbarkeit (\code{CONNECTIVITY}, \code{ROOT\_PROBABILITY}) und Verwaisung (\code{REFERENCE\_DELETION}) von Objekten beeinflussen.
-Diese können über die grafische Oberfläche verändert werden (siehe Abschnitt~\ref{sec:execution}) und werde beim Beenden in einer Datei \code{gcsim.config} gesichert bzw. aus dieser geladen werden.
+Diese können über die grafische Oberfläche verändert werden (siehe Abschnitt~\ref{sec:execution}) und werden beim Beenden in einer Datei \code{gcsim.config} gesichert bzw. aus dieser geladen werden.
 Zudem befindet sich in der Klasse \code{Settings} eine Auflistung der zur Verfügung stehenden Garbage-Collection-Algorithmen.
 In Abschnitt \ref{sec:extension} wird erläutert, wie diese um weitere Algorithmen ergänzt werden kann.
 
@@ -213,7 +213,7 @@ In Abschnitt \ref{sec:extension} wird erläutert, wie diese um weitere Algorithm
 \section{Grafische Benutzerschnittstelle}
 \label{sec:gui}
 Für die Umsetzung der grafischen Benutzerschnittstelle wird auf das Framework \textit{Swing} sowie das \textit{Abstract Window Toolkit} (AWT) zurückgegriffen, die sich für die Entwicklung plattformunahängiger Oberflächen eignen.
-Jedes Fenster wurde dabei in einer eigenen Klasse umgesetzt (siehe Abbildung~\ref{fig:gui}).
+Jedes Fenster wird dabei in einer eigenen Klasse umgesetzt (siehe Abbildung~\ref{fig:gui}).
 So genannte \textit{Event Listener}, die auf Benutzerinteraktionen wie Button-Klicks, Textfeldeingaben und Fensterschließungen reagieren, werden dabei konsequent durch innere Klassen
 realisiert.
 
@@ -225,10 +225,10 @@ realisiert.
 \end{figure}
 
 Das Herzstück der grafischen Ausgabe des Heaps bildet die Klasse \code{CanvasView}.
-Diese besitzt neben einer Referenz auf die Menge \code{objects} und der aktuellen Position des Allokators zusätzlich die innere Klasse \code{CanvasPanel} als Spezialisierung der Swing-Komponente \code{JPanel} (siehe Listing~\ref{java:canvas}).
+Diese besitzt neben einer Referenz auf die Menge \code{objects} der Steuerklasse und der aktuellen Position des Allokators zusätzlich die innere Klasse \code{CanvasPanel} als Spezialisierung der Swing-Komponente \code{JPanel} (siehe Listing~\ref{java:canvas}).
 Durch Überschreibung der \code{paintComponent}-Methode können benutzerdefinierte Zeichnungen ausgegeben werden.
 Diese Methode wird zum Rendern des Fensterinhalts aufgerufen, beispielsweise wenn das Fenster über den Bildschirmrand hinausgeschoben wird.
-Ein manueller Aufruf ist durch den \code{CollectionController} über die Methode \code{refreshFrame} (Zeile~2 bis~6) möglich.
+Ein manueller Aufruf durch den \code{CollectionController} ist über die Methode \code{refreshFrame} (Zeile~2 bis~6) möglich.
 
 \begin{listing}[p]
 	\inputminted[]{java}{code/CanvasView.java}

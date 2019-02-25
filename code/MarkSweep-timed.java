@@ -11,9 +11,9 @@
 					toScan.add(obj);
 					controller.refreshView();      // Anzeige aktualisieren
 				}
-			} else {                // alle Basisobjekte abgearbeitet
-				gcTimer.stop();     // diesen Timer anhalten
-				markTimed();        // nächste Mark-Phase ausführen
+			} else {              // alle Basisobjekte abgearbeitet
+			  gcTimer.stop();     // diesen Timer anhalten
+			  markTimed();        // nächste Mark-Phase ausführen
 			}
 		});
 		gcTimer.start();            // starte erzeugten Timer

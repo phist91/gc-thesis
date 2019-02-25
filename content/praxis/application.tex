@@ -15,7 +15,7 @@ Der Start der Anwedung erfolgt mithilfe des beigelegten Datenträgers in drei ve
 Wird zusätzlich der einzige gültige Parameter \code{default} übergeben, werden statt der gespeicherten Einstellungen in der Datei \code{gcsim.config} die Standardeinstellungen verwendet.
 Das geschieht auch, wenn keine gültigen gespeicherten Einstellungen vorhanden sind.
 
-Nach dem Start der Anwendung erscheint das Auswahlfenster, in dem grundlegende Einstellungen wie der zu verwendende Garbage-Collection-Algorithmus und die Größe des Heaps festgelegt werden können (siehe Abbildung~\ref{fig:app-start}.
+Nach dem Start der Anwendung erscheint das Auswahlfenster, in dem grundlegende Einstellungen wie der zu verwendende Garbage-Collection-Algorithmus und die Größe des Heaps festgelegt werden können (siehe Abbildung~\ref{fig:app-start}).
 Zudem kann die Größe der Darstellung angepasst werden.
 Der Bereich rechts neben den Texteingabefeldern gibt dabei Auskunft über die zu erwartende Größe des Ausgabefensters.
 Die Schaltfläche \textit{Einstellungen} ist aktiviert, wenn für den ausgewählten Algorithmus zusätzliche Konfigurationsmöglichkeiten verfügbar sind (siehe Abschnitt~\ref{sec:extension}).
@@ -30,7 +30,7 @@ Die Schaltfläche \textit{Einstellungen} ist aktiviert, wenn für den ausgewähl
 Sobald die Auswahl bestätigt wurde, beginnt der Simulationsmodus (siehe Abbildung~\ref{fig:app-simulation}).
 Mithilfe der Eingabekomponenten im oberen Bereich des Kontrollfensters können nun neue Objekte zum Heap hinzugefügt werden.
 Die beiden oberen Textfelder \textit{untere Grenze} und \textit{obere Grenze} geben dabei die Größenordnung an, in der sich neu erzeugte Objekte befinden.
-Das Textfeld \textit{Verzweigungsgrad} gibt die Wahrscheinlichkeit an, mit der jedes bereits existierende Objekt eine Referenz auf ein neu erstelltes Objekt erhält, während \textit{Anteil Basisobjekte} bestimmt, mit welcher Wahrscheinlichkeit ein erzeugtes Objekt ein Basisobjekt ist.
+Das Textfeld \textit{Verzweigungsgrad} gibt die Wahrscheinlichkeit an, mit der jedes bereits existierende Objekt eine Referenz auf ein neu erstelltes Objekt erhält, während der \textit{Anteil an Basisobjekten} bestimmt, mit welcher Wahrscheinlichkeit ein erzeugtes Objekt ein Basisobjekt ist.
 Die Schaltfläche \textit{Objekt erstellen} erzeugt ein einzelnes Objekt mit den spezifizierten Eigenschaften, während ein Klick auf \textit{Heap füllen} solange Objekte erzeugt, bis ein Allokationsversuch fehlschlägt.
 Mittels der Schaltfläche \textit{Heap leeren} kann der Heap zurückgesetzt werden.
 Dies ist etwa notwendig, wenn ein Kollektionszyklus unterbrochen wird und sich Objekte mit verschiedenen Markierungen im Heap befinden.
@@ -90,7 +90,7 @@ Objekte, die bei diesem Algorithmus bereits in den anderen Halbraum kopiert wurd
 \label{sec:extension}
 Die in Kapitel~\ref{cha:modelling} vorgestellte Modellierung und ihre Umsetzung ermöglicht grundsätzlich, den Simulator um eigene Algorithmen zu ergänzen, indem die Klasse \code{GarbageCollector} spezialisiert bzw. die Schnittstelle \code{Allocator} implementiert wird.
 Die im Simulator auswählbaren Garbage-Collection-Algorithmen werden in der Klasse \code{Settings} durch das Array \code{collectors} definiert (siehe Listing~\ref{java:selection}).
-Dieses bildet die Grundlage für das Model der \code{JComboBox} des Auswahlfensters.
+Dieses bildet die Datengrundlage für die \code{JComboBox} des Auswahlfensters.
 Somit steht jeder Eintrag des Arrays für einen auswählbaren Algorithmus.
 Wenn ein implementierter Garbage-Collection-Algorithmus zum Simulator hinzugefügt werden soll, muss das Array entsprechend um einen Eintrag der Klasse \code{GarbageCollectorSelection} ergänzt werden.
 Zur Erzeugung eines Objekts dieser Klasse ist folgende Syntax zu verwenden:
@@ -104,7 +104,7 @@ Zur Erzeugung eines Objekts dieser Klasse ist folgende Syntax zu verwenden:
 Der erste Konstruktorparameter ist dabei der Name, der im Auswahlfenster angezeigt werden soll.
 Der zweite Parameter ist ein Objekt vom Typ \code{Runnable}, bei dessen Ausführung ein neuer \code{CollectionController} instanziiert werden muss.
 Dabei ist auch eine geeignete Allokator- und Kollektorinstanz zu erzeugen (siehe etwa Zeile~5f).
-Der dritte Parameter -- ebenfalls vom Typ \code{Runnable} -- ist optional und wird verwendetn, um ein zusätzliches Einstellfenster zu erzeugen.
+Der dritte Parameter -- ebenfalls vom Typ \code{Runnable} -- ist optional und wird verwendet, um ein zusätzliches Einstellfenster zu erzeugen.
 Wird der Parameter spezifiziert, ist die Schaltfläche \textit{Einstellungen} im Auswahlfenster des Simulators verfügbar.
 Das Einstellfenster kann dazu verwendet werden, um durch die Anwenderin weitere Konfigurationsmöglichkeiten festlegen zu lassen, die in der grafischen Benutzerschnittstelle nicht vorgesehen sind.
 
