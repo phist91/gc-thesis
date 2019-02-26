@@ -57,7 +57,7 @@ Die entsprechenden Speicherbereiche stehen anschließend wieder für neue Objekt
 	\State \quad \quad \quad \quad \Method{setMarked}(\Var{*ref})	
 	\State \quad \quad \quad \quad \Method{add}(\Var{toDo}, \Var{*ref})
 \end{algorithmic}
-\caption[Naives Mark and Sweep -- Markierung]{Naives Mark and Sweep -- Markierung (vgl. \cite[Kap. 2.2]{jones-lins})}
+\caption[Naives Mark and Sweep -- Markierung]{Naives Mark and Sweep -- Markierungsphase (vgl. \cite[Kap. 2.2]{jones-lins})}
 \label{algo:naive-mark}
 \end{algorithm}
 
@@ -112,7 +112,7 @@ Es ist wesentlich, dass Objekte bereits markiert werden, wenn sie der Menge \Var
 Andernfalls besteht bei zyklischen Referenzen die Gefahr einer Endlosschleife, da unmarkierte Objekte mehrfach hinzugefügt würden.
 Präziser lässt sich festhalten, dass \Var{toDo} zu jedem Zeitpunkt ausschließlich bereits markierte Objekte enthält.
 Da keine Objekte hinzugefügt werden, die bereits markiert wurden (Zeile 7 und 15), wird kein Objekt mehrfach verarbeitet.
-Da zudem mit jeder Iteration der \WHILE-Schleife mindestens ein Objekt aus \Var{toDo} entfernt wird (Zeile 13), die Anzahl aller Objekte endlich ist und vorausgesetzt, dass während der Ausführung des Kollektors keine neuen Objekte entstehen, wird sowohl die \WHILE-Schleife, als auch die \FOREACH-Schleife nach endlich vielen Schritten terminieren.
+Da zudem mit jeder Iteration der \WHILE-Schleife mindestens ein Objekt aus \Var{toDo} entfernt wird (Zeile 13), die Anzahl aller Objekte endlich ist und vorausgesetzt wird, dass während der Ausführung des Kollektors keine neuen Objekte entstehen, wird sowohl die \WHILE-Schleife, als auch die \FOREACH-Schleife nach endlich vielen Schritten terminieren.
 
 \begin{algorithm}
 \begin{algorithmic}[1]
@@ -123,8 +123,10 @@ Da zudem mit jeder Iteration der \WHILE-Schleife mindestens ein Objekt aus \Var{
 	\State \quad \quad \quad \Method{unsetMarked}(\Var{*pos})
 	\State \quad \quad \ELSE \Method{free}(\Var{pos})
 	\State \quad \quad \Var{pos} $\gets$ \Method{nextObject}(\Var{pos})
+	\State \quad \FOREACH $\Var{obj} \in \Roots$	\Comment{Markierung der Basisobjekte zurücksetzen}
+	\State \quad \quad \Method{unsetMarked}(\Var{obj})
 \end{algorithmic}
-\caption[Naives Mark and Sweep -- Bereinigung]{Naives Mark and Sweep -- Bereinigung (vgl. \cite[Kap. 2.2]{jones-lins})}
+\caption[Naives Mark and Sweep -- Bereinigung]{Naives Mark and Sweep -- Bereinigungsphase (vgl. \cite[Kap. 2.2]{jones-lins})}
 \label{algo:naive-sweep}
 \end{algorithm}
 
@@ -132,6 +134,7 @@ Die Bereinigungsphase (engl. \textit{sweep}) beginnt unmittelbar nach der Markie
 Die Variable \Var{pos} wird mit der Speicheradresse initialisiert, an der sich das erste Objekt im Heap befindet.
 Hier wird davon ausgegangen, dass eine Prozedur \Method{nextObject} des Allokators zur Verfügung steht, die anhand einer übergebenen Speicheradresse die Adresse des nachfolgenden Objektes oder \Null zurückgibt, wenn dieses nicht existiert.
 Dadurch wird der Heap linear traversiert; nicht markierte Objekte werden freigegeben, während die Markierung erreichbarer Objekte zurückgesetzt wird.
+Damit auch die Markierung der nicht dem Heap zugehörigen Basisobjekte zurückgesetzt wird, erfolgt zuletzt eine Iteration über \Roots (Zeile~8f).
 
 Wir halten zunächst fest, dass der Mark-Sweep-Algorithmus in seiner Gänze terminiert und korrekt ist, sofern während der Garbage Collection das laufende Programm angehalten wird:
 
@@ -147,9 +150,9 @@ Wir halten zunächst fest, dass der Mark-Sweep-Algorithmus in seiner Gänze term
 	Gleiches gilt für die Bereinigungsphase, in der alle Objekte des Heaps in endlicher Zeit besucht werden.
 	Somit terminiert der gesamte Algorithmus.
 	
-	Weiter werden lediglich nicht markierte Objekte freigegeben (Zeile~4 bis~6 in Algorithmus~\ref{algo:naive-sweep}).
+	Weiter werden lediglich nicht markierte Heapobjekte freigegeben (Zeile~4 bis~6 in Algorithmus~\ref{algo:naive-sweep}).
 	Bleibt ein Objekt \Var{obj} unmarkiert, so ist \Var{obj} kein Basisobjekt, da \Method{markStart} alle Basisobjekte markiert.
-	Somit wird kein Basisobjekt freigegeben.
+	Somit bleibt kein Basisobjekt unmarkiert.
 	Wir zeigen, dass es nach der Markierungsphase zudem keine zwei Objekte $\Var{a}$, $\Var{b}$ mit $\Var{a} \rightarrow \Var{b}$ gibt, sodass $\Var{a}$ markiert und $\Var{b}$ unmarkiert ist:
 	Da $\Var{a}$ markiert ist, wurde $\Var{a}$ auch der Menge $\Var{toDo}$ hinzugefügt (Zeile 8f bzw. 16f in Algorithmus~\ref{algo:naive-mark}).
 	Entsprechend gab es eine Iteration der \WHILE-Schleife mit $\Var{obj} = \Var{a}$.
@@ -249,6 +252,8 @@ Andernfalls wird ihre Markierung zurück auf weiß gesetzt.
 	\State \quad \quad \quad \Method{free}(\Var{pos})
 	\State \quad \quad \ELSE \Method{setColor}(\Var{*pos}, \Var{WHITE})
 	\State \quad \quad \Var{pos} $\gets$ \Method{nextObject}(\Var{pos})
+	\State \quad \FOREACH $\Var{obj} \in \Roots$
+	\State \quad \quad \Method{setColor}(\Var{obj}, \Var{WHITE})
 \end{algorithmic}
 \caption[Markierung mit Drei-Farben-Abstraktion]{Markierung mit Drei-Farben-Abstraktion (vgl. \cite[S. 970]{dijkstra1978})}
 \label{algo:tricolor}
@@ -304,7 +309,7 @@ An dieser Stelle gehen wir auf die Terminierung und Korrektheit des modifizierte
 	Andernfalls wird \Var{*(\&b)} $=$ \Var{b} grau markiert (Zeile~14).
 	In beiden Fällen ist \Var{b} am Ende der Schleife nicht weiß markiert.
 	Da \Var{a} das einzige Objekt ist, das in dieser Iteration schwarz gefärbt wird, ist (A) nach der Iteration weiterhin gültig.
-	Da die Schleife terminiert, die Invariante aufrecht erhalten bleibt und in der Bereinigungsphase nur weiß markierte Objekte freigegeben werden, ist der Algorithmus korrekt.
+	Da die Schleife terminiert, die Invariante aufrecht erhalten bleibt und in der Bereinigungsphase nur weiß markierte Heapobjekte freigegeben werden, ist der Algorithmus korrekt.
 \end{proof}
 
 Die Atomizität der Schreibbarriere \Method{writeRef} in Algorithmus~\ref{algo:tricolor-barrier} ist in der Tat notwendig, um die Korrektheit zu gewährleisten.
@@ -399,7 +404,7 @@ In diesem Fall muss der Allokator einen neuen Block initialisieren, der neue Obj
 Falls nicht genügend freier Speicher zur Verfügung steht, um einen weiteren Block zu erzeugen, schlägt auch der zweite Al"-lo"-ka"-tions"-versuch fehl (Zeile~5f).
 Der letzte Versuch besteht nun darin, die Markierungen der Objekte zu aktualisieren, indem eine Markierungsphase gestartet wird (Zeile~7).
 Da die letzte Markierungsphase nicht unmittelbar vor der Speicheranforderung, sondern möglicherweise wesentlich früher stattgefunden hat, könnten in der Zwischenzeit weitere Objekte verwaist sein.
-Diese werden nachfolgend in einem zweiten Lazy-Sweep-Zyklus freigegeben, sodass zuletzt Platz innerhalb eines Blocks bzw. für einen neuen Block geschaffen werden kann (Zeile~8).
+Diese werden nachfolgend in einem zweiten Lazy-Sweep-Zyklus freigegeben (Zeile~8), sodass zuletzt Platz innerhalb eines Blocks bzw. für einen neuen Block geschaffen werden kann.
 
 Während die Einschränkung der Bereinigung auf einzelne Blöcke zwar einen Performancevorteil mit sich bringt, besitzt diese Variante des Mark-Sweep-Algorithmus auch einige Nachteile:
 Eine ungünstige Kombination von Speicheranforderungen und Sweep-Zyklen könnte dazu führen, dass viele Blöcke derselben Größenordnung angelegt werden, die jeweils nur wenige Objekte enthalten und größtenteils ungenutzt sind.
@@ -448,6 +453,7 @@ Davon ausgehend, dass in \Var{toDo} ausschließlich Referenzen konstanter Größ
 Während der Speicherbedarf der Markierungsphase also linear mit der Anzahl der erreichbaren Objekte wächst, spielt für die Laufzeit auch die Anzahl der Referenzen eine Rolle.
 Für jedes erreichbare Objekt müssen alle enthaltenen Referenzen verfolgt werden, um auszuschließen, dass kein erreichbares Objekt unmarkiert bleibt.
 Die Komplexität dieser Operation ist analog zur vollständigen Traversierung eines beliebigen Graphen $(V,E)$, die durch $\oh(|V|+|E|)$ gegeben ist \cite[Kap. 22]{cormen-leiserson}.
+$V$ entspricht hierbei der Menge $\Reach$ der erreichbaren Objekte und $E$ die Menge der von ihnen ausgehenden Referenzen.
 
 \begin{mybox}
 \begin{satz}[Speicherbedarf und Komplexität des Mark-Sweep-Algorithmus]
