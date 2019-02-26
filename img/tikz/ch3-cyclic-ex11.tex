@@ -1,6 +1,6 @@
 \input{standalone.tex}
 \begin{document}
-	\begin{tikzpicture}[->, auto, node distance= 1.5cm and 3cm, on grid, semithick,%
+	\begin{tikzpicture}[auto, node distance= 1.5cm and 3cm, on grid, semithick,%
 		state/.style={circle, draw, font=\ttfamily, minimum width= 0.7cm}]
 		\node[state,fill=gray!45] (B) at (2,1) {b};
 		\node[state,fill=gray!45] (C) at (2,-0.5) {c};
@@ -18,5 +18,7 @@
 		\draw (C) node[left=0.35cm,ctcolormain,font=\bfseries]{0};
 		\draw (D) node[right=0.35cm,ctcolormain,font=\bfseries]{1};
 		\draw (E) node[right=0.35cm,ctcolormain,font=\bfseries]{0};
+		
+		\draw (0.5,1) node{\textbf{(1)}};
 	\end{tikzpicture}
 \end{document}

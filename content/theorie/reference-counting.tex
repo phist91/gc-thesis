@@ -16,12 +16,13 @@ Dieser Ansatz -- die \textbf{Referenzzählung} (engl. \textit{reference counting
 
 \section{Naive Referenzzählung}
 \label{sec:naive-rc}
-Zur Realisierung des Ansatzes von \textsc{Collins} im eingangs betrachteten Speichermodell wird erneut der Header eines Objekts \Var{a} genutzt, um einen ganzzahligen, nicht negativen Wert \Var{rc}(\Var{a}) zu hinterlegen, der als \textbf{Referenzzähler} von \Var{a} bezeichnet wird.
+Zur Realisierung des Ansatzes von \textsc{Collins} im eingangs betrachteten Speichermodell wird erneut der Header eines Heappbjekts \Var{a} genutzt, um einen ganzzahligen, nicht negativen Wert \Var{rc}(\Var{a}) zu hinterlegen, der als \textbf{Referenzzähler} von \Var{a} bezeichnet wird.
 Dieser gibt an, wie viele Referenzen von anderen Objekten auf \Var{a} existieren und wird bei der Erzeugung von \Var{a} mit dem Wert $0$ initialisiert.
 Auf diese Art erhält man unmittelbar eine notwendige Bedingung für die Erreichbarkeit eines Heapobjekts:
 Ist $\Var{a} \in \Reach$, so existiert mindestens ein Objekt $\Var{b} \neq \Var{a}$ mit $\Var{b} \rightarrow \Var{a}$ und somit gilt $\Var{rc}(\Var{a}) \geq 1$.
 Damit dieses Kriterium auch von Basisobjekten ausgehende Referenzen einschließt, wird im Folgenden die Menge \Roots der Basisobjekte selbst als Objekt aufgefasst.
 Entsprechend wird mit $\Pointers(\Roots)$ die Menge der Referenzen auf Objekte des Heaps bezeichnet, die von Basisobjekten ausgehen.
+Für Basisobjekte selbst, die nach Konvention nicht zum Heap gehören, wird kein Referenzzähler geführt, da sie per definitionem stets erreichbar sind.
 
 \begin{mybox}
 \begin{lemma}[Notwendige Bedingung für Erreichbarkeit]
@@ -31,7 +32,7 @@ Entsprechend wird mit $\Pointers(\Roots)$ die Menge der Referenzen auf Objekte d
 \end{mybox}
 
 Diese Bedingung ist allerdings nicht hinreichend, da die Objekte, von denen die Referenzen ausgehen, gegebenenfalls nicht erreichbar sind und die Erreichbarkeit von \Var{a} somit nicht garantiert werden kann.
-Jedoch folgt als Kontraposition von Lemma~\ref{lemma:notwendig-rc} sofort, dass ein Objekt $\Var{a}$ mit $\Var{rc}(\Var{a}) = 0$ nicht erreichbar ist und freigegeben werden kann.
+Jedoch folgt als Kontraposition von Lemma~\ref{lemma:notwendig-rc} sofort, dass ein Heapobjekt $\Var{a}$ mit $\Var{rc}(\Var{a}) = 0$ nicht erreichbar ist und freigegeben werden kann.
 
 Wie kann \Var{rc}(\Var{a}) nun verwendet werden, um automatisch ein nicht erreichbares Objekt freizugeben?
 Immer, wenn eine Referenz auf \Var{a} in ein Feld eines anderen Objekts geschrieben wird, so muss \Var{rc}(\Var{a}) inkrementiert werden.
@@ -173,6 +174,8 @@ Nachfolgend wird ein Algorithmus von \textsc{Martínez}, \textsc{Wachenchauzer} 
 Dieses basiert darauf, dass ein Zyklus von Objekten als \textbf{starke Zusammenhangskomponente} im Objektgraphen aufgefasst werden kann (vgl. \cite[S. 348]{linhou2006}).
 Das bedeutet, dass von jedem Objekt aus jedes andere Objekt innerhalb des Zyklus erreicht werden kann.
 
+\newpage
+
 \begin{mybox}
 \begin{defn}[Starke Zusammenhangskomponente]
 \label{def:zusammenhang}
@@ -221,9 +224,13 @@ Anders formuliert: Besitzt die Komponente ein Objekt, das über eine externe Ref
 Zusätzlich zum Referenzzähler wird pro Objekt eine Markierungsinformation gespeichert, die die Werte \Var{WHITE}, \Var{GRAY} und \Var{BLACK} annehmen kann (vgl. Abschnitt~\ref{sec:tricolor}).
 Nach Untersuchung der hypothetisch zyklischen Struktur sollen erreichbare Objekte weiß und nicht erreichbare schwarz markiert sein.
 Zu Beginn sind alle Objekte weiß markiert.
-Algorithmus~\ref{algo:cyclic-rc} ergänzt die Prozedur \Method{decRefCount} der naiven Referenzzählung um einen \ELSE-Fall, der ausgelöst wird, wenn der Referenzzähler \Var{rc}(\Var{obj}) nach Dekrementierung nicht $0$ beträgt (vgl. Zeile~8 bis 11).
+Algorithmus~\ref{algo:cyclic-rc} ergänzt die Prozedur \Method{decRefCount} der naiven Referenzzählung um einen \ELSE-Fall, der ausgelöst wird, wenn der Referenzzähler \Var{rc}(\Var{obj}) nach Dekrementierung nicht $0$ beträgt (vgl. Zeile~7 bis 10).
 In diesem Fall muss überprüft werden, ob \Var{obj} das letzte Objekt einer starken Zusammenhangskomponente war, durch welches diese erreichbar war.
 Dazu wird nach einem dreischrittigen Verfahren vorgegangen, das im Folgenden beschrieben wird.\footnote{Wie bereits eingangs der Arbeit erwähnt, wird im Folgenden auf die Überprüfung von \Null-Referenzen verzichtet. Entsprechende \IF-Anweisungen lassen sich jedoch problemlos in die Algorithmen integrieren.}
+
+Wir beginnen mit der Prozedur \Method{markGray}, die zunächst für \Var{obj} aufgerufen wird.
+Davon ausgehend, dass \Var{obj} Bestandteil einer zyklischen Struktur sein kann, werden zunächst Zählungen von internen Referenzen entfernt, indem per Tiefensuche alle unmarkierten und von \Var{obj} referenzierten Objekte betrachtet, grau markiert und ihre Referenzzähler angepasst werden (Zeile~3 bis~5 in Algorithmus~\ref{algo:cyclic-markscan}).
+Durch einen rekursiven Aufruf in Zeile~6 wird somit die starke Zusammenhangskomponente $\sk{\Var{obj}}$ behandelt und grau markiert; die Referenzzähler ihrer Objekte enthalten anschließend die Anzahl aller externen Referenzen.
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
@@ -246,15 +253,11 @@ Dazu wird nach einem dreischrittigen Verfahren vorgegangen, das im Folgenden bes
 \label{algo:cyclic-markscan}
 \end{algorithm}
 
-Wir beginnen mit der Prozedur \Method{markGray}, die zunächst für \Var{obj} aufgerufen wird.
-Davon ausgehend, dass \Var{obj} Bestandteil einer zyklischen Struktur sein kann, werden zunächst Zählungen von internen Referenzen entfernt, indem per Tiefensuche alle unmarkierten und von \Var{obj} referenzierten Objekte betrachtet, grau markiert und ihre Referenzzähler angepasst werden (Zeile~3 bis~5 in Algorithmus~\ref{algo:cyclic-markscan}).
-Durch einen rekursiven Aufruf in Zeile~6 wird somit die starke Zusammenhangskomponente $\sk{\Var{obj}}$ behandelt und grau markiert; die Referenzzähler ihrer Objekte enthalten anschließend die Anzahl aller externen Referenzen.
-
 Im zweiten Schritt wird die Prozedur \Method{scan} für \Var{obj} aufgerufen, um die modifizierten Referenzzähler der grau markierten Objekte auszuwerten.
 Besitzt \Var{rc}(\Var{obj}) den Wert $0$, so wird \Var{obj} zunächst schwarz markiert (Zeile~9f).
 Das bedeutet, dass \Var{obj} nur von Objekten aus erreichbar ist, die sich innerhalb der starken Zusammenhangskomponente befinden.
 Infolgedessen ist die Erreichbarkeit von \Var{obj} von den anderen Objekten der Komponente abhängig: Besitzen diese ebenfalls nur interne Referenzen, ist die gesamte Komponente -- und damit auch \Var{obj} -- unerreichbar.
-Um dies zu überprüfen, wird \Method{scan} rekursiv für alle Objekte von $\sk{\Var{obj}}$ aufgerufen (Zeile~11 bis 13).
+Um dies zu überprüfen, wird \Method{scan} rekursiv für alle Objekte von $\sk{\Var{obj}}$ aufgerufen (Zeile~11f).
 
 Besitzt hingegen ein grau markiertes Objekt \Var{a} einen Referenzzähler mit einem Wert ungleich $0$, so existiert eine externe Referenz auf dieses Objekt -- \Var{a} ist von einem Objekt aus erreichbar, das nicht zu $\sk{\Var{a}}$ gehört.
 In diesem Fall wird die Prozedur \Method{unmark} aufgerufen, die \Var{a} weiß markiert (Zeile~2 in Algorithmus~\ref{algo:cyclic-clean}).
@@ -287,13 +290,15 @@ Im letzten Schritt können daher alle schwarz markierten Objekte freigegeben wer
 Um die Arbeit des Algorithmus zu veranschaulichen, wird nun exemplarisch der Objektgraph aus Abbildung~\ref{fig:rc-scc} betrachtet und angenommen, dass die Referenz $\Var{a} \rightarrow \Var{b}$ entfernt wird, wodurch die Objekte \Var{b}, \Var{c}, \Var{d} und \Var{e} unerreichbar werden.
 Zu erwarten ist, dass der Aufruf von \Method{markGray}(\Var{b}), \Method{scan}(\Var{b}) und \Method{collect}(\Var{b}) alle vier Objekte freigibt.
 
+\newpage
+
 \begin{figure}[h]
 	\centering
 	\begin{subfigure}{0.4\textwidth}
 		\centering
 		\includestandalone{img/tikz/ch3-cyclic-ex1}
 	\end{subfigure}~\hspace{0.5cm}~
-	\begin{subfigure}{0.473\textwidth}
+	\begin{subfigure}{0.4\textwidth}
 		\centering
 		\includestandalone{img/tikz/ch3-cyclic-ex2}
 	\end{subfigure}\\[1cm]
@@ -323,7 +328,7 @@ Der Aufruf \Method{markGray}(\Var{c}) erniedrigt den Referenzzähler von \Var{d}
 An dieser Stelle geschehen jedoch keine rekursiven Aufrufe mehr, da alle von \Var{d} referenzierten Objekte bereits grau markiert sind.
 Somit terminieren hier die Aufrufe von \Method{markGray}(\Var{d}), \Method{markGray}(\Var{c}) und \Method{markGray}(\Var{b}).
 
-An dieser Stelle ist bereits erkennbar, dass alle Referenzzähler von $\sk{\Var{b}}$ $0$ sind, weswegen die starke Zusammenhangskomponente keine externen Referenzen besitzt und nicht mehr erreichbar ist.
+Zu diesem Zeitpunkt ist bereits erkennbar, dass alle Referenzzähler von $\sk{\Var{b}}$ $0$ sind, weswegen die starke Zusammenhangskomponente keine externen Referenzen besitzt und nicht mehr erreichbar ist.
 Dies wird nun von \Method{scan} mittels einer weiteren Tiefensuche beginnend bei \Var{b} überprüft.
 Da alle von \Var{b} aus erreichbaren Objekte grau markiert sind und ihre Referenzzähler verschwinden, werden sie schwarz markiert; ein Aufruf von \Method{unmark} findet nicht statt.
 Somit werden anschließend alle vier Knoten durch \Method{collect} mittels einer dritten Tiefensuche freigegeben.
@@ -450,7 +455,8 @@ Entsprechend wird ein Objekt genau einmal von einem Heapobjekt referenziert, wen
 	\State \Atomic \MethodHead{collect}():
 	\State \quad \FOREACH $\Var{ref} \in \Pointers(\Roots)$		\Comment{nicht gezählte Referenzen hinzufügen}
 	\State \quad \quad \Method{incRefCount}(\Var{*ref})
-	\State \quad \FOREACH $\Var{obj} \in \Var{ZCT}$		\Comment{nicht erreichbare Objekte löschen}
+	\State \quad \WHILE $\Var{ZCT} \neq \emptyset$		\Comment{nicht erreichbare Objekte löschen}
+	\State \quad \quad $\Var{obj} \gets \Method{remove}(\Var{ZCT})$
 	\State \quad \quad \FOREACH $\Var{ref} \in \Pointers(\Var{obj})$
 	\State \quad \quad \quad \Method{decRefCount}(\Var{*ref})
 	\State \quad \quad \Method{free}(\Var{obj})
@@ -469,7 +475,7 @@ Ist beides nicht der Fall, so muss \Var{obj} zur \Var{MRT} hinzugefügt werden; 
 Analoge Fallunterscheidungen sind nötig, wenn ein Referenzzähler reduziert wird (Zeile~14 bis~18).
 
 Die Freigabe von Objekten kann nun zu geeigneten, unkritischen Zeitpunkten mittels der Prozedur \Method{collect} ausgelöst werden, sofern diese vorhersehbar sind, oder alternativ bei akutem Speichermangel.
-Da die Objekte in der \Var{ZCT} gegebenenfalls noch von lokalen Variablen referenziert werden und in diesem Fall nicht entfernt werden dürfen, müssen zunächst ihre Referenzzähler angepasst werden, indem über alle Referenzen von Basisobjekten iteriert wird (Zeile~20).
+Da die Objekte in der \Var{ZCT} gegebenenfalls noch von lokalen Variablen referenziert werden und in diesem Fall nicht entfernt werden dürfen, müssen zunächst ihre Referenzzähler angepasst werden, indem über alle Referenzen von Basisobjekten iteriert wird (Zeile~20f).
 Objekte, die im Anschluss in der \Var{ZCT} verbleiben, sind tatsächlich verwaist und können bedenkenlos entfernt werden, ohne die Korrektheit des Algorithmus zu gefährden (Zeile~22 bis~26).
 
 \begin{figure}[h]

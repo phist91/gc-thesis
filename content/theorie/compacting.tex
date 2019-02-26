@@ -45,7 +45,7 @@ Dabei werden verwaiste Objekte entweder überschrieben oder befinden sich anschl
 
 Wie schon in Kapitel~\ref{cha:mark-sweep} wird vorausgesetzt, dass eine Prozedur zur Verfügung steht, die die Adresse des nachfolgenden Objekts liefert, sofern existent.
 Entsprechend kann leicht eine Prozedur \Method{nextMarkedObject} realisiert werden, die nur markierte Objekte liefert.
-Weiter soll eine Prozedur \Method{moveObject}(\Var{old}, \Var{new}) existieren, die das Objekt an der Speicheradresse \Var{old} an die Speicheradresse \Var{new} verschiebt.
+Weiter soll eine Prozedur \Method{moveObject}(\Var{old}, \Var{new}) existieren, die das Objekt an der Speicheradresse \Var{old} an die Speicheradresse \Var{new} verschiebt, wobei eine Überschreibung von Daten an der Zielposition ausdrücklich zugelassen ist.
 
 Der Algorithmus verfährt nun recht intuitiv (siehe Abbildung~\ref{fig:lisp2}):
 Beginnend am Anfang des Heaps werden der Reihe nach alle markierten Objekte besucht und an die vorderste Stelle bewegt, an der noch kein markiertes Objekt steht.
@@ -53,9 +53,7 @@ Dabei wird für jedes verschobene Objekt die alte und neue Speicheradresse in ei
 Nach jeder Verschiebung wird der Zeiger \Var{pos} auf das neue Ende des kompaktierten Bereichs und \Var{next} auf das nächste markierte Objekt gesetzt (Zeile~8f).
 Die erreichbaren Objekte befinden sich nun lückenlos am Anfang des Heaps.
 
-\newpage
-
-\begin{figure}[H]
+\begin{figure}[h]
 	\centering
 	\includestandalone[scale=1]{img/tikz/ch4-lisp2}
 	\caption[LISP-2-Algorithmus]{Veranschaulichung des LISP-2-Algorithmus.}
@@ -64,7 +62,7 @@ Die erreichbaren Objekte befinden sich nun lückenlos am Anfang des Heaps.
 
 \vfill
 
-\begin{algorithm}[h!]
+\begin{algorithm}[h]
 \begin{algorithmic}[1]
 	\State \Atomic \MethodHead{compact}():
 	\State \quad $\Var{pos} \gets \Var{HEAP\_START}$	\Comment{Zeiger auf Ende des kompaktierten Bereichs}
