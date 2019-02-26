@@ -157,6 +157,7 @@ Aus diesem Grund wird nachfolgend eine schwächere Eigenschaft von Objekten betr
 Dafür wird von einer Menge \Roots von \textbf{Basisobjekten} (engl. \textit{root objects}) ausgegangen, die nicht zum Heap gehören.
 Diese sind dadurch gekennzeichnet, dass der Mutator unmittelbaren Zugriff auf sie hat, ohne dafür zunächst ihre Adresse aus den Feldern anderer Objekte beschaffen zu müssen.
 Hierzu zählen zum Beispiel statische Objekte, deren Positionen im Speicher bereits zur Übersetzungszeit bekannt sind, oder Objekte, die sich in Aufrufstapeln von Unterprogrammen befinden.
+Basisobjekte selbst werden durch die Garbage Collection nicht verwaltet, allerdings werden ihre Header von manchen Algorithmen dennoch zur Speicherung von Informationen genutzt.
 Alle weiteren Objekte, die zur Laufzeit dynamisch erzeugt werden, gelten als erreichbar, wenn auf sie über eine Folge von Referenzen zugegriffen werden kann, wobei diese in den Feldern von Objekten gespeichert sind und die erste Referenz von einem Basisobjekt ausgeht.
 Einfacher ausgedrückt: Ein Objekt ist erreichbar, wenn der Mutator die Möglichkeit hat, mittelbar oder unmittelbar über Referenzen auf das Objekt zugreifen zu können.
 Formal wird diese Eigenschaft wie folgt definiert:
@@ -176,7 +177,6 @@ Formal wird diese Eigenschaft wie folgt definiert:
 
 Diese Definition garantiert zwar nicht, dass jedes erreichbare Objekt auch lebendig ist.
 Davon ausgehend, dass unerreichbare Objekte auch nicht \textit{wiedergefunden} werden können und verwaist bleiben, lässt sich jedoch mit Sicherheit sagen, dass unerreichbare Objekte nicht mehr verwendet werden und gefahrlos durch den Kollektor freigegeben werden dürfen.
-Basisobjekte selbst werden durch die Garbage Collection nicht verwaltet, allerdings werden ihre Header von manchen Algorithmen dennoch zur Speicherung von Informationen genutzt.
 
 Die Erreichbarkeit von Objekten lässt sich mithilfe eines sogenannten \textbf{Objektgraphen} visualisieren.
 Jedes existierende Objekt korrespondiert dabei mit einem Knoten des Graphen, sodass das Objekt mit seinem Knoten identifiziert werden kann (und umgekehrt).
