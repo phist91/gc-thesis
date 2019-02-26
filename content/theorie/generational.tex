@@ -40,7 +40,7 @@ Eine Referenz $\Var{a} \rightarrow \Var{b}$ eines älteren Objekts \Var{a} auf e
 	\label{fig:lieberman-generations}
 \end{figure}
 
-Der Kollektor geht bei der Bereinigung der Generation $k$  (\Var{source}) in mehreren Schritten vor (siehe Algorithmus~\ref{algo:lieberman}):
+Der Kollektor geht bei der Bereinigung der Generation $k \in \NN_0$  (\Var{source}) in mehreren Schritten vor (siehe Algorithmus~\ref{algo:lieberman}):
 Als erstes wird ein Block für eine neue Version \Var{target} der betrachteten Generation angelegt (Zeile~3).
 Nun werden die erreichbaren Objekte in \Var{source} nach \Var{target} kopiert, vergleichbar mit dem Halbraumverfahren aus Abschnitt~\ref{sec:copying}.
 Zunächst werden dazu alle Objekte kopiert, die über Handles erreichbar sind (Prozedur \Method{updateHandles}).
@@ -48,6 +48,7 @@ Dabei wird für jeden auffindbaren Handle in \Var{source} das entsprechende Ziel
 Weiter werden alle direkten Referenzen auf Objekte der $k$-ten Generation durch die Prozedur \Method{updateFields} aktualisiert.
 Aufgrund der oben eingeführten Konvention genügt es, alle Blöcke mit höherer Generationenzahl zu untersuchen (Zeile~16).
 Auch hier werden dann Referenzen auf Objekte aus der $k$-ten Generation nach \Var{target} kopiert und die korrespondierenden Felder angepasst.
+Damit hierbei auch Referenzen berücksichtigt werden, die von Basisobjekten ausgehen, wird \Roots als \textit{Generation $\infty$}, also als jüngste aller Generationen, identifiziert.
 
 \begin{algorithm}[h!]
 \begin{algorithmic}[1]
@@ -144,6 +145,8 @@ Entsprechend ist es attraktiv, diese zu bereinigen, da sie eine vielversprechend
 Die erwartete Laufzeit des Kollektors hält sich dabei gleichzeitig in Grenzen, da nur wenige Nachfolgegenerationen existieren, die Referenzen auf die zu reinigende Generation besitzen könnten.
 Ältere Generationen, die schon häufig bereinigt wurden, enthalten wiederum tendenziell weniger verwaiste Objekte.
 Da bei ihrer Bereinigung viele jüngere Generationen betrachtet werden müssen, sollten diese eher selten stattfinden (vgl. \cite[S. 423]{lieberman1983}).
+Basisobjekte wiederum sind tendenziell häufigen Referenzmanipulationen unterworfen.
+Die Identifikation von \Roots mit $\textsc{Gen}_{\infty}$ ist somit zweckmäßig, damit bei der Bereinigung einer Generation diese Manipulationen berücksichtigt werden. 
 
 Abgesehen von Generation und Versionszahl gibt es noch weitere Parameter zur Optimierung des Algorithmus.
 Eine periodische Erhöhung der Generationenzahl hat den Vorteil, dass Objekte, die fast zeitgleich erzeugt werden, in derselben Generation gespeichert werden, was sich für einige Datenstrukturen positiv auf die räumliche Lokalität auswirken dürfte.
