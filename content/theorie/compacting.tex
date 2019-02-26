@@ -53,16 +53,14 @@ Dabei wird für jedes verschobene Objekt die alte und neue Speicheradresse in ei
 Nach jeder Verschiebung wird der Zeiger \Var{pos} auf das neue Ende des kompaktierten Bereichs und \Var{next} auf das nächste markierte Objekt gesetzt (Zeile~8f).
 Die erreichbaren Objekte befinden sich nun lückenlos am Anfang des Heaps.
 
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
-	\includestandalone[scale=1]{img/tikz/ch4-lisp2}
+	\includestandalone[scale=0.85]{img/tikz/ch4-lisp2}
 	\caption[LISP-2-Algorithmus]{Veranschaulichung des LISP-2-Algorithmus.}
 	\label{fig:lisp2}
 \end{figure}
 
-\vfill
-
-\begin{algorithm}[h]
+\begin{algorithm}[b!]
 \begin{algorithmic}[1]
 	\State \Atomic \MethodHead{compact}():
 	\State \quad $\Var{pos} \gets \Var{HEAP\_START}$	\Comment{Zeiger auf Ende des kompaktierten Bereichs}
@@ -165,7 +163,7 @@ Somit ist sichergestellt, dass die Reihenfolge der Objekte im Heap erhalten blei
 \begin{algorithmic}[1]
 	\State \MethodHead{calculateOffsets}():
 	\State \quad $\Var{offset}(0) \gets \Var{HEAP\_START}$
-	\State \quad \FOR $\Var{k} \in \{1, \dots, \abs{\Blocks}\}$
+	\State \quad \FOR $\Var{k} \in \{1, \dots, \abs{\Blocks}-1\}$
 	\State \quad \quad $\Var{offset}(k) \gets \Var{offset}(k-1) + \Method{usedWords}(k-1)$
 	\Statex
 	\State \MethodHead{newAddress}(\Var{adr}):
@@ -208,7 +206,7 @@ Zwar befindet sich auch der hintere Teil von \Var{c} im dritten Block, allerding
 
 Der Performancegewinn durch den Verzicht auf eine zweite Heaptraversierung ist offenkundig, wird jedoch mit zusätzlichem Speicherbedarf erkauft.
 Der Bitvektor benötigt ein Bit Speicherplatz pro Wort, während der Offsetvektor pro Block ein Wort belegt.
-Für die oben genannte Wortbreite und Blockgröße ergibt sich daher ein Overhead von etwa 4\% des Heaps.
+Für die von \textsc{Kermany} und \textsc{Petrank} vorgeschlagene Wortbreite und Blockgröße ergibt sich daher ein Overhead von etwa 4\% des Heaps.
 Eine Erhöhung der Wortbreite $w$, an der Objekte im Heap ausgerichtet werden, kann diesen Anteil zwar reduzieren (siehe Tabelle~\ref{tab:compressor}), aber auch eine ineffizientere Speichernutzung verursachen, da jedes Objekt stets ein Vielfaches von $w$ an Speicher belegt.
 Größere Blöcke wiederum erhöhen den Aufwand zur Berechnung der neuen Speicheradressen, da eine höhere Anzahl an Objekten pro Block zu erwarten ist.
 
@@ -302,7 +300,7 @@ Ist in \Var{newAdr} bereits eine Speicheradresse hinterlegt worden, so wurde das
 Die Prozedur \Method{collect} kann anschließend mit der Abarbeitung der Objekte in \Var{toDo} beginnen (Zeile~10 bis~13).
 
 Abbildung~\ref{fig:fenichel-example} veranschaulicht die Arbeitsweise des Algorithmus an einem Beispiel:
-Nachdem die Rollen der Halbräume \Var{source} und \Var{target} vertauscht wurden, wird zunächst das einzige Basisobjekt \Var{b} kopiert \textbf{(2)}.
+Nachdem die Rollen der Halbräume \Var{source} und \Var{target} vertauscht wurden, wird zunächst das einzige von Basisobjekten referenzierte Objekt \Var{b} kopiert \textbf{(2)}.
 Anschließend wird es zu \Var{toDo} hinzugefügt, was durch eine Nummerierung der Kopie \Var{b'} angezeigt wird \textbf{(3)}.
 Da nun alle Basisobjekte kopiert wurden, wird \Var{toDo} abgearbeitet.
 Daher werden alle Felder von \Var{b'} untersucht, die Ziele der enthaltenen Referenzen -- hier \Var{f} und \Var{g} -- nach \Var{target} kopiert und die Kopien zu \Var{toDo} hinzugefügt \textbf{(4)}.
@@ -340,7 +338,7 @@ Entsprechend analog zu Satz~\ref{satz:tricolor-correctness} lässt sich die Term
 
 \begin{proof}
 	Wir beweisen, dass nach Terminierung des Algorithmus kein erreichbares Objekt im Halbraum \Var{source} verbleibt.
-	Sei also $\Var{a} \in \Reach$ ein erreichbares Objekt.
+	Sei also $\Var{a} \in \Reach$ ein erreichbares Objekt des Heaps.
 	Dann gilt $\Var{b[i]} = \Var{\&a}$ für Feld \Var{b[i]} eines Objektes \Var{b}.
 	Ist $\Var{b} \in \Roots$, so ist $\Var{\&b[i]} \in \Fields(\Roots)$ und $\Var{a}$ wird in einer Iteration der \FOREACH-Schleife (Zeile~8f) nach \Var{target} kopiert sowie \Var{b[i]} angepasst.
 	
@@ -437,7 +435,7 @@ Dies kann beispielsweise in der Programmiersprache \Cpp durch Überladung des Ad
 \label{algo:operator-overload}
 \end{algorithm}
 
-Die Verwendung von Handles vereinfacht die betrachteten Mark-Compact-Algorithmen deutlich, da auf eine kostspielige Aktualisierung aller Objektfelder verzichtet und eine Anpassung des Handles unmittelbar nach Verschiebung eines Objekts vorgenommen werden kann.
+Die Verwendung von Handles vereinfacht die betrachteten Mark"=Compact"=Algorithmen deutlich, da auf eine kostspielige Aktualisierung aller Objektfelder verzichtet und eine Anpassung des Handles unmittelbar nach Verschiebung eines Objekts vorgenommen werden kann.
 Im LISP-2-Algorithmus wird damit die Prozedur \Method{updateRefs} obsolet und die Buchführung über alte und neue Adressen ist nicht länger notwendig (siehe Algorithmus~\ref{algo:handle-compaction}).
 Allerdings besitzen diese Vorteile auch hier ihren Preis:
 Da jedes Objekt im Heap einen Handle besitzt, der ebenfalls dynamisch erzeugt wurde, verdoppelt dieser Ansatz die Zahl der Objekte und reduziert den verfügbaren Heapspeicher.
