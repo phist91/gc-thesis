@@ -531,7 +531,11 @@ Wird nun über die in \Var{log} eingetragenen Felder iteriert, so wird geprüft,
 Nur dann sind Anpassungen der jeweiligen Referenzzähler nötig.
 Anschließend wird die Markierung des Feldes zurückgesetzt und der Eintrag aus der Tabelle entfernt.
 
-\begin{algorithm}[h!]
+Mittels Methoden für verteilte Systeme, auf die hier nicht näher eingegangen wird, lässt sich dieser Ansatz durch feingranularere Synchronisationen optimieren, etwa indem Logtabellen threadweise angelegt werden.
+Dadurch kann vermieden werden, dass das gesamte Programm angehalten wird.
+Für mehr Details sei auf die Publikation von \textsc{Levanoni} und \textsc{Petrank} verwiesen \cite[S. 19]{levanoni2006}.
+
+\begin{algorithm}[h]
 \begin{algorithmic}[1]
 	\State \Atomic \MethodHead{writeRef}(\Var{obj}, \Var{i}, \Var{ref}):
 	\State \quad \IF \NOT \Method{isModified}(\Var{\&obj[i]})
@@ -552,6 +556,6 @@ Anschließend wird die Markierung des Feldes zurückgesetzt und der Eintrag aus 
 \label{algo:coalesced-rc}
 \end{algorithm}
 
-Mittels Methoden für verteilte Systeme, auf die hier nicht näher eingegangen wird, lässt sich dieser Ansatz durch feingranularere Synchronisationen optimieren, etwa indem Logtabellen threadweise angelegt werden.
-Dadurch kann vermieden werden, dass das gesamte Programm angehalten wird.
-Für mehr Details sei auf die Publikation von \textsc{Levanoni} und \textsc{Petrank} verwiesen \cite[S. 19]{levanoni2006}.
+Mit dem Mark-Sweep-Algorithmus und der Referenzzählung haben wir nun zwei zunächst diametral verschiedene Ansätze zur automatischen Speicherverwaltung kennen gelernt.
+Die zuletzt eingeführten Optimierungsmöglichkeiten, in denen die Referenzzählung von Kollektionsphasen begleitet wird, lassen bereits erahnen, dass beide Verfahren nicht gänzlich unvereinbar sind.
+Bevor dieser Gedanke weiter verfolgt wird, erfolgt im nächsten Kapitel die Auseinandersetzung mit dem Phänomen der Speicherfragmentierung, das beide Ansätze betrifft und bisher nicht zur Sprache gekommen ist.

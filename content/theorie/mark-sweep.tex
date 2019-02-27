@@ -471,3 +471,6 @@ Für die Drei-Farben-Abstraktion ergeben sich identische asymptotische Laufzeite
 Die Kosten der Bereinigungsphase des Lazy Sweeping nach \textsc{Hughes} sind nur schwer abschätzbar, da sie unter anderem von der Strukturierung des Heaps in Blöcken abhängen, welche wiederum je nach Anwendungsfall einen starken Einfluss auf die Ausführungshäufigkeit der Garbage Collection haben kann.
 Grundsätzlich ist es für Mark-Sweep-Ansätze empfehlenswert, einen größeren Puffer für die Arbeit des Kollektors zu reservieren, um eine hohe Zahl an Speicheranforderungen seitens des Allokators bewältigen zu können.
 Andernfalls besteht die Gefahr, dass die Garbage Collection zu häufig ausgelöst wird und den Mutator nach und nach verdrängt (vgl. \cite[S. 70]{jones-lins}).
+
+Während wir in diesem Kapitel mit dem Mark-Sweep-Algorithmus und seinen Optimierungen ein erstes Verfahren zur Bewältigung des Ausgangsproblems eingeführt haben, wird im nächsten Kapitel ein fundamental anderer Ansatz vorgestellt, der zunächst größere Unterbrechungen im Programmablauf vermeidet.
+Dabei wird auch diskutiert, welche Vor- und Nachteile sich im Vergleich zum Mark-Sweep-Algorithmus ergeben und welche Optimierungsmöglichkeiten hier ausgeschöpft werden können.
