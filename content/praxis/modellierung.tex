@@ -65,13 +65,13 @@ Abschnitt~\ref{sec:gui} widmet sich anschließend der Anbindung an die grafische
 
 Im Sinne der Plattformunabhängigkeit wird dazu die Programmiersprache \textit{Java} gewählt, wobei auf die \textit{Java Language Specification 9}\footnote{\url{https://docs.oracle.com/javase/specs/jls/se9/html/index.html}} zurückgegriffen wird.
 Der gesamte Programmcode wird über das Versionskontrollsystem \textit{Git}\footnote{\url{https://git-scm.com/}} verwaltet.
-Um eine plattformunabhängige Entwicklung zu gewährleisten, kommt zudem das Build-Management-Tool \textit{Apache Maven}\footnote{\url{https://maven.apache.org/}} zum Einsatz.
+Um plattformübergreifend eine einheitliche Entwicklung zu gewährleisten, kommt zudem das Build-Management-Tool \textit{Apache Maven}\footnote{\url{https://maven.apache.org/}} zum Einsatz.
 Dieses bildet die verschiedenen Arbeitsschritte der Entwicklung, wie etwa Kompilieren, Testen und Erzeugen von \code{JAR}-Dateien, auf automatisiert durchführbare Phasen ab und kümmert sich dabei eigenständig um Abhängigkeiten von externen Bibliotheken.
 Zur Weiterentwicklung des Systems genügt somit ein Klonen des Git-Repositorys und eine Ausführung von Maven, um alle benötigten Abhängigkeiten beschaffen zu lassen.
 
 Bei der Entwicklung der einzelnen Komponenten wird grundsätzlich \textit{testgetrieben} vorgegangen.
 Das bedeutet, dass zu jeder zu implementierenden Methode zunächst mehrere Testfälle erstellt werden, die das erwartete Verhalten des Programms beschreiben.
-Einzige Ausnahme bilden hier Methoden, die mit GUI-Komponenten interagieren, da diese nur schwer automatisiert testbar sind.
+Einzige Ausnahme bilden hier Methoden, die mit GUI-Komponenten interagieren, da diese nur mit zusätzlichem Aufwand automatisiert testbar sind.
 Als Testframework wird auf \textit{JUnit 5}\footnote{\url{https://junit.org/junit5/}} zurückgegriffen.
 
 \subsection{Heapobjekte (\code{pst.gcsim.Objects})}
@@ -80,7 +80,7 @@ Die Implementation der Klasse \code{HeapObject} unterscheidet sich nur unwesentl
 Erwähnenswert ist jedoch die zusätzlich implementierte Klasse \code{AddressComparator} (siehe \ref{java:comparator}):
 Da es in manchen Zusammenhängen sinnvoll ist, Objektmengen sortieren zu können (siehe etwa Abschnitt~\ref{sub:impl-gc}), vergleicht diese \code{Comparator}-Implementation Objekte anhand ihrer Speicheradresse.
 Damit zwei verschiedene Objekte mit gleicher Speicheradresse nicht fälschlicherweise als identisch eingestuft werden, werden sie im Zweifelsfall zusätzlich nach einer internen ID verglichen.\footnote{Die Java 9 API-Spezifikation der Klasse \code{Comparator} empfiehlt, dass für zwei Objekte \code{a} und \code{b} der Ausdruck \mintinline[fontsize=\footnotesize]{java}{compare(a,b)} genau dann zu \code{0} auswertet, wenn \mintinline[fontsize=\footnotesize]{java}{a.equals(b)} zu \mintinline[fontsize=\footnotesize]{java}{true} auswertet. Diese Bedingung ist etwa für sortierte Datenstrukturen wie \code{TreeSet} wichtig, die keine Duplikate zulassen und \code{compare} zur Überprüfung auf Gleichheit heranziehen.}
-Diese ist ein zusätzliches Attribut, das beim Erstellen eines \code{HeapObject} vergeben wird.
+Diese ist ein zusätzliches Attribut in Form einer fortlaufenden Nummerierung, die beim Erstellen eines \code{HeapObject} vergeben wird.
 
 \begin{listing}[h]
 	\inputminted[]{java}{code/AddressComparator.java}
@@ -91,7 +91,7 @@ Diese ist ein zusätzliches Attribut, das beim Erstellen eines \code{HeapObject}
 \begin{figure}[t!]
 	\centering
 	\includegraphics[scale=0.6]{img/uml/ch7-klassen.pdf}
-	\caption[Klassendiagramm des realisierten Modells (Auszug)]{Klassendiagramm (Auszug) des realisierten Modells aus Abbildung~\ref{fig:model}.}
+	\caption[Klassendiagramm des realisierten Modells (Auszug)]{Klassendiagramm (Auszug) des realisierten Modells aus Abbildung~\ref{fig:model}. Zwei Klassen mit gleicher Färbung gehören zum gleichen Paket.}
 	\label{fig:implementation}
 \end{figure}
 
@@ -200,7 +200,7 @@ Auch beim Halbraumverfahren ist zuletzt eine Entfernung der verwaisten Objekte a
 \label{sub:settings}
 Die Konfigurationsklasse \code{Settings} enthält wesentliche Einstellungen zum Betrieb des Simulators sowie vorkonfigurierte Standardwerte (siehe Listing~\ref{java:settings}).
 Dazu gehören etwa die Größe des Heaps (\code{HEAP\_COLS}, \code{HEAP\_ROWS}), die Größe erzeugter Objekte (\code{MIN\_OBJECT\_SIZE}, \code{MIN\_OBJECT\_SIZE}) und die Animationsgeschwindigkeit sowie Einstellungen, die Erreichbarkeit (\code{CONNECTIVITY}, \code{ROOT\_PROBABILITY}) und Verwaisung (\code{REFERENCE\_DELETION}) von Objekten beeinflussen.
-Diese können über die grafische Oberfläche verändert werden (siehe Abschnitt~\ref{sec:execution}) und werden beim Beenden in einer Datei \code{gcsim.config} gesichert bzw. aus dieser geladen werden.
+Diese können über die grafische Oberfläche verändert werden (siehe Abschnitt~\ref{sec:execution}) und werden beim Beenden mittels der Klasse \code{java.util.Properties} in einer Datei \code{gcsim.config} gesichert bzw. aus dieser geladen werden.
 Zudem befindet sich in der Klasse \code{Settings} eine Auflistung der zur Verfügung stehenden Garbage-Collection-Algorithmen.
 In Abschnitt \ref{sec:extension} wird erläutert, wie diese um weitere Algorithmen ergänzt werden kann.
 

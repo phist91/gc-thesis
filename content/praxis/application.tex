@@ -57,14 +57,6 @@ Nach erfolgter Abarbeitung werden sie grün gefärbt.
 	\label{fig:app-simulation}
 \end{figure}
 
-Durch wiederholte Ausführung von Füll- und Kollektionsphasen kann der langfristige Einsatz eines Algorithmus simuliert werden, wobei interessante Eigenschaften beobachtet werden können.
-Eine Anpassung der einstellbaren Parameter sorgt dabei für eine Simulation mannigfaltiger Szenarien (siehe Abbildung~\ref{fig:simulation}).
-Eine Verwendung unterschiedlich großer Objekte lässt etwa beim Mark-Sweep-Algorithmus die zunehmende Fragmentierung des ungenutzten Speichers erkennen, die Allokationsversuche fehlschlagen lässt.
-Dieses Phänomen tritt jedoch nicht auf, wenn die Objektgröße konstant ist.
-Beim Lisp-2-Algorithmus ist wiederum zu sehen, dass bei geringem Verwaisungsgrad (bzw. hohem Verzweigungsgrad) die Ausbeute des Kollektors eher gering ist, aber bedingt durch die Kompaktierungsphase dennoch viele Objekte verschoben werden, was sehr zeitaufwendig sein kann.
-Eine ähnliche Kausalität kann ebenfalls beim Halbraumverfahren beobachtet werden, wobei hier zusätzlich die Halbierung des Speicherplatzes ins Auge springt.
-Objekte, die bei diesem Algorithmus bereits in den anderen Halbraum kopiert wurden, werden hier zusätzlich dunkelblau dargestellt.
-
 \begin{figure}[p]
 	\centering
 	\begin{subfigure}{\textwidth}
@@ -85,6 +77,14 @@ Objekte, die bei diesem Algorithmus bereits in den anderen Halbraum kopiert wurd
 	\caption[Simulation der verschiedenen Algorithmen]{Simulation der verschiedenen Algorithmen.}
 	\label{fig:simulation}
 \end{figure}
+
+Durch wiederholte Ausführung von Füll- und Kollektionsphasen kann der langfristige Einsatz eines Algorithmus simuliert werden, wobei interessante Eigenschaften beobachtet werden können.
+Eine Anpassung der einstellbaren Parameter sorgt dabei für eine Simulation mannigfaltiger Szenarien (siehe Abbildung~\ref{fig:simulation}).
+Eine Verwendung unterschiedlich großer Objekte lässt etwa beim Mark-Sweep-Algorithmus die zunehmende Fragmentierung des ungenutzten Speichers erkennen, die Allokationsversuche fehlschlagen lässt.
+Dieses Phänomen tritt jedoch nicht auf, wenn die Objektgröße konstant ist.
+Beim Lisp-2-Algorithmus ist wiederum zu sehen, dass bei geringem Verwaisungsgrad (bzw. hohem Verzweigungsgrad) die Ausbeute des Kollektors eher gering ist, aber bedingt durch die Kompaktierungsphase dennoch viele Objekte verschoben werden, was sehr zeitaufwendig sein kann.
+Eine ähnliche Kausalität kann ebenfalls beim Halbraumverfahren beobachtet werden, wobei hier zusätzlich die Halbierung des Speicherplatzes ins Auge springt.
+Objekte, die bei diesem Algorithmus bereits in den anderen Halbraum kopiert wurden, werden hier zusätzlich dunkelblau dargestellt.
 
 \section{Erweiterung um zusätzliche Algorithmen}
 \label{sec:extension}

@@ -25,6 +25,8 @@
 					new SemispaceCollector<SemispaceAllocator>())
 	);
 	
+	...
+	
 	public static final GarbageCollectorSelection[] collectors = {
 			marksweep, lisp2, semispace, naiveAlloc, semispaceAlloc
 	};
