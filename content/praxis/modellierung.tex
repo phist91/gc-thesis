@@ -9,7 +9,7 @@ Das darauffolgende Kapitel beschreibt schließlich, wie die Anwendung zu verwend
 
 \section{Spezifikation der Anforderungen}
 \label{sec:requirements}
-Der zu entwerfende Simulator hat das Ziel, die Ausführung ausgewählter Garbage-Collection-Algorithmen demonstrieren, sodass die einzelnen Arbeitsschritte eines Algorithmus klar erkennbar sind.
+Der zu entwerfende Simulator hat das Ziel, die Ausführung ausgewählter Garbage-Collection-Algorithmen zu demonstrieren, sodass die einzelnen Arbeitsschritte eines Algorithmus klar erkennbar sind.
 Dazu wird eine Realisierung des in Kapitel~\ref{cha:intro} eingeführten Speichermodells angestrebt.
 Eine grafische Ausgabe visualisiert dabei den Heap als Blockgrafik: Belegte Teile des Heaps sind optisch von freien unterscheidbar, zudem sind Lage und Größe der einzelnen Objekte erkennbar.
 Weiter wird gefordert, dass die Anwenderin die Möglichkeit zur Konfiguration des Simulators hat:
@@ -41,7 +41,7 @@ Die Schnittstelle \code{Allocator} stellt die wesentlichen Dienste eines Allokat
 Dazu zählt die Anforderung einer Speichermenge durch den Mutator, die Freigabe von Objekten und des durch sie belegten Speicherbereichs sowie das Verschieben eines Objekts.
 Ersteres geschieht durch Übergabe der gewünschten Speichermenge und Rückgabe einer neu erzeugten Instanz von \code{HeapObject}, die die entsprechende Speicheradresse enthält.
 Der Allokator ist diejenige Instanz, die Informationen über den Füllstand des Heaps und insbesondere über die Belegung einzelner Wörter besitzt.
-Die abstrakte Klasse \code{GarbageCollector} beschreibt die Funktionalität eines Kollektors, welche im Wesentlichen aus der Durchführung eines Garbage-Collection-Zyklus (Methode \code{collect}) besteht.
+Die abstrakte Klasse \code{GarbageCollector} beschreibt die Funktionalität eines Kollektors, welche im Wesentlichen aus der Durchführung eines Garbage-Collection-Zyklus besteht.
 Da eine Garbage Collection die Freigabe und Verschiebung von Objekten auslösen kann, benötigt sie die entsprechende Funktionalität von \code{Allocator}.
 Die Klasse \code{CollectionController} realisiert einerseits die Aufgabe des Mutators, das heißt die Anforderung von Speicher für neue Objekte sowie die (Simulation von) Referenzmanipulationen, die zur Verwaisung von Objekten führen.
 Daher besitzt sie zwei Mengen von Heapobjekten \code{objects} und \code{roots}.
@@ -76,7 +76,7 @@ Als Testframework wird auf \textit{JUnit 5}\footnote{\url{https://junit.org/juni
 \subsection{Heapobjekte (\code{pst.gcsim.Objects})}
 \label{sub:heapobject}
 Die Implementation der Klasse \code{HeapObject} unterscheidet sich nur unwesentlich von der in Abschnitt~\ref{sec:model} aufgeführten Modellierung.
-Erwähnenswert ist jedoch die zusätzlich implementierte Klasse \code{AddressComparator} (siehe \ref{java:comparator}):
+Erwähnenswert ist jedoch die zusätzlich implementierte Klasse \code{AddressComparator} (siehe Listing~\ref{java:comparator}):
 Da es je nach Kontext sinnvoll ist, Objektmengen sortieren zu können (siehe etwa Abschnitt~\ref{sub:impl-gc}), vergleicht diese \code{Comparator}-Implementation Objekte anhand ihrer Speicheradresse.
 Damit zwei verschiedene Objekte mit gleicher Speicheradresse nicht fälschlicherweise als identisch eingestuft werden, werden sie im Zweifelsfall zusätzlich nach einer internen ID verglichen.\footnote{Die Java 9 API-Spezifikation der Klasse \code{Comparator} empfiehlt, dass für zwei Objekte \code{a} und \code{b} der Ausdruck \mintinline[fontsize=\footnotesize]{java}{compare(a,b)} genau dann zu \code{0} auswertet, wenn \mintinline[fontsize=\footnotesize]{java}{a.equals(b)} zu \mintinline[fontsize=\footnotesize]{java}{true} auswertet. Diese Bedingung ist etwa für sortierte Datenstrukturen wie \code{TreeSet} wichtig, die keine Duplikate zulassen und \code{compare} zur Überprüfung auf Gleichheit heranziehen.}
 Diese ist ein zusätzliches Attribut in Form einer fortlaufenden Nummerierung, die beim Erstellen eines \code{HeapObject} vergeben wird.
@@ -107,9 +107,9 @@ Dieser zeichnet sich dadurch aus, dass er -- ausgehend von einer Startposition -
 Die Startposition ist dabei gegeben durch das Attribut \code{position}, welches stets die Adresse des ersten Worts hinter dem zuletzt angelegten Objekt enthält.
 
 Das Herzstück der Klasse \code{NaiveAllocator} ist die Methode \code{allocate}, die intern durch \code{newObject} aufgerufen wird und das Auffinden einer geeigneten Position für ein neues Heapobjekt übernimmt (siehe Listing~\ref{java:naive-alloc}).
-Diese Methode sucht zunächst unter Zuhilfenahme von \code{nextFree} und \code{nextUsed} der Reihe nach alle freien Stellen hinter \code{position} ab, bis eine genügend große gefunden oder das Ende des Heaps erreicht wurde (Zeile~7 bis~14).
+Diese Methode sucht zunächst unter Zuhilfenahme von \code{nextFree} und \code{nextUsed} der Reihe nach alle freien Stellen hinter \code{position} ab, bis eine genügend große gefunden oder das Ende des Heaps erreicht wurde (Zeile~7 bis~15).
 Dabei wird auch berücksichtigt, dass sich hinter \code{position} eventuell kein freier Speicher befindet (Zeile~9f) oder ein freier Speicherbereich sich bis ans Heapende erstreckt (Zeile 12f).
-Wird so ein hinreichend großer Bereich freien Speichers gefunden, wird dieser entsprechend der angeforderten Speichermenge als belegt markiert und die Anfangsadresse des Bereichs zurückgegeben (Zeile~18 bis 22).
+Wird so ein hinreichend großer Bereich freien Speichers gefunden, wird dieser entsprechend der angeforderten Speichermenge als belegt markiert und die Anfangsadresse des Bereichs zurückgegeben (Zeile~18 bis~23).
 Andernfalls wird auf analoge Weise der Bereich vor \code{position} durchsucht.
 Sollte auch hierbei kein geeigneter Speicherbereich gefunden werden können, wird als Ergebnis \code{-1} zurückgegeben, was \code{newObject} dazu veranlasst, kein neues Objekt zu erzeugen.
 
@@ -184,7 +184,7 @@ Allerdings muss jedes verwaiste Objekt im Hinblick auf eine grafische Ausgabe au
 
 Zuletzt sei ein Blick auf die Implementation des Halbraumverfahrens in der Klasse \code{SemispaceCollector} geworfen.
 Auch hier zeigt sich zunächst eine deutliche Ähnlichkeit der Methode \code{collect} zum Pseudocode-Algorithmus~\ref{algo:copying-gc}, allerdings wird in der Methode \code{update} ebenfalls auf eine Anpassung von Referenzen verzichtet.
-In Erinnerung daran, dass der ursprüngliche Algorithmus keine Objekte markiert, sondern unmittelbar bei Entdeckung in den anderen Halbraum verschiebt, fehlt somit zunächst die Möglichkeit zu erkennen, ob ein Objekt bereits kopiert wurde.
+In Erinnerung daran, dass der ursprüngliche Algorithmus keine Objekte markiert, sondern unmittelbar bei Entdeckung in den anderen Halbraum verschiebt, fehlt somit zunächst die Möglichkeit optisch zu erkennen, ob ein Objekt bereits kopiert wurde.
 Zur Kompensation werden daher zusätzlich Markierungsinformationen genutzt, um zwischen unentdeckten, entdeckten (d.h. bereits kopierten) und fertig abgearbeiteten Objekten zu unterscheiden.
 Dies hat den zusätzlichen Vorteil, diese drei Status in der grafischen Ausgabe optisch unterscheidbar machen zu können.
 Auch beim Halbraumverfahren ist zuletzt eine Entfernung der verwaisten Objekte aus \code{objects} nötig, obschon der Quellhalbraum en bloc freigegeben werden kann.
