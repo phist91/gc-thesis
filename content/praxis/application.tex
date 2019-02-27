@@ -6,7 +6,7 @@
 \label{sec:execution}
 Der Start der Anwedung erfolgt mithilfe des beigelegten Datenträgers in drei verschiedenen Möglichkeiten:
 \begin{enumerate}
-	\item Ausführung der JAR-Datei \code{gcsim-1.0-full.jar}.
+	\item Ausführung der JAR-Datei \code{gcsim-1.0-full.jar} mittels Doppelklick.
 	\item Ausführung in der Konsole mittels \code{java -jar gcsim-1.0-full.jar}.
 	\item Kopieren des Maven-Projekts im Ordner \code{gcsim} und Ausführung eines Build-Zyklus mit \code{mvn package}.
 	Anschließend kann der Simulator mit \code{mvn exec:exec} gestartet werden.
@@ -16,7 +16,7 @@ Wird zusätzlich der einzige gültige Parameter \code{default} übergeben, werde
 Das geschieht auch, wenn keine gültigen gespeicherten Einstellungen vorhanden sind.
 
 Nach dem Start der Anwendung erscheint das Auswahlfenster, in dem grundlegende Einstellungen wie der zu verwendende Garbage-Collection-Algorithmus und die Größe des Heaps festgelegt werden können (siehe Abbildung~\ref{fig:app-start}).
-Zudem kann die Größe der Darstellung angepasst werden.
+Zudem kann die Größe der Darstellung des Heaps angepasst werden.
 Der Bereich rechts neben den Texteingabefeldern gibt dabei Auskunft über die zu erwartende Größe des Ausgabefensters.
 Die Schaltfläche \textit{Einstellungen} ist aktiviert, wenn für den ausgewählten Algorithmus zusätzliche Konfigurationsmöglichkeiten verfügbar sind (siehe Abschnitt~\ref{sec:extension}).
 
@@ -78,7 +78,7 @@ Nach erfolgter Abarbeitung werden sie grün gefärbt.
 	\label{fig:simulation}
 \end{figure}
 
-Durch wiederholte Ausführung von Füll- und Kollektionsphasen kann der langfristige Einsatz eines Algorithmus simuliert werden, wobei interessante Eigenschaften beobachtet werden können.
+Durch wiederholte Ausführung von Füll- und Kollektionsphasen wird der langfristige Einsatz eines Algorithmus simuliert, wobei interessante Eigenschaften beobachtet werden können.
 Eine Anpassung der einstellbaren Parameter sorgt dabei für eine Simulation mannigfaltiger Szenarien (siehe Abbildung~\ref{fig:simulation}).
 Eine Verwendung unterschiedlich großer Objekte lässt etwa beim Mark-Sweep-Algorithmus die zunehmende Fragmentierung des ungenutzten Speichers erkennen, die Allokationsversuche fehlschlagen lässt.
 Dieses Phänomen tritt jedoch nicht auf, wenn die Objektgröße konstant ist.
@@ -88,7 +88,7 @@ Objekte, die bei diesem Algorithmus bereits in den anderen Halbraum kopiert wurd
 
 \section{Erweiterung um zusätzliche Algorithmen}
 \label{sec:extension}
-Die in Kapitel~\ref{cha:modelling} vorgestellte Modellierung und ihre Umsetzung ermöglicht grundsätzlich, den Simulator um eigene Algorithmen zu ergänzen, indem die Klasse \code{GarbageCollector} spezialisiert bzw. die Schnittstelle \code{Allocator} implementiert wird.
+Die in Kapitel~\ref{cha:modelling} vorgestellte Modellierung und ihre Umsetzung ermöglicht, den Simulator um eigene Algorithmen zu ergänzen, indem die Klasse \code{GarbageCollector} spezialisiert bzw. die Schnittstelle \code{Allocator} implementiert wird.
 Die im Simulator auswählbaren Garbage-Collection-Algorithmen werden in der Klasse \code{Settings} durch das Array \code{collectors} definiert (siehe Listing~\ref{java:selection}).
 Dieses bildet die Datengrundlage für die \code{JComboBox} des Auswahlfensters.
 Somit steht jeder Eintrag des Arrays für einen auswählbaren Algorithmus.
@@ -106,7 +106,7 @@ Der zweite Parameter ist ein Objekt vom Typ \code{Runnable}, bei dessen Ausführ
 Dabei ist auch eine geeignete Allokator- und Kollektorinstanz zu erzeugen (siehe etwa Zeile~5f).
 Der dritte Parameter -- ebenfalls vom Typ \code{Runnable} -- ist optional und wird verwendet, um ein zusätzliches Einstellfenster zu erzeugen.
 Wird der Parameter spezifiziert, ist die Schaltfläche \textit{Einstellungen} im Auswahlfenster des Simulators verfügbar.
-Das Einstellfenster kann dazu verwendet werden, um durch die Anwenderin weitere Konfigurationsmöglichkeiten festlegen zu lassen, die in der grafischen Benutzerschnittstelle nicht vorgesehen sind.
+Das Einstellfenster kann dazu verwendet werden, um durch die Anwenderin weitere Konfigurationsmöglichkeiten festlegen zu lassen, die in der grafischen Benutzerschnittstelle bisher nicht vorgesehen sind.
 
 \begin{listing}[h]
 	\inputminted[]{java}{code/CollectorSelection.java}
