@@ -1,6 +1,29 @@
 %!TEX root = ../thesis.tex
 \chapter{Fazit}
-\todo[inline]{Erweiterungen: Implementation zusätzlicher Algorithmen, zusätzliche Allokatoren, Grafische Ausgabe mit Graph, um Verwaisung direkter beeinflussen und Referenzmanipulationen und -anpassungen sehen zu können, Stepper mit Swing-Timern}
-Zusammenfassen, was in dieser Arbeit passiert ist.
-Und, dass es noch viel mehr gibt.
-Und ob der Visualisierer etwas taugt oder nicht.
+\label{cha:fazit}
+
+In dieser Arbeit wurden auf der Grundlage eines abstrakten Speichermodells verschiedene Garbage-Collection-Algorithmen zur automatischen Speicherverwaltung aufgearbeitet und analysiert.
+Mit dem Mark-Sweep-Algorithmus und der Referenzzählung haben wir zwei anfangs sehr unterschiedliche Ansätze kennen gelernt, welche die Freigabe nicht mehr benötigten Speichers bewerkstelligen.
+Durch einige Optimierungen war zu sehen, dass diese scheinbar konträren Ansätze keineswegs unvereinbar sind:
+Zusätzliche Kollektionsphasen neben der Referenzzählung erleichtern den Umgang mit zyklischen Strukturen und lindern gleichzeitig den Performanceverlust, der mit einer rigorosen Nachverfolgung von Referenzmanipulationen einhergeht.
+Mit der verborgenen Referenzzählung konnten wir schließlich sehen, dass eine Vereinigung beider Grundverfahren eine vielversprechende Lösung darstellt, um \textit{das Beste zweier Welten} zu kombinieren.
+Eine wesentliche Rolle spielen dabei auch die zuvor betrachteten Algorithmen, die das zentrale Problem der Speicherfragmentierung durch eine Kompaktierung des Heaps beheben, sowie die Partitionierung des Heaps in disjunkte Speicherbereiche.
+
+Der im zweiten Teil entworfene Garbage-Collection-Simulator ist in der Lage, vorgestellte Algorithmen angemessen zu visualisieren.
+Durch die angebeotenen Konfigurationsmöglichkeiten ermöglicht er dabei, verschiedene Anwendungsfälle zu simulieren und interessante Eigenschaften der implementierten Algorithmen zu entdecken.
+Durch eine geschickte Modellierung ist zudem eine Ergänzung um weitere Allokations- und Kollektionsverfahren zwecks ihrer Erprobung möglich.
+Einziger Wermutstropfen ist jedoch die fehlende Darstellung von Referenzen, wodurch eine Simulation von referenzzählenden Verfahren eher erkenntnisarm sein dürfte.
+Als Abhilfe ist eine zusätzliche Darstellung des Objektgraphen denkbar, sodass die Verwaisung von Objekten und die Anpassung von Referenzen in kompaktierenden Algorithmen direkt beobachtet werden kann.
+Diesbezüglich kann auch eine Erhöhung der Interaktivität in Betracht gezogen werden, indem die Anwenderin mithilfe des Objektgraphen selbst die Vernetzung und Verwaisung der Objekte bestimmt.
+Somit können verschiedene Algorithmen gezielt an festen Beispielszenarien erprobt werden, was mit der vom Zufall abhängigen Implementation aktuell nicht möglich ist.
+Eine weitere mögliche Ergänzung ist die Integration eines \textit{Steppers}, mit dem die Anwenderin selbst den nächsten Arbeitsschritt eines Kollektors auslöst.
+Die verwendeten Swing-Timer, die auch einen nicht-wiederholenden Modus besitzen, bieten hierfür eine gute Grundlage.
+
+Schlussendlich muss beachtet werden, dass die vorliegende Arbeit maximal einen Überblick über zentrale Algorithmen und Ansätze bieten kann.
+Allein die von Richard \textsc{Jones} gepflegte \textit{Garbage Collection Bibliography}\footnote{\url{https://www.cs.kent.ac.uk/people/staff/rej/gcbib/gcbib.pdf}} zählt über 2.500 Publikationen zum Thema Garbage Collection.
+Darunter sind zahlreiche zu finden, die sich auf spezielle Anwendungsfälle beziehen oder Schwerpunkte wie Nebenläufigkeit, Parallelisierung und Echtzeitsysteme betonen.
+Auch, wenn diese Konzepte nicht im Detail betrachtet wurden, bietet diese Arbeit eine gute Einführung in die zugrunde liegende Thematik, sodass sie durchaus als Vorbereitung zur Auseinandersetzung mit elaborierteren Garbage-Collection-Algorithmen verstanden werden kann.
+Darüber hinaus liefert sie Hinweise auf relevante Aspekte, die für die Entscheidungsfindung für oder gegen einen Garbage-Collection-Algorithmus beachtet werden sollten.
+Dies spielt vor allem für Systeme und Programmiersprachen wie \textit{Java} eine Rolle, bei denen die Entwicklerin aus verschiedenen vorimplementierten Algorithmen wählen kann.
+Mit dem Aufkommen neuer Anwendungsfälle entsteht auch der Bedarf an hochperformanten und ressourceneffizienten Algorithmen zur automatischen Speicherverwaltung, die an die jeweilige Situation angepasst sind.
+Insofern lässt sich abschließend festhalten, dass die Thematik der Garbage-Collection-Algorithmen auch in Zukunft von hoher Relevanz ist.
