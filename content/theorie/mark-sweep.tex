@@ -132,7 +132,7 @@ Da zudem mit jeder Iteration der \WHILE-Schleife mindestens ein Objekt aus \Var{
 
 Die Bereinigungsphase (engl. \textit{sweep}) beginnt unmittelbar nach der Markierungsphase durch Aufruf der Prozedur \Method{sweep}.
 Die Variable \Var{pos} wird mit der Speicheradresse initialisiert, an der sich das erste Objekt im Heap befindet.
-Hier wird davon ausgegangen, dass eine Prozedur \Method{nextObject} des Allokators zur Verfügung steht, die anhand einer übergebenen Speicheradresse die Adresse des nachfolgenden Objektes oder \Null zurückgibt, wenn dieses nicht existiert.
+Hier wird davon ausgegangen, dass eine Prozedur \Method{nextObject} des Allokators zur Verfügung steht, die anhand einer übergebenen Speicheradresse die Adresse des nachfolgenden Objekts oder \Null zurückgibt, wenn dieses nicht existiert.
 Dadurch wird der Heap linear traversiert; nicht markierte Objekte werden freigegeben, während die Markierung erreichbarer Objekte zurückgesetzt wird.
 Damit auch die Markierung der nicht dem Heap zugehörigen Basisobjekte zurückgesetzt wird, erfolgt zuletzt eine Iteration über \Roots (Zeile~8f).
 
@@ -263,9 +263,9 @@ Mithilfe dieser \textbf{Drei-Farben-Abstraktion} (engl. \textit{tri-color abstra
 Wird in einem Objekt \Var{a} eine Referenz auf ein Objekt \Var{b} hinterlegt, so kann dies dazu führen, dass \Var{b} erreichbar wird.
 Infolgedessen müssen auch alle von \Var{b} referenzierten Objekte als erreichbar identifiziert werden.
 Somit ist es zielführend, \Var{b} beim Setzen der Referenz grau zu markieren und zur Menge \Var{graySet} hinzuzufügen, sofern dies noch nicht der Fall ist oder die Felder von \Var{b} nicht bereits verfolgt wurden.
-Dies kann etwa mit einer \textit{Schreibbarriere} (engl. \textit{write barrier}) realisiert werden, die genau dann zum Einsatz kommt, wenn während eines Kollektionszyklus eine Referenz in ein Feld eines Objektes geschrieben wird (siehe Algorithmus~\ref{algo:tricolor-barrier}).
+Dies kann etwa mit einer \textit{Schreibbarriere} (engl. \textit{write barrier}) realisiert werden, die genau dann zum Einsatz kommt, wenn während eines Kollektionszyklus eine Referenz in ein Feld eines Objekts geschrieben wird (siehe Algorithmus~\ref{algo:tricolor-barrier}).
 Auf diese Art kann es jedoch vorkommen, dass Objekte unerreichbar werden, nachdem sie bereits grau oder schwarz markiert wurden.
-Entsprechend verbleiben sie zunächst im Speicher und werden erst im nächsten Garbage-Collection-Zyklus entfernt.
+Entsprechend verbleiben sie vorübergehend im Speicher und werden erst im nächsten Garbage-Collection-Zyklus entfernt.
 
 \begin{algorithm}[h]
 \begin{algorithmic}[1]

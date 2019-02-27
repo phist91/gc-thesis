@@ -69,8 +69,8 @@ Damit hierbei auch Referenzen berücksichtigt werden, die von Basisobjekten ausg
 	\State \quad \quad $\Var{*origin}(\Var{handle}) \gets \Method{newHandle}(\Var{target}, \Var{newAdr}(\Var{obj}))$
 	\Statex
 	\State \MethodHead{updateFields}(\Var{source}):
-	\State \quad \FOREACH $j > \Var{generation}(\Var{source})$		\Comment{Referenzen aus jüngeren}
-	\State \quad \quad \FOREACH $\Var{field} \in \Fields(\textsc{Gen}_j)$	\CommentCont{Generationen anpassen}
+	\State \quad \FOREACH $j > \Var{generation}(\Var{source})$		\Comment{Referenzen aus jüngeren Generationen}
+	\State \quad \quad \FOREACH $\Var{field} \in \Fields(\textsc{Gen}_j)$	\CommentCont{(inkl. \Roots) anpassen}
 	\State \quad \quad \quad \IF $\Var{**field} \in \Var{source}$
 	\State \quad \quad \quad \quad \Method{copy}(\Var{**field}, \Var{pos})
 	\State \quad \quad \quad \quad $\Var{*field} \gets \Var{newAdr}(\Var{**field})$

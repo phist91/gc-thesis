@@ -35,7 +35,7 @@ Diese Bedingung ist allerdings nicht hinreichend, da die Objekte, von denen die 
 Jedoch folgt als Kontraposition von Lemma~\ref{lemma:notwendig-rc} sofort, dass ein Heapobjekt $\Var{a}$ mit $\Var{rc}(\Var{a}) = 0$ nicht erreichbar ist und freigegeben werden kann.
 
 Wie kann \Var{rc}(\Var{a}) nun verwendet werden, um automatisch ein nicht erreichbares Objekt freizugeben?
-Immer, wenn eine Referenz auf \Var{a} in ein Feld eines anderen Objekts geschrieben wird, so muss \Var{rc}(\Var{a}) inkrementiert werden.
+Immer, wenn eine Referenz auf \Var{a} in ein Feld eines anderen Objekts geschrieben wird, muss \Var{rc}(\Var{a}) inkrementiert werden.
 Gleichzeitig muss der Referenzzähler des Objekts \Var{b}, welches das Ziel der überschriebenen Referenz war, dekrementiert werden.
 Wenn dieser anschließend den Wert $0$ aufweist, kann \Var{b} sofort freigegeben werden.
 Diese Manipulationen der Referenzzähler sind unmittelbar auszuführen, wenn eine Referenz manipuliert wird.
@@ -120,8 +120,8 @@ Referenzzählung benötigt zudem keinen Zugriff auf den vollständigen Objektgra
 Da kein Aufspüren aller erreichbaren Objekte durchgeführt wird, kann auf eine Traversierung des Objektgraphen verzichtet werden.
 Dies ist besonders für verteilte Systeme von Vorteil, in denen die Markierungsphase sonst mehrere Knoten des Systems belasten und erhöhten Datenaustausch zwischen diesen verursachen würde.
 Weiter lässt sich erahnen, dass Referenzzählung weniger stark dazu neigt, Cache-Mechanismen zu beeinträchtigen.
-Im Gegensatz zu Mark and Sweep finden kaum unvorhersehbare Objektzugriffe statt.
-Wird der Referenzzähler eines Objektes erhöht, so wird gerade eine neue Referenz hierauf angelegt.
+Im Gegensatz zum Mark-Sweep-Algorithmus finden kaum unvorhersehbare Objektzugriffe statt.
+Wird der Referenzzähler eines Objekts erhöht, so wird gerade eine neue Referenz hierauf angelegt.
 Die Wahrscheinlichkeit, dass im Programmablauf kurz danach auch ein Zugriff auf dieses Objekt vorgesehen ist, ist daher relativ hoch.
 Zeitliche Lokalität ist somit gegeben.
 
@@ -386,7 +386,7 @@ Wir zeigen nun, dass die zyklische Referenzzählung nach \textsc{Martínez} et a
 	Für \Method{markGray} ist dies leicht zu sehen, da \Method{markGray} lediglich weiß markierte Objekte manipuliert und diese sofort grau färbt (Zeile 2f in Algorithmus~\ref{algo:cyclic-markscan}).
 	Analoges gilt für \Method{collect} und schwarz gefärbte Objekte.
 	\Method{scan} wiederum verändert nur grau markierte Objekte.
-	Ist der Referenzzähler eines Objektes $0$, für welches \Method{scan} aufgerufen wird, so wird dieses schwarz gefärbt.
+	Ist der Referenzzähler eines Objekts $0$, für welches \Method{scan} aufgerufen wird, so wird dieses schwarz gefärbt.
 	Andernfalls wird das Objekt durch \Method{unmark} weiß markiert.
 	In beiden Fällen ist damit sichergestellt, dass ein Objekt nicht mehrfach durch \Method{scan} bzw. \Method{unmark} bearbeitet wird und keine weiteren rekursiven Aufrufe stattfinden.
 	Somit terminieren alle drei Aufrufe.
@@ -556,6 +556,6 @@ Für mehr Details sei auf die Publikation von \textsc{Levanoni} und \textsc{Petr
 \label{algo:coalesced-rc}
 \end{algorithm}
 
-Mit dem Mark-Sweep-Algorithmus und der Referenzzählung haben wir nun zwei zunächst diametral verschiedene Ansätze zur automatischen Speicherverwaltung kennen gelernt.
+Mit dem Mark-Sweep-Algorithmus und der Referenzzählung haben wir nun zwei zunächst diametral verschiedene Ansätze zur automatischen Speicherverwaltung kennengelernt.
 Die zuletzt eingeführten Optimierungsmöglichkeiten, in denen die Referenzzählung von Kollektionsphasen begleitet wird, lassen bereits erahnen, dass beide Verfahren nicht gänzlich unvereinbar sind.
 Bevor dieser Gedanke weiter verfolgt wird, erfolgt im nächsten Kapitel die Auseinandersetzung mit dem Phänomen der Speicherfragmentierung, das beide Ansätze betrifft und bisher nicht zur Sprache gekommen ist.

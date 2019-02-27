@@ -284,7 +284,7 @@ Diese Idee wurde ursprünglich von \textsc{Fenichel} und \textsc{Yochelson} für
 
 Zur Vorbereitung wird der Heap zu Programmbeginn in zwei Hälften eingeteilt, die durch zwei Zeiger \Var{source} und \Var{target} markiert werden (Prozedur \Method{initialize} in Algorithmus~\ref{algo:copying-gc}).
 Der durch \Var{target} referenzierte Halbraum ist stets derjenige, der neu angelegte bzw. zu kopierende Objekte aufnimmt.
-Ein dritter Pointer \Var{pos} zeigt den Füllstand von \Var{target} und damit die Position an, an der ein neues Objekt angelegt bzw. kopiert wird.
+Ein dritter Zeiger \Var{pos} zeigt den Füllstand von \Var{target} und damit die Position an, an der ein neues Objekt angelegt bzw. kopiert wird.
 Der Allokator ist entsprechend so zu modifizieren, dass neue Objekte an der Stelle \Var{pos} angelegt werden und \Var{pos} anschließend angepasst wird, sowie die Garbage Collection bereits dann ausgelöst wird, wenn der freie Speicher in \Var{target} zur Neige geht.
 
 Kommt es zu einem Kollektionszyklus, werden zunächst die Rollen von \Var{source} und \Var{target} vertauscht (Zeile 6).
@@ -339,7 +339,7 @@ Entsprechend analog zu Satz~\ref{satz:tricolor-correctness} lässt sich die Term
 \begin{proof}
 	Wir beweisen, dass nach Terminierung des Algorithmus kein erreichbares Objekt im Halbraum \Var{source} verbleibt.
 	Sei also $\Var{a} \in \Reach$ ein erreichbares Objekt des Heaps.
-	Dann gilt $\Var{b[i]} = \Var{\&a}$ für Feld \Var{b[i]} eines Objektes \Var{b}.
+	Dann gilt $\Var{b[i]} = \Var{\&a}$ für Feld \Var{b[i]} eines Objekts \Var{b}.
 	Ist $\Var{b} \in \Roots$, so ist $\Var{\&b[i]} \in \Fields(\Roots)$ und $\Var{a}$ wird in einer Iteration der \FOREACH-Schleife (Zeile~8f) nach \Var{target} kopiert sowie \Var{b[i]} angepasst.
 	
 	Ist $\Var{b} \notin \Roots$, so sei \Var{b} ohne Einschränkung aus dem Halbraum \Var{target}.\footnote{Andernfalls ist \Var{b} selbst ein erreichbares Objekt im Halbraum \Var{source} und die Behauptung folgt per Induktion.}

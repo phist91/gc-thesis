@@ -105,10 +105,10 @@ In Algorithmus~\ref{algo:new} ist etwa eine naive Implementation zu sehen.
 \end{algorithm}
 
 Nach \textsc{Dijkstra} et al. besteht die Laufzeitumgebung eines Programms zudem aus zwei funktional unterscheidbaren Bestandteilen \cite[S. 967]{dijkstra1978}:
-Der \textbf{Mutator} ist derjenige Thread (bzw. eine Menge von Threads), die den eigentlichen Programmcode ausführen.
+Der \textbf{Mutator} ist derjenige Thread (bzw. eine Menge von Threads), der den eigentlichen Programmcode ausführt.
 Bedeutsam sind dabei vor allem Programmanweisungen, die in Feldern von Objekten vorhandene Referenzen manipulieren und somit ursächlich für die Entstehung nicht mehr benötigter Objekte sind.
 Im Gegensatz dazu ist die Aufgabe des \textbf{Kollektors}, die nicht mehr benötigten Objekte zu identifizieren und ihre Freigabe zu veranlassen.
-Der Kollektor ist demnach derjenige Thread (bzw. eine Menge von Threads), die einen Garbage-Collection-Algorithmus ausführen.
+Der Kollektor ist demnach derjenige Thread (bzw. eine Menge von Threads), der einen Garbage-Collection-Algorithmus ausführt.
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
