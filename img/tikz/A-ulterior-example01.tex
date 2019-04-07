@@ -1,38 +1,29 @@
 \input{standalone.tex}
-
 \newcommand{\xscale}{0.6}
 \newcommand{\yscale}{0.6}
-
 \newcommand{\object}[3]{
 	\draw [draw,fill=gray!50] (#1*\xscale,0) rectangle (#1*\xscale+\xscale,\yscale);
 	\draw (#1*\xscale + \xscale*0.5,0.5*\yscale) node{\Var{#2}};
 	\draw (#1*\xscale+1.15*\xscale,-0.15*\yscale) node[anchor=south east,font=\tiny]{$#3$};
 }
-
 \newcommand{\objectFaded}[3]{
 	\draw [draw,fill=gray!25] (#1*\xscale,0) rectangle (#2*\xscale+\xscale,\yscale);
 	\draw (#1*\xscale*0.5 + #2*\xscale*0.5 + \xscale*0.5,0) node[above=0.05cm]{\Var{#3}};
 }
-
 \newcommand{\border}[2]{
 	\draw [very thick] (#1*\xscale,0) rectangle (#1*\xscale + #2*\xscale,\yscale);
 }
-
 \newcommand{\arrowTop}[4]{
 	\draw [->,thick,#4] (#1*\xscale,\yscale) -- (#1*\xscale,\yscale+#3) 
 			-- (#2*\xscale,\yscale+#3) -- (#2*\xscale,\yscale);
 }
-
 \newcommand{\arrowBottom}[4]{
 	\draw [->,thick,#4] (#1*\xscale,0) -- (#1*\xscale,-#3) --
 			(#2*\xscale,-#3) -- (#2*\xscale,0);
 }
-
-
 \newcommand{\arrowRoots}[2]{
 	\draw [->,thick] (#1*\xscale,\yscale + #2) -- (#1*\xscale,\yscale);
 }
-
 \newcommand{\toNursery}{ctcoloraccessory}
 \newcommand{\toMature}{ctcolormain}
 
@@ -68,25 +59,5 @@
 		\draw (14*\xscale,\yscale*3) node{\Mature};
 		\border{0}{7}
 		\border{9}{10}
-		
-		
-	
-%		\object{20}{22}{b'}
-%		\object{23}{24}{f'}
-%		\object{25}{27}{g'}
-%		\object{28}{29}{c'}
-%		\object{30}{32}{e'}
-%		
-%		\arrowRoots{21.5}			% R -> b'
-%		\arrowTopHigh{23.5}{29}		% f' -> c'
-%		\arrowTopHigh{23.5}{31.5}	% f' -> e'
-%		\arrowTop{26.5}{24.5}		% g' -> f'
-%		\arrowBottom{21.5}{24}		% b' -> f'
-%		\arrowBottom{21.5}{26.5}	% b' -> g'
-%		\pos{33}
-%		\source
-%		\target
-%		\border
-%		\draw (-\xscale,\yscale/2) node[left]{\textbf{(7)}};
 	\end{tikzpicture}
 \end{document}

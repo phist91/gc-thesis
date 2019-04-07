@@ -20,18 +20,13 @@
 ]{scrreprt}%
 
 % **************************************************
-% Debug LaTeX Information
-% **************************************************
-%\listfiles
-
-% **************************************************
 % Information and Commands for Reuse
 % **************************************************
 \newcommand{\thesisTitle}{Garbage-Collection-Algorithmen und ihre Simulation}
 \newcommand{\thesisName}{Phil Steinhorst}
 \newcommand{\thesisSubject}{Masterarbeit}
 \newcommand{\thesisDate}{28. Februar 2019}
-\newcommand{\thesisVersion}{My First Draft}
+%\newcommand{\thesisVersion}{My First Draft}
 \newcommand{\thesisAuthorStreet}{Dürerstraße 1}
 \newcommand{\thesisAuthorCity}{Münster}
 \newcommand{\thesisAuthorPostalCode}{48147}
@@ -40,22 +35,11 @@
 \newcommand{\thesisAuthorFirstSubject}{Mathematik}
 \newcommand{\thesisAuthorSecondSubject}{Informatik}
 \newcommand{\thesisAuthorId}{382 837}
-
 \newcommand{\thesisFirstReviewer}{Prof. Dr. Jan Vahrenhold}
-\newcommand{\thesisFirstReviewerUniversity}{\protect{Clean Thesis Style University}}
-\newcommand{\thesisFirstReviewerDepartment}{Department of Clean Thesis Style}
-
 \newcommand{\thesisSecondReviewer}{Prof. Dr. Markus Müller-Olm}
-\newcommand{\thesisSecondReviewerUniversity}{\protect{Clean Thesis Style University}}
-\newcommand{\thesisSecondReviewerDepartment}{Department of Clean Thesis Style}
-
-\newcommand{\thesisFirstSupervisor}{Jane Doe}
-\newcommand{\thesisSecondSupervisor}{John Smith}
-
 \newcommand{\thesisUniversity}{\protect{Westfälische Wilhelms-Universität Münster}}
 \newcommand{\thesisUniversityDepartment}{Fachbereich 10 -- Mathematik und Informatik}
 \newcommand{\thesisUniversityInstitute}{Institut für Informatik}
-\newcommand{\thesisUniversityGroup}{Clean Thesis Group (CTG)}
 \newcommand{\thesisUniversityCity}{Münster}
 \newcommand{\thesisUniversityStreetAddress}{Einsteinstraße 62}
 \newcommand{\thesisUniversityPostalCode}{48149}
@@ -64,7 +48,7 @@
 % Load and Configure Packages
 % **************************************************
 \usepackage[utf8]{inputenc}		% defines file's character encoding
-\usepackage[ngerman]{babel} % babel system, adjust the language of the content
+\usepackage[ngerman]{babel}		% babel system, adjust the language of the content
 \usepackage[					% clean thesis style
 	sansserif=false,%
 	hangfigurecaption=false,%
@@ -76,7 +60,6 @@
 	bibfile=bib-refs,%
 	bibstyle=alphabetic,%
 ]{cleanthesis}
-%\usepackage[german=quotes]{csquotes}
 
 \usepackage{nimbusmononarrow}
 
@@ -117,23 +100,9 @@
 	\setlist{itemsep=-0.7\baselineskip,topsep=-0.5\baselineskip}
 	\setlist[enumerate]{font=\sffamily\bfseries}
 	\setlist[description]{labelindent=0.3cm}
-	%\setlist[itemize]{label=$\triangleright$,font=\bfseries}
 	\usepackage{tabularx}
 	\usepackage{subcaption}
 % ===========================================================
-
-% thmtools
-% ===========================================================
-%\usepackage{ntheorem}
-%\declaretheoremstyle[%
-%	headfont=\bfseries,
-%	notefont=\normalfont,
-%	bodyfont=\normalfont,
-%	headformat=\NAME \ \NUMBER \NOTE,
-%	headpunct={\\},
-%	postheadspace=1ex,
-%	spaceabove=15pt,spacebelow=10pt]%
-%{mainstyle}
 
 \usepackage[tikz]{mdframed}
 \newmdenv[%
@@ -169,8 +138,7 @@
 \newtheorem{defn}{Definition}[chapter]
 \newtheorem{lemma}{Lemma}[chapter]
 
-%\theoremstyle{beweisstyle}
-
+% qed workaround
 \makeatletter
 \renewenvironment{proof}[1][\proofname]{\par
 \pushQED{\qed}%

@@ -251,15 +251,12 @@ Diese Idee wurde ursprünglich von \textsc{Fenichel} und \textsc{Yochelson} für
 \begin{algorithm}[h]
 \begin{algorithmic}[1]
 	\State \MethodHead{initialize}():
-%	\State \quad $\Var{spaceSize} \gets (\Var{HEAP\_END} - \Var{HEAP\_START}) / 2$
-%	\State \quad $\Var{limit} \gets \Var{HEAP\_START} + \Var{spaceSize}$
 	\State \quad $\Var{target} \gets \Var{HEAP\_START}$		\Comment{Erste Hälfte}
 	\State \quad $\Var{source} \gets (\Var{HEAP\_START} + \Var{HEAP\_END}) / 2$		\Comment{Zweite Hälfte}
 	\State \quad $\Var{pos} \gets \Var{target}$		\Comment{Füllstand}
 	\Statex
 	\State \Atomic \MethodHead{collect}():
 	\State \quad \Method{swap}(\Var{target}, \Var{source})		\Comment{Halbräume tauschen}
-%	\State \quad $\Var{limit} \gets \Var{target} + \Var{spaceSize}$
 	\State \quad $\Var{pos} \gets \Var{target}$
 	\State \quad \FOREACH $\Var{field} \in \Fields(\Roots)$		\Comment{Beginne mit Basisobjekten}
 	\State \quad \quad \Method{update}(\Var{field})		\Comment{Feld aktualisieren und Ziel zu \Var{toDo} hinzufügen}

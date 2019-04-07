@@ -1,5 +1,4 @@
 \input{standalone.tex}
-
 \newcommand{\xscale}{0.3}
 \newcommand{\yscale}{0.6}
 \newcommand{\object}[3]{
@@ -9,16 +8,13 @@
 	\draw [thick,ctcolormain] (#1*\xscale + 0.07*\xscale,#2*\yscale+0.01) -- 
 		(#1*\xscale + 0.07*\xscale,#2*\yscale + 1.5*\yscale) node[left]{\Var{pos}};
 }
-
 \newcommand{\nextCur}[2]{
 	\draw [thick,ctcoloraccessory] (#1*\xscale - 0.07*\xscale,#2*\yscale + 0.98*\yscale) --
 		(#1*\xscale - 0.07*\xscale,#2*\yscale - 0.5*\yscale) node[right]{\Var{next}};
 }
-
 \newcommand{\border}[1]{
 	\draw [thick] (0,#1*\yscale) rectangle (20*\xscale,#1*\yscale+\yscale);
 }
-
 \newcommand{\labelnum}[2]{
 	\draw (-2*\xscale,#1*\yscale + 0.5*\yscale) node[left]{\textbf{(#2)}};
 }

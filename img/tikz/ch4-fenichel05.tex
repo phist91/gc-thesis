@@ -1,59 +1,46 @@
 \input{standalone.tex}
-
 \newcommand{\xscale}{0.3}
 \newcommand{\yscale}{0.6}
-
 \newcommand{\object}[3]{
 	\draw [draw,fill=gray!50] (#1*\xscale,0) rectangle (#2*\xscale+\xscale,\yscale);
 	\draw (#1*\xscale*0.5 + #2*\xscale*0.5 + \xscale*0.5,0) node[above=0.05cm]{\Var{#3}};
 }
-
 \newcommand{\objectFaded}[3]{
 	\draw [draw,fill=gray!25] (#1*\xscale,0) rectangle (#2*\xscale+\xscale,\yscale);
 	\draw (#1*\xscale*0.5 + #2*\xscale*0.5 + \xscale*0.5,0) node[above=0.05cm]{\Var{#3}};
 }
-
 \newcommand{\pos}[1]{
 	\draw [thick,ctcolormain] (#1*\xscale + 0.07*\xscale,0.01) -- 
 		(#1*\xscale + 0.07*\xscale,1.5*\yscale) node[right]{\Var{pos}};
 }
-
 \newcommand{\target}{
 	\draw (40*\xscale,\yscale) node[anchor=south west,ctcoloraccessory]{\Var{target}};
 }
-
 \newcommand{\source}{
 	\draw (0,\yscale) node[anchor=south east,ctcoloraccessory]{\Var{source}};
 }
-
 \newcommand{\border}{
 	\draw [very thick] (0,0) rectangle (40*\xscale,\yscale);
 	\draw [very thick] (20*\xscale,0) -- (20*\xscale,\yscale);
 }
-
 \newcommand{\arrowTop}[2]{
 	\draw [->,thick] (#1*\xscale,\yscale) -- (#1*\xscale,\yscale+0.5) 
 			-- (#2*\xscale,\yscale+0.5) -- (#2*\xscale,\yscale);
 }
-
 \newcommand{\arrowBottom}[2]{
 	\draw [->,thick] (#1*\xscale,0) -- (#1*\xscale,-0.5) --
 			(#2*\xscale,-0.5) -- (#2*\xscale,0);
 }
-
 \newcommand{\arrowBottomLow}[2]{
 	\draw [->,thick] (#1*\xscale,0) -- (#1*\xscale,-0.75) --
 			(#2*\xscale,-0.75) -- (#2*\xscale,0);
 }
-
 \newcommand{\arrowRoots}[1]{
 	\draw [->,thick] (#1*\xscale,\yscale + 1) -- (#1*\xscale,\yscale);
 }
-
 \newcommand{\todonum}[2]{
 	\draw (#1*\xscale+0.3*\xscale,-0.15*\yscale) node[anchor=south east,font=\tiny]{$#2$};
 }
-
 \newcommand{\arrowTopHigh}[2]{
 	\draw [->,thick] (#1*\xscale,\yscale) -- (#1*\xscale,\yscale+0.75) 
 			-- (#2*\xscale,\yscale+0.75) -- (#2*\xscale,\yscale);

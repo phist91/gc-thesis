@@ -7,7 +7,9 @@ Zum Abschluss des ersten Teils sollen daher nochmals die Algorithmen bezüglich 
 Diese Kriterien können je nach Anwendungsfall für eine erste Auswahl potenziell infrage kommender Garbage-Collection-Algorithmen herangezogen werden.
 
 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 
 \subsubsection*{Durchsatz oder Responsivität?}
@@ -26,7 +28,9 @@ Hierzu sind jedoch -- wie bei der Referenzzählung -- Schreibbarrieren nötig, d
 Soll die Referenzzählung auch zyklische Strukturen zuverlässig freigeben oder aus Durchsatzgründen auf einige Schreibbarrieren verzichten, sind wiederum separate Bereinigungsphasen notwendig, die den Mutator anhalten und die Referenzzähler korrigieren.
 
 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 
 \subsubsection*{Speicherbedarf}
@@ -42,7 +46,9 @@ Als besonders speicherhungrig erweisen sich hier der Compressor-Algorithmus (sie
 Für Anwendungen, in denen wenig Speicher zur Verfügung steht, kann dies ein Ausschlusskriterium sein, da häufige Ausführungen der Garbage Collection den Mutator verdrängen könnten.
 
 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 
 \subsubsection*{Kopieren oder nicht kopieren?}
@@ -53,7 +59,9 @@ Zumal besteht die Gefahr, dass der Kollektor \textit{gegen den Allokator} arbeit
 Insofern ist es wichtig, den Kollektor auch auf die Arbeitsweise des Allokators abzustimmen.
 
 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 
 \subsubsection*{Quantitative Resultate}
