@@ -13,6 +13,10 @@ Dies umfasst eine angemessene Visualisierung eines beschränkten Speicherbereich
 Dabei sind auch unterschiedliche Szenarien auswählbar, etwa verschiedene Speicherfüllstände und eine variable Anzahl bzw. Größe von Objekten, die im Speicher hinterlegt sind.
 Nennenswerte Auszüge aus dem Entwurfs- und Implementationsprozess werden detailliert hervorgehoben und erläutert.
 
+### Garbage-Collection-Simulator
+Der implementierte Simulator ist in [diesem Repository](https://github.com/phist91/gcsim) zu finden.
+Entwicklung und Verwendung des Simulators werden in den Kapiteln 7 und 8 beschrieben.
+
 ### Disclaimer
 Diese Masterarbeit wurde mit LaTeX unter Verwendung der Vorlage [Clean Thesis](https://github.com/derric/cleanthesis) von Ricardo Langner gesetzt.
 Für mehr Informationen siehe [hier](http://cleanthesis.der-ric.de/).
