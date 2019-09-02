@@ -1,0 +1,7 @@
+build:
+  script:
+    - latexmk -pdf
+    - latexmk -c
+  artifacts:
+    paths:
+      - thesis.pdf
