@@ -43,7 +43,7 @@ Bevor genauer darauf eingangen wird, was man unter einer Garbage Collection konk
 Dieses Speichermodell ist bewusst abstrakt gehalten, sodass es möglichst allgemeine Betrachtungen losgelöst von konkreten Programmiersprachen, Laufzeitumgebungen und Betriebssystemen ermöglicht, auch wenn an einigen Stellen exemplarisch Bezüge zu diesen hergestellt werden.
 Die eingeführten Begrifflichkeiten orientieren sich stark an der Terminologie aus der Fachliteratur (vgl. \cite[Kap. 1]{jones-lins}).
 
-\subsubsection*{Objekt}
+\minisec{Objekt}
 Der Begriff \textbf{Objekt} bezeichnet stets eine konkrete Instanz eines definierten Datentyps, beispielsweise eines \code{struct} in C oder einer Java-Klasse.
 Ein Objekt besitzt eine festgelegte Anzahl von \textbf{Feldern}, die jeweils einen Wert eines festgelegten Datentyps -- etwa ein Integer oder eine Referenz auf ein anderes Objekt im hier definierten Sinne -- enthalten.
 Der in dieser Arbeit verwendete Objektbegriff ist wesentlich allgemeiner gehalten als in der Objektorientierung üblich:
@@ -57,7 +57,7 @@ Dies sind separate Felder, die Metainformationen aufnehmen, die für den Compile
 Diverse vorgestellte Algorithmen werden diesen Bereich nutzen, um für die Speicherverwaltung relevante Informationen zu hinterlegen.\footnote{Technisch kann dies etwa dadurch realisiert werden, dass die angeforderte Speichermenge für ein Objekt vergrößert wird, sodass die Informationen des Headers am Anfang des Objekts aufgenommen werden können.
 Als Ergebnis der Speicheranforderung wird dann die Speicheradresse zurückgegeben, die auf den Bereich hinter dem Header verweist.}
 
-\subsubsection*{Heap}
+\minisec{Heap}
 Der \textbf{Heap} ist derjenige Speicherbereich, in dem zur Laufzeit eines Programms Objekte in beliebiger Reihenfolge erzeugt und freigegeben werden können.
 Der Heap besteht aus \textit{Wörtern} einer festen Größe, auf die über eine Speicheradresse zugegriffen werden kann; ein \textit{Wort} ist dabei die kleinste zuweisbare Speichermenge und kann die Zustände \textit{belegt} (bzw. \textit{zugewiesen}) oder \textit{frei} annehmen.
 Sofern nichts anderes vereinbart ist, wird davon ausgegangen, dass der Heap ein zusammenhängender linearer Speicherbereich ist (siehe Abbildung~\ref{fig:heap}).\footnote{Tatsächlich ist dies eine starke Vereinfachung.
@@ -81,7 +81,7 @@ Ob es an der Stelle sinnvoll ist, Objekte \textit{by value} oder \textit{by refe
 In dieser Arbeit soll die Übergabe eines Objekts die Intention erzeugen, dass die im Objekt gespeicherten Informationen relevant sind, während die Übergabe einer Objektadresse dessen Position im Speicher in den Fokus rückt.
 Ähnliches gilt für Mengen von Objekten, die in manchen Algorithmen vorkommen.}
 
-\subsubsection*{Allokator, Mutator und Kollektor}
+\minisec{Allokator, Mutator und Kollektor}
 Aufgabe des \textbf{Allokators}, der zur Laufzeitumgebung eines Programms gehört, ist zum einen die Zuweisung von Heapspeicher bei dynamischer Instanziierung eines neuen Objekts und zum anderen die Freigabe von Objekten.
 Der Allokator führt somit Buch über die belegten und freien Wörter des Heaps.
 Die genaue Realisierung dieser Mechanismen werden in dieser Arbeit weitestgehend außen vor gelassen, jedoch wird in gewissen Situationen das Vorhandensein bestimmter Funktionalitäten vorausgesetzt.

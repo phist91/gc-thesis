@@ -12,7 +12,7 @@ Diese Kriterien können je nach Anwendungsfall für eine erste Auswahl potenziel
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 
-\subsubsection*{Durchsatz oder Responsivität?}
+\minisec{Durchsatz oder Responsivität?}
 Der Durchsatz ist ein Maß für die Performanz einer Software und beschreibt die Geschwindigkeit, mit der diese Aufgaben erledigt.
 Ein hoher Durchsatz verlangt, dass der Kollektor das eigentliche Programm möglichst wenig ausbremst und dem Mutator möglichst viel Prozessorzeit überlässt.
 Die Responsivität beschreibt hingegen die Antwortzeit, mit der eine Anwendung auf eingehende Anfragen reagiert.
@@ -33,7 +33,7 @@ Soll die Referenzzählung auch zyklische Strukturen zuverlässig freigeben oder 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 
-\subsubsection*{Speicherbedarf}
+\minisec{Speicherbedarf}
 Da eine Garbage Collection häufig ausgelöst wird, wenn der freie Heapspeicher zur Neige geht, ist der Speicherbedarf der verschiedenen Konzepte ein weiterer Aspekt, der bei der Wahl des passenden Algorithmus beachtet werden sollte.
 Alle vorgestellten Algorithmen benötigen zusätzlichen Speicher pro Objekt, sei es, um Markierungsinformationen oder Referenzzähler innerhalb oder außerhalb von Objekt"-headern zu speichern.
 Einzelne Bits, die von markierenden Algorithmen verwendet werden, können gegebenenfalls in bereits vorhandene Header integriert werden, Referenzzähler können jedoch prinzipiell unbeschränkt groß werden.
@@ -51,7 +51,7 @@ Für Anwendungen, in denen wenig Speicher zur Verfügung steht, kann dies ein Au
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 
-\subsubsection*{Kopieren oder nicht kopieren?}
+\minisec{Kopieren oder nicht kopieren?}
 Ein weiteres Kriterium bei der Suche eines geeigneten Garbage"=Collection"=Algorithmus ist, ob der Algorithmus den genutzten Heapspeicher kompaktiert oder nicht.
 Bildet der freie Speicher einen möglichst großen zusammenhängenden Bereich, können aufeinanderfolgende Speicheranforderungen schnell erfüllt werden, da keine \textit{passende Lücke} für die angeforderte Speichermenge gesucht werden muss.
 Allerdings sind kopierende Algorithmen vor allem für große Heaps tendenziell langsamer, da im schlimmsten Fall alle erreichbaren Objekte verschoben werden, sämtliche Referenzen auf verschobene Objekte angepasst werden müssen und der Mutator in dieser Zeit angehalten wird.
@@ -64,7 +64,7 @@ Insofern ist es wichtig, den Kollektor auch auf die Arbeitsweise des Allokators 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 
-\subsubsection*{Quantitative Resultate}
+\minisec{Quantitative Resultate}
 Neben dieser qualitativen Gegenüberstellung ist es durchaus möglich, auch die quantitativen Unterschiede der verschiedenen Konzepte zu messen.
 Vor allem neuere Algorithmen werden dazu für die \textit{Jikes Research Virtual Machine}\footnote{\url{https://www.jikesrvm.org/}} implementiert oder Benchmark-Frameworks wie \textit{SPECjvm}\footnote{\url{https://www.spec.org/jvm2008/}} ausgesetzt, um Performanceunterschiede messbar zu machen und dabei verschiedene Ausprägungen von Objekten und Objektkonstellationen zu betrachten (siehe etwa \cite{blackburn2003}, \cite{blackburn2004}, \cite{kermany2006}, \cite{levanoni2006}, \cite{garner2007}).
 Diese belegen durchaus, dass zum einen deutliche Performanceunterschiede zwischen verschiedenen Ansätzen in gewissen Anwendungsfällen existieren und zum anderen vermutlich kein Algorithmus existiert, der in jeder Situation perfekt ist (vgl. \cite{fitzgerald2000}).
