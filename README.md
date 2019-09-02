@@ -14,7 +14,7 @@ Dabei sind auch unterschiedliche Szenarien auswählbar, etwa verschiedene Speich
 Nennenswerte Auszüge aus dem Entwurfs- und Implementationsprozess werden detailliert hervorgehoben und erläutert.
 
 ### Garbage-Collection-Simulator
-Der implementierte Simulator ist in [diesem Repository](https://github.com/phist91/gcsim) zu finden.
+Der implementierte Simulator ist in [diesem Repository](https://gitlab.com/phist91/gcsim) zu finden.
 Entwicklung und Verwendung des Simulators werden in den Kapiteln 7 und 8 beschrieben.
 
 ### Disclaimer
